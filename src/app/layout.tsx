@@ -10,13 +10,15 @@ export const metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="de">
-      <body>
+      <body className="bg-gray-50">
+        {/* FixedHeader immer oben */}
         <FixedHeader />
-        <main className="pt-[140px] px-4">
+
+        {/* main-Content: Padding top = Höhe des Headers (h-24) + etwas Abstand */}
+        <main className="pt-28 px-6">
           {children}
         </main>
       </body>
     </html>
   );
 }
-
