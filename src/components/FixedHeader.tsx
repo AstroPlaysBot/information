@@ -15,9 +15,12 @@ const FixedHeader = () => {
 
   return (
     <div
-      className={`fixed top-0 left-0 w-full z-50 transition-colors duration-300 ${
-        scrolled ? 'bg-black bg-opacity-70' : 'bg-black'
-      }`}
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300
+        ${scrolled
+          ? 'bg-black/60 backdrop-blur-md'
+          : 'bg-black'
+        }
+      `}
     >
       <div className="flex items-center h-24 px-6">
         <h1 className="text-white font-bold text-[64px]">
