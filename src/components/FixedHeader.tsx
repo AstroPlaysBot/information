@@ -15,11 +15,10 @@ const FixedHeader = () => {
 
   return (
     <div
-      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300
-        ${scrolled
-          ? 'bg-black/60 backdrop-blur-md'
-          : 'bg-black'
-        }
+      className={`fixed top-0 left-0 w-full z-50
+        bg-neutral-900
+        transition-all duration-300
+        ${scrolled ? 'backdrop-blur-xl' : ''}
       `}
     >
       <div className="flex items-center h-24 px-6">
