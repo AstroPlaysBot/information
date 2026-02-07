@@ -9,31 +9,31 @@ const FixedHeader = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const { language, toggleLanguage, t } = useLanguage();
 
-  // Scroll Effekt für Schatten/Blurring
+  // Shadow / Blur on scroll
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener('scroll', onScroll);
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Body scroll blockieren, wenn Mobile Menu offen
+  // Body scroll blockieren, nur wenn Mobile Menu offen
   useEffect(() => {
-    if (menuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    document.body.style.overflow = menuOpen ? 'hidden' : '';
   }, [menuOpen]);
 
   const handleHomeClick = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    setMenuOpen(false); // Menü schließen
+    setMenuOpen(false);
   };
 
   return (
     <>
       {/* Header */}
-      <div className="fixed top-4 left-0 w-full z-50">
+      <div
+        className={`fixed top-4 left-0 w-full z-50 transition-all duration-300 ${
+          menuOpen ? 'bg-neutral-800/50 backdrop-blur-md' : ''
+        }`}
+      >
         <div
           className={`
             mx-auto max-w-[1600px]
@@ -44,7 +44,7 @@ const FixedHeader = () => {
             bg-neutral-800/90
             border border-white/10
             transition-all duration-300 ease-out
-            ${scrolled ? 'backdrop-blur-2xl shadow-xl scale-[1.02]' : ''}
+            ${scrolled && !menuOpen ? 'backdrop-blur-2xl shadow-xl scale-[1.02]' : ''}
             px-3 sm:px-0
           `}
         >
@@ -70,13 +70,12 @@ const FixedHeader = () => {
             <a className="hover:text-white transition">{t('support')}</a>
             <a className="hover:text-white transition">{t('dashboard')}</a>
 
-            {/* Flagge */}
             <button onClick={toggleLanguage} className="hover:opacity-80 transition text-xl">
               {language === 'de' ? '🇩🇪' : '🇬🇧'}
             </button>
           </nav>
 
-          {/* Hamburger für Mobile */}
+          {/* Hamburger Mobile */}
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setMenuOpen(!menuOpen)}
@@ -91,9 +90,9 @@ const FixedHeader = () => {
       {/* Mobile Menu Overlay */}
       <div
         className={`
-          fixed top-0 left-0 h-full w-3/4 max-w-xs sm:max-w-sm bg-neutral-900 text-white p-6
-          transform transition-transform duration-300 ease-in-out z-40 md:hidden
-          ${menuOpen ? 'translate-x-0' : '-translate-x-full'}
+          fixed top-0 right-0 h-full w-3/4 max-w-xs sm:max-w-sm bg-neutral-900 text-white p-6
+          transform transition-transform duration-300 ease-in-out z-50 md:hidden
+          ${menuOpen ? 'translate-x-0' : 'translate-x-full'}
         `}
       >
         <button onClick={() => setMenuOpen(false)} className="mb-6 text-2xl">
