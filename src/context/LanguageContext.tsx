@@ -21,13 +21,16 @@ const translations = {
   },
 };
 
+// Gültige Keys für Übersetzungen
+type TranslationKeys = 'home' | 'modules' | 'support' | 'dashboard' | 'welcome' | 'description';
+
 type Language = 'de' | 'en';
 
 interface LanguageContextProps {
   language: Language;
   setLanguage: (lang: Language) => void;
   toggleLanguage: () => void;
-  t: (key: string) => string;
+  t: (key: TranslationKeys) => string;
 }
 
 const LanguageContext = createContext<LanguageContextProps | undefined>(undefined);
@@ -50,7 +53,8 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setLanguage(prev => (prev === 'de' ? 'en' : 'de'));
   };
 
-  const t = (key: string) => translations[language][key] || key;
+  // Typ-sichere Übersetzung
+  const t = (key: TranslationKeys) => translations[language][key];
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, toggleLanguage, t }}>
