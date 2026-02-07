@@ -1,14 +1,14 @@
-export default function Home() {
+'use client';
+import React from 'react';
+import { useLanguage } from '../context/LanguageContext';
+
+export default function HomePage() {
+  const { t } = useLanguage();
+
   return (
-    <div className="space-y-8">
-      <p className="text-xl font-medium">
-        Willkommen auf der AstroPlays Discord Bot Website!
-      </p>
-      <p>
-        Hier findest du Infos über den Bot, Befehle und alles andere.
-      </p>
-      {/* Dummy Content zum Scrollen */}
-      <div className="h-[2000px]"></div>
+    <div className="p-8">
+      <h1 className="text-4xl font-bold mb-4">{t('welcome')}</h1>
+      <p className="text-gray-300">{t('description')}</p>
     </div>
   );
 }
