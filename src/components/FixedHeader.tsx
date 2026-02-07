@@ -1,5 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 
 const FixedHeader = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -22,23 +23,25 @@ const FixedHeader = () => {
           bg-neutral-800/90
           border border-white/10
           transition-all duration-300 ease-out
-          ${scrolled
-            ? 'backdrop-blur-2xl shadow-xl scale-[1.02]'
-            : ''
-          }
+          ${scrolled ? 'backdrop-blur-2xl shadow-xl scale-[1.02]' : ''}
         `}
       >
         {/* Logo + Name */}
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center">
-            <span className="text-white font-bold">A</span>
-          </div>
+          <Image
+            src="/astroplays.PNG"
+            alt="AstroPlays Logo"
+            width={32}
+            height={32}
+            className="rounded-md"
+            priority
+          />
           <span className="text-white font-semibold text-lg">
             AstroPlays
           </span>
         </div>
 
-        {/* Nav */}
+        {/* Navigation */}
         <nav className="hidden md:flex items-center gap-6 text-sm text-gray-300">
           <a className="hover:text-white transition">Home</a>
           <a className="hover:text-white transition">Funktionen</a>
