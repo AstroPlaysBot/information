@@ -13,9 +13,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="de">
       <body className="bg-gray-50">
-        {/* Globaler Sprach-Provider */}
+        {/* Globaler Sprachprovider */}
         <LanguageProvider>
+          {/* Header */}
           <FixedHeader />
+          {/* Seiteninhalt */}
           <main className="pt-28 px-6">{children}</main>
         </LanguageProvider>
       </body>
