@@ -1,20 +1,15 @@
-import '../styles/globals.css';
-import { ReactNode } from 'react';
+import './globals.css';
+import { LanguageProvider } from '../context/LanguageContext';
 import FixedHeader from '../components/FixedHeader';
 
-export const metadata = {
-  title: 'AstroPlays Discord Bot',
-  description: 'Website für den Discord Bot AstroPlays',
-}
-
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="de">
-      <body className="bg-gray-50">
-        <FixedHeader />
-        <main className="pt-28 px-6">
-          {children}
-        </main>
+      <body>
+        <LanguageProvider>
+          <FixedHeader />
+          <main>{children}</main>
+        </LanguageProvider>
       </body>
     </html>
   );
