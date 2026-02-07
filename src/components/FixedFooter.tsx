@@ -7,7 +7,7 @@ const FixedFooter: React.FC = () => {
       {/* Link Gruppe */}
       <div className="flex flex-col md:flex-row gap-4 text-sm md:text-base">
         <a href="/impressum" className="hover:text-white transition">Impressum</a>
-        <a href="mailto:kontakt@astroplays.com" className="hover:text-white transition">kontakt@astroplays.com</a>
+        <a href="mailto:astroplays.help@gmail.com" className="hover:text-white transition">astroplays.help@gmail.com</a>
         <a href="/datenschutz" className="hover:text-white transition">Datenschutz</a>
       </div>
 
