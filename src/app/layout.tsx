@@ -1,4 +1,3 @@
-'use client';
 import '../styles/globals.css';
 import { ReactNode } from 'react';
 import FixedHeader from '../components/FixedHeader';
@@ -13,11 +12,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="de">
       <body className="bg-gray-50">
-        {/* Globaler Sprachprovider */}
+        {/* LanguageProvider kann weiterhin Client-Komponenten nutzen */}
         <LanguageProvider>
-          {/* Header */}
           <FixedHeader />
-          {/* Seiteninhalt */}
           <main className="pt-28 px-6">{children}</main>
         </LanguageProvider>
       </body>
