@@ -1,0 +1,22 @@
+'use client';
+import React from 'react';
+
+const FixedFooter: React.FC = () => {
+  return (
+    <footer className="w-full bg-neutral-900/90 text-gray-300 p-4 md:p-6 mt-auto flex flex-col md:flex-row justify-between items-center gap-2 md:gap-0">
+      {/* Link Gruppe */}
+      <div className="flex flex-col md:flex-row gap-4 text-sm md:text-base">
+        <a href="/impressum" className="hover:text-white transition">Impressum</a>
+        <a href="mailto:kontakt@astroplays.com" className="hover:text-white transition">kontakt@astroplays.com</a>
+        <a href="/datenschutz" className="hover:text-white transition">Datenschutz</a>
+      </div>
+
+      {/* Copyright / Hinweis */}
+      <div className="text-sm md:text-base text-gray-400 mt-2 md:mt-0">
+        &copy; {new Date().getFullYear()} AstroPlaysBot. Alle Rechte vorbehalten.
+      </div>
+    </footer>
+  );
+};
+
+export default FixedFooter;
