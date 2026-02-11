@@ -10,14 +10,12 @@ const FixedHeader = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const { language, toggleLanguage, t } = useLanguage();
 
-  // Scroll Detection
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener('scroll', onScroll);
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Lock Body scroll on mobile menu open
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : '';
   }, [menuOpen]);
@@ -40,9 +38,10 @@ const FixedHeader = () => {
             flex items-center justify-between
             rounded-2xl
             bg-neutral-800/70 border border-white/10
-            backdrop-blur-md backdrop-brightness-110
+            backdrop-blur-md backdrop-brightness-110 backdrop-saturate-120
             transition-all duration-300 ease-out
-            ${scrolled && !menuOpen ? 'backdrop-blur-lg shadow-xl' : ''}
+            px-3 sm:px-0
+            ${scrolled && !menuOpen ? 'shadow-xl scale-[1.02] backdrop-blur-lg' : ''}
           `}
         >
           {/* LOGO */}
@@ -127,13 +126,6 @@ const FixedHeader = () => {
           </li>
         </ul>
       </div>
-
-      {/* Frosted Glass Lupe Effekt für Content hinter Header */}
-      <style jsx>{`
-        div.fixed.top-4 > div {
-          backdrop-filter: blur(10px) brightness(1.1) saturate(1.2);
-        }
-      `}</style>
     </>
   );
 };
