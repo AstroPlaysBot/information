@@ -10,19 +10,18 @@ const FixedHeader = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const { language, toggleLanguage, t } = useLanguage();
 
-  // Shadow / Blur on scroll
+  // Scroll Detection
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener('scroll', onScroll);
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Body scroll lock (Mobile)
+  // Lock Body scroll on mobile menu open
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : '';
   }, [menuOpen]);
 
-  // HOME → echter Reload
   const handleHomeClick = () => {
     window.location.href = '/';
   };
@@ -31,9 +30,7 @@ const FixedHeader = () => {
     <>
       {/* HEADER */}
       <div
-        className={`fixed top-4 left-0 w-full z-50 transition-all duration-300 ${
-          menuOpen ? 'bg-neutral-800/50 backdrop-blur-md' : ''
-        }`}
+        className={`fixed top-4 left-0 w-full z-50 px-3 sm:px-0 transition-all duration-300`}
       >
         <div
           className={`
@@ -42,11 +39,10 @@ const FixedHeader = () => {
             md:px-8
             flex items-center justify-between
             rounded-2xl
-            bg-neutral-800/90
-            border border-white/10
+            bg-neutral-800/70 border border-white/10
+            backdrop-blur-md backdrop-brightness-110
             transition-all duration-300 ease-out
-            ${scrolled && !menuOpen ? 'backdrop-blur-2xl shadow-xl scale-[1.02]' : ''}
-            px-3 sm:px-0
+            ${scrolled && !menuOpen ? 'backdrop-blur-lg shadow-xl' : ''}
           `}
         >
           {/* LOGO */}
@@ -68,12 +64,7 @@ const FixedHeader = () => {
           <nav className="hidden md:flex items-center gap-6 text-sm text-gray-300">
             <button
               onClick={handleHomeClick}
-              className="
-                px-4 py-2 rounded-lg
-                bg-white/10 text-white
-                border border-white/20
-                hover:bg-white/20 transition
-              "
+              className="px-4 py-2 rounded-lg bg-white/10 text-white border border-white/20 hover:bg-white/20 transition"
             >
               {t('home')}
             </button>
@@ -136,6 +127,13 @@ const FixedHeader = () => {
           </li>
         </ul>
       </div>
+
+      {/* Frosted Glass Lupe Effekt für Content hinter Header */}
+      <style jsx>{`
+        div.fixed.top-4 > div {
+          backdrop-filter: blur(10px) brightness(1.1) saturate(1.2);
+        }
+      `}</style>
     </>
   );
 };
