@@ -2,7 +2,7 @@
 
 export default function Background() {
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden">
+    <div className="fixed inset-0 -z-10 overflow-hidden min-h-screen">
       {/* Grund-Dunkelheit */}
       <div className="absolute inset-0 bg-neutral-950" />
 
