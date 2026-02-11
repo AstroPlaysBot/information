@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import ContentOrder from '../components/ContentOrder';
 
 export default function HomePage() {
   return (
@@ -31,13 +30,10 @@ export default function HomePage() {
             href="#features"
             className="text-white font-medium hover:underline"
           >
-            Funktionen entdecken →
+            Funktionen entdecken → 
           </a>
         </div>
       </section>
-
-      {/* MODULARER CONTENT DARUNTER */}
-      <ContentOrder />
     </>
   );
 }
