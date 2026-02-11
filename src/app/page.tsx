@@ -9,7 +9,7 @@ export default function HomePage() {
 
   return (
     <>
-      {/* ALTER CONTENT – bleibt erhalten */}
+      {/* Bestehender Content – bleibt */}
       <section className="p-8">
         <h1 className="text-4xl font-bold mb-4">
           {t('welcome')}
@@ -19,7 +19,7 @@ export default function HomePage() {
         </p>
       </section>
 
-      {/* NEUER MODULARER CONTENT */}
+      {/* Neuer modularer Content */}
       <ContentOrder />
     </>
   );
