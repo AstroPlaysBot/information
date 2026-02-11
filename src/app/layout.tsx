@@ -15,13 +15,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body className="bg-gray-50 flex flex-col min-h-screen">
         <LanguageProvider>
           <FixedHeader />
-          
-          {/* Content-Bereich */}
+
           <main className="pt-28 px-6 flex-1">
             {children}
           </main>
 
-          {/* Footer */}
           <FixedFooter />
         </LanguageProvider>
       </body>
