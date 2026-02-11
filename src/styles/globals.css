@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background-color: #f9f9f9;
+/* Sterne-Hintergrund */
+.bg-stars {
+  background-image:
+    radial-gradient(1px 1px at 20% 30%, white, transparent),
+    radial-gradient(1px 1px at 80% 20%, white, transparent),
+    radial-gradient(1px 1px at 40% 70%, white, transparent),
+    radial-gradient(1px 1px at 60% 90%, white, transparent),
+    radial-gradient(1px 1px at 10% 80%, white, transparent);
 }
