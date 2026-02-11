@@ -1,4 +1,5 @@
 'use client';
+
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useLanguage } from '../context/LanguageContext';
@@ -16,19 +17,19 @@ const FixedHeader = () => {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Body scroll blockieren, nur wenn Mobile Menu offen
+  // Body scroll lock (Mobile)
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : '';
   }, [menuOpen]);
 
+  // HOME → echter Reload
   const handleHomeClick = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    setMenuOpen(false);
+    window.location.href = '/';
   };
 
   return (
     <>
-      {/* Header */}
+      {/* HEADER */}
       <div
         className={`fixed top-4 left-0 w-full z-50 transition-all duration-300 ${
           menuOpen ? 'bg-neutral-800/50 backdrop-blur-md' : ''
@@ -48,7 +49,7 @@ const FixedHeader = () => {
             px-3 sm:px-0
           `}
         >
-          {/* Logo + Name */}
+          {/* LOGO */}
           <div className="flex items-center gap-3 pl-3 sm:pl-0">
             <Image
               src="/astroplays.PNG"
@@ -63,19 +64,33 @@ const FixedHeader = () => {
             </span>
           </div>
 
-          {/* Desktop Navigation */}
+          {/* DESKTOP NAV */}
           <nav className="hidden md:flex items-center gap-6 text-sm text-gray-300">
-            <button onClick={handleHomeClick} className="hover:text-white transition">{t('home')}</button>
+            <button
+              onClick={handleHomeClick}
+              className="
+                px-4 py-2 rounded-lg
+                bg-white/10 text-white
+                border border-white/20
+                hover:bg-white/20 transition
+              "
+            >
+              {t('home')}
+            </button>
+
             <a className="hover:text-white transition">{t('modules')}</a>
             <a className="hover:text-white transition">{t('support')}</a>
             <a className="hover:text-white transition">{t('dashboard')}</a>
 
-            <button onClick={toggleLanguage} className="hover:opacity-80 transition text-xl">
+            <button
+              onClick={toggleLanguage}
+              className="hover:opacity-80 transition text-xl"
+            >
               {language === 'de' ? '🇩🇪' : '🇬🇧'}
             </button>
           </nav>
 
-          {/* Hamburger Mobile */}
+          {/* MOBILE MENU BUTTON */}
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setMenuOpen(!menuOpen)}
@@ -87,32 +102,35 @@ const FixedHeader = () => {
         </div>
       </div>
 
-      {/* Mobile Menu Overlay */}
+      {/* MOBILE OVERLAY */}
       <div
         className={`
-          fixed top-0 right-0 h-full w-3/4 max-w-xs sm:max-w-sm bg-neutral-900 text-white p-6
-          transform transition-transform duration-300 ease-in-out z-50 md:hidden
+          fixed top-0 right-0 h-full w-3/4 max-w-xs bg-neutral-900
+          text-white p-6 transform transition-transform duration-300 z-50 md:hidden
           ${menuOpen ? 'translate-x-0' : 'translate-x-full'}
         `}
       >
         <button onClick={() => setMenuOpen(false)} className="mb-6 text-2xl">
           <HiX />
         </button>
+
         <ul className="flex flex-col gap-4 text-lg">
           <li>
-            <button onClick={handleHomeClick} className="hover:text-gray-300">{t('home')}</button>
+            <button
+              onClick={handleHomeClick}
+              className="px-4 py-2 rounded-lg bg-white/10 border border-white/20"
+            >
+              {t('home')}
+            </button>
           </li>
+          <li><a className="hover:text-gray-300">{t('modules')}</a></li>
+          <li><a className="hover:text-gray-300">{t('support')}</a></li>
+          <li><a className="hover:text-gray-300">{t('dashboard')}</a></li>
           <li>
-            <a href="#" className="hover:text-gray-300">{t('modules')}</a>
-          </li>
-          <li>
-            <a href="#" className="hover:text-gray-300">{t('support')}</a>
-          </li>
-          <li>
-            <a href="#" className="hover:text-gray-300">{t('dashboard')}</a>
-          </li>
-          <li>
-            <button onClick={toggleLanguage} className="hover:text-gray-300 text-xl mt-4">
+            <button
+              onClick={toggleLanguage}
+              className="hover:text-gray-300 text-xl mt-4"
+            >
               {language === 'de' ? '🇩🇪' : '🇬🇧'}
             </button>
           </li>
