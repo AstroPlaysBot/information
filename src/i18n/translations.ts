@@ -9,8 +9,21 @@ export const translations = {
     home: {
       title: 'Play, Manage, Level Up.',
       description:
-        'AstroPlays hilft dir dabei, deinen Discord-Server zu organisieren und zu verwalten.',
-      featuresLink: 'Zu Funktionen →',
+        'AstroPlays hilft dir dabei, deinen Discord-Server zu organisieren, zu verwalten und auf das nächste Level zu bringen – alles an einem Ort.',
+      conceptButton: 'Zum Konzept',
+      featuresLink: 'Funktionen entdecken →',
+      module1: {
+        title: 'Modul 1',
+        text: 'Text für Modul 1',
+      },
+      module2: {
+        title: 'Modul 2',
+        text: 'Text für Modul 2',
+      },
+      support: {
+        title: 'Support',
+        text: 'Hier kommt dein Support-Text rein.',
+      },
     },
     concept: {
       hero: {
@@ -65,10 +78,23 @@ export const translations = {
       dashboard: 'Dashboard',
     },
     home: {
-      title: 'Play, Manage, Level Up.',
+      title: 'Play, Manage,\nLevel Up.',
       description:
-        'AstroPlays helps you organize and manage your Discord server.',
-      featuresLink: 'Go to features →',
+        'AstroPlays helps you organize and manage your Discord server and take it to the next level – all in one place.',
+      conceptButton: 'To Concept',
+      featuresLink: 'Discover features →',
+      module1: {
+        title: 'Module 1',
+        text: 'Text for Module 1',
+      },
+      module2: {
+        title: 'Module 2',
+        text: 'Text for Module 2',
+      },
+      support: {
+        title: 'Support',
+        text: 'Here goes your support text.',
+      },
     },
     concept: {
       hero: {
@@ -125,7 +151,14 @@ export type TranslationKeys =
   | 'nav.dashboard'
   | 'home.title'
   | 'home.description'
+  | 'home.conceptButton'
   | 'home.featuresLink'
+  | 'home.module1.title'
+  | 'home.module1.text'
+  | 'home.module2.title'
+  | 'home.module2.text'
+  | 'home.support.title'
+  | 'home.support.text'
   | 'concept.hero.title'
   | 'concept.hero.subtitle'
   | 'concept.astro.title'
