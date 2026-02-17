@@ -5,10 +5,15 @@ import { translations } from '../i18n/translations';
 
 type Language = 'de' | 'en';
 
-// Alle gültigen Keys automatisch ableiten
-type TranslationObject = typeof translations.de;
-
-type TranslationKeys = keyof TranslationObject;
+// 🔹 Alle erlaubten Keys definieren (verschachtelt)
+export type TranslationKeys =
+  | 'nav.home'
+  | 'nav.modules'
+  | 'nav.support'
+  | 'nav.dashboard'
+  | 'home.title'
+  | 'home.description'
+  | 'home.featuresLink';
 
 interface LanguageContextProps {
   language: Language;
@@ -41,8 +46,12 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
     setLanguage((prev) => (prev === 'de' ? 'en' : 'de'));
   };
 
-  const t = (key: TranslationKeys) => {
-    return translations[language][key] ?? translations.de[key];
+  // 🔹 t() unterstützt jetzt verschachtelte Keys wie "nav.modules"
+  const t = (key: TranslationKeys): string => {
+    const [section, subkey] = key.split('.') as [keyof typeof translations.de, string];
+    return translations[language][section][
+      subkey as keyof typeof translations.de[typeof section]
+    ] as string;
   };
 
   return (
