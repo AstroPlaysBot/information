@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useLanguage } from '../src/context/LanguageContext.tsx';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function ConceptPage() {
   const { t } = useLanguage();
