@@ -29,3 +29,12 @@ export const translations = {
   },
 } as const;
 
+// ✅ Typen für alle Keys
+export type TranslationKeys =
+  | 'nav.home'
+  | 'nav.modules'
+  | 'nav.support'
+  | 'nav.dashboard'
+  | 'home.title'
+  | 'home.description'
+  | 'home.featuresLink';
