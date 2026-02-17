@@ -30,7 +30,7 @@ export default function HomePage() {
           </a>
 
           <a
-            href="#features"
+            href="/features"
             className="text-white font-medium hover:underline"
           >
             Funktionen entdecken →
