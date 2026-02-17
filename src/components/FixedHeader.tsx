@@ -27,7 +27,9 @@ const FixedHeader = () => {
   return (
     <>
       {/* HEADER */}
-      <div className={`fixed top-4 left-0 w-full z-50 px-3 sm:px-0 transition-all duration-300`}>
+      <div
+        className={`fixed top-4 left-0 w-full z-50 px-3 sm:px-0 transition-all duration-300`}
+      >
         <div
           className={`
             mx-auto max-w-[1600px]
@@ -63,12 +65,12 @@ const FixedHeader = () => {
               onClick={handleHomeClick}
               className="px-4 py-2 rounded-lg bg-white/10 text-white border border-white/20 hover:bg-white/20 transition"
             >
-              {t('nav.home')}
+              {t('home')}
             </button>
 
-            <a className="hover:text-white transition">{t('nav.modules')}</a>
-            <a className="hover:text-white transition">{t('nav.support')}</a>
-            <a className="hover:text-white transition">{t('nav.dashboard')}</a>
+            <a className="hover:text-white transition">{t('modules')}</a>
+            <a className="hover:text-white transition">{t('support')}</a>
+            <a className="hover:text-white transition">{t('dashboard')}</a>
 
             <button
               onClick={toggleLanguage}
@@ -108,12 +110,12 @@ const FixedHeader = () => {
               onClick={handleHomeClick}
               className="px-4 py-2 rounded-lg bg-white/10 border border-white/20"
             >
-              {t('nav.home')}
+              {t('home')}
             </button>
           </li>
-          <li><a className="hover:text-gray-300">{t('nav.modules')}</a></li>
-          <li><a className="hover:text-gray-300">{t('nav.support')}</a></li>
-          <li><a className="hover:text-gray-300">{t('nav.dashboard')}</a></li>
+          <li><a className="hover:text-gray-300">{t('modules')}</a></li>
+          <li><a className="hover:text-gray-300">{t('support')}</a></li>
+          <li><a className="hover:text-gray-300">{t('dashboard')}</a></li>
           <li>
             <button
               onClick={toggleLanguage}
@@ -129,3 +131,4 @@ const FixedHeader = () => {
 };
 
 export default FixedHeader;
+
