@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { useLanguage } from '../context/LanguageContext';
 import { HiMenu, HiX } from 'react-icons/hi';
 
 const FixedHeader = () => {
