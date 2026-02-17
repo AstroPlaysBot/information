@@ -37,18 +37,6 @@ export default function HomePage() {
           </a>
         </div>
       </section>
-
-      {/* MODULARE SECTIONS */}
-      <section className="max-w-5xl mx-auto py-16 px-4 text-gray-300">
-        <h2 className="text-2xl font-semibold mb-4">Modul 1</h2>
-        <p className="mb-8">Text für Modul 1</p>
-
-        <h2 className="text-2xl font-semibold mb-4">Modul 2</h2>
-        <p>Text für Modul 2</p>
-
-        <h2 className="text-2xl font-semibold mb-4">Support</h2>
-        <p>Hier kommt dein Support-Text rein.</p>
-      </section>
     </>
   );
 }
