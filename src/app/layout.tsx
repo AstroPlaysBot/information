@@ -2,7 +2,6 @@ import '../styles/globals.css';
 import { ReactNode } from 'react';
 import FixedHeader from '../components/FixedHeader';
 import FixedFooter from '../components/FixedFooter';
-import { LanguageProvider } from '../context/LanguageContext';
 import Background from '../components/Background';
 
 export const metadata = {
@@ -17,15 +16,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {/* GLOBALER HINTERGRUND */}
         <Background />
 
-        <LanguageProvider>
-          <FixedHeader />
+        <FixedHeader />
 
-          <main className="pt-28 px-6 flex-1">
-            {children}
-          </main>
+        <main className="pt-28 px-6 flex-1">
+          {children}
+        </main>
 
-          <FixedFooter />
-        </LanguageProvider>
+        <FixedFooter />
       </body>
     </html>
   );
