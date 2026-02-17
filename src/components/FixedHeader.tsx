@@ -7,7 +7,6 @@ import { HiMenu, HiX } from 'react-icons/hi';
 const FixedHeader = () => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const { language, toggleLanguage, t } = useLanguage();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -26,9 +25,7 @@ const FixedHeader = () => {
   return (
     <>
       {/* HEADER */}
-      <div
-        className={`fixed top-4 left-0 w-full z-50 px-3 sm:px-0 transition-all duration-300`}
-      >
+      <div className="fixed top-4 left-0 w-full z-50 px-3 sm:px-0 transition-all duration-300">
         <div
           className={`
             mx-auto max-w-[1600px]
@@ -64,19 +61,11 @@ const FixedHeader = () => {
               onClick={handleHomeClick}
               className="px-4 py-2 rounded-lg bg-white/10 text-white border border-white/20 hover:bg-white/20 transition"
             >
-              {t('home')}
+              Home
             </button>
-
-            <a className="hover:text-white transition">{t('modules')}</a>
-            <a className="hover:text-white transition">{t('support')}</a>
-            <a className="hover:text-white transition">{t('dashboard')}</a>
-
-            <button
-              onClick={toggleLanguage}
-              className="hover:opacity-80 transition text-xl"
-            >
-              {language === 'de' ? '🇩🇪' : '🇬🇧'}
-            </button>
+            <a className="hover:text-white transition">Module</a>
+            <a className="hover:text-white transition">Support</a>
+            <a className="hover:text-white transition">Dashboard</a>
           </nav>
 
           {/* MOBILE MENU BUTTON */}
@@ -109,20 +98,12 @@ const FixedHeader = () => {
               onClick={handleHomeClick}
               className="px-4 py-2 rounded-lg bg-white/10 border border-white/20"
             >
-              {t('home')}
+              Home
             </button>
           </li>
-          <li><a className="hover:text-gray-300">{t('modules')}</a></li>
-          <li><a className="hover:text-gray-300">{t('support')}</a></li>
-          <li><a className="hover:text-gray-300">{t('dashboard')}</a></li>
-          <li>
-            <button
-              onClick={toggleLanguage}
-              className="hover:text-gray-300 text-xl mt-4"
-            >
-              {language === 'de' ? '🇩🇪' : '🇬🇧'}
-            </button>
-          </li>
+          <li><a className="hover:text-gray-300">Module</a></li>
+          <li><a className="hover:text-gray-300">Support</a></li>
+          <li><a className="hover:text-gray-300">Dashboard</a></li>
         </ul>
       </div>
     </>
@@ -130,4 +111,3 @@ const FixedHeader = () => {
 };
 
 export default FixedHeader;
-
