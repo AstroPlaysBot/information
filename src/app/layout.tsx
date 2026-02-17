@@ -14,10 +14,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="de" className="min-h-screen">
       <body className="bg-neutral-950 flex flex-col min-h-screen text-white">
-        <LanguageProvider>
-          {/* GLOBALER HINTERGRUND */}
-          <Background />
+        {/* GLOBALER HINTERGRUND */}
+        <Background />
 
+        <LanguageProvider>
           <FixedHeader />
 
           <main className="pt-28 px-6 flex-1">
