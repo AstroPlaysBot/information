@@ -71,7 +71,7 @@ export default function ConceptPage() {
 
         <p className="mt-8 text-lg font-semibold text-green-400">
           PLAYS sorgt dafür, dass Mitglieder bleiben.<br />
-          Nicht wegen Regeln – sondern weil es Bock macht.
+          Nicht wegen Regeln – sondern weil es Spaß macht.
         </p>
       </section>
 
