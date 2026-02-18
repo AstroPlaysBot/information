@@ -22,6 +22,8 @@ const FixedHeader = () => {
     window.location.href = '/';
   };
 
+  const closeMenu = () => setMenuOpen(false);
+
   return (
     <>
       {/* HEADER */}
@@ -65,7 +67,7 @@ const FixedHeader = () => {
             </button>
             <a className="hover:text-white transition">Module</a>
             <a className="hover:text-white transition">Support</a>
-            <a className="hover:text-white transition">Dashboard</a>
+            <a className="hover:text-white transition">Einloggen</a>
           </nav>
 
           {/* MOBILE MENU BUTTON */}
@@ -81,31 +83,39 @@ const FixedHeader = () => {
       </div>
 
       {/* MOBILE OVERLAY */}
-      <div
-        className={`
-          fixed top-0 right-0 h-full w-3/4 max-w-xs bg-neutral-900
-          text-white p-6 transform transition-transform duration-300 z-50 md:hidden
-          ${menuOpen ? 'translate-x-0' : 'translate-x-full'}
-        `}
-      >
-        <button onClick={() => setMenuOpen(false)} className="mb-6 text-2xl">
-          <HiX />
-        </button>
+      {menuOpen && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={closeMenu}
+        >
+          {/* Hintergrund, klickbar um Menü zu schließen */}
+          <div className="absolute inset-0 bg-black/50"></div>
 
-        <ul className="flex flex-col gap-4 text-lg">
-          <li>
-            <button
-              onClick={handleHomeClick}
-              className="px-4 py-2 rounded-lg bg-white/10 border border-white/20"
-            >
-              Home
+          {/* Slide-in Menu */}
+          <div
+            className="absolute top-0 right-0 h-full w-3/4 max-w-xs bg-neutral-900 text-white p-6 transform transition-transform duration-300"
+            onClick={(e) => e.stopPropagation()} // verhindert dass Klick auf Menü selbst es schließt
+          >
+            <button onClick={closeMenu} className="mb-6 text-2xl">
+              <HiX />
             </button>
-          </li>
-          <li><a className="hover:text-gray-300">Module</a></li>
-          <li><a className="hover:text-gray-300">Support</a></li>
-          <li><a className="hover:text-gray-300">Dashboard</a></li>
-        </ul>
-      </div>
+
+            <ul className="flex flex-col gap-4 text-lg">
+              <li>
+                <button
+                  onClick={() => { handleHomeClick(); closeMenu(); }}
+                  className="px-4 py-2 rounded-lg bg-white/10 border border-white/20"
+                >
+                  Home
+                </button>
+              </li>
+              <li><a className="hover:text-gray-300">Module</a></li>
+              <li><a className="hover:text-gray-300">Support</a></li>
+              <li><a className="hover:text-gray-300">Einloggen</a></li>
+            </ul>
+          </div>
+        </div>
+      )}
     </>
   );
 };
