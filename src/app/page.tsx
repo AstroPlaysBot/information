@@ -8,7 +8,6 @@ import shieldImg from '../public/shield.png';
 import starImg from '../public/star.png';
 import boostImg from '../public/boost.png';
 import streamImg from '../public/stream.png';
-import autoRolesImg from '../public/autoroles.png';
 
 export default function HomePage() {
   const modules = [
