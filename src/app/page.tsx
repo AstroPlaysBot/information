@@ -91,7 +91,7 @@ export default function HomePage() {
             {/* Hintergrundbild */}
             <div
               className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-10 w-64 h-64 bg-contain bg-no-repeat pointer-events-none"
-              style={{ backgroundImage: `url(${group.bgImage.src})` }}
+              style={{ backgroundImage: `url(${group.bgImage})` }}
             ></div>
 
             {/* Module Cards */}
