@@ -3,17 +3,11 @@
 import React from 'react';
 import Background from '../components/Background';
 
-// Beispiel-Icons (du kannst später eigene Bilder/Icons einfügen)
-import shieldImg from '../public/shield.PNG';
-import starImg from '../public/star.PNG';
-import boostImg from '../public/boost.PNG';
-import streamImg from '../public/stream.PNG';
-
 export default function HomePage() {
   const modules = [
     {
       group: 'AstroBasics',
-      bgImage: boostImg, // oder anderes Bild
+      bgImage: '/boost.PNG',
       items: [
         { name: 'AstroAutoRoles', info: 'Automatisches Rollenmanagement' },
         { name: 'AstroBoost', info: 'Boost-Funktionen für deinen Server' },
@@ -26,7 +20,7 @@ export default function HomePage() {
     },
     {
       group: 'AstroProtect',
-      bgImage: shieldImg,
+      bgImage: '/shield.PNG',
       items: [
         { name: 'AstroLogs', info: 'Server Logs einsehen' },
         { name: 'AstroLock', info: 'Kanäle sperren' },
@@ -37,14 +31,14 @@ export default function HomePage() {
     },
     {
       group: 'AstroStar (Premium)',
-      bgImage: starImg,
+      bgImage: '/star.PNG',
       items: [
         { name: 'AstroTickets+', info: 'Premium Ticketsystem' },
       ],
     },
     {
       group: 'AstroStreams',
-      bgImage: streamImg,
+      bgImage: '/stream.PNG',
       items: [
         { name: 'Kommt noch...', info: 'Streaming-Features in Arbeit' },
       ],
