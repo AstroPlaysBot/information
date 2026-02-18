@@ -4,10 +4,10 @@ import React from 'react';
 import Background from '../components/Background';
 
 // Beispiel-Icons (du kannst später eigene Bilder/Icons einfügen)
-import shieldImg from '../public/shield.png';
-import starImg from '../public/star.png';
-import boostImg from '../public/boost.png';
-import streamImg from '../public/stream.png';
+import shieldImg from '../public/shield.PNG';
+import starImg from '../public/star.PNG';
+import boostImg from '../public/boost.PNG';
+import streamImg from '../public/stream.PNG';
 
 export default function HomePage() {
   const modules = [
