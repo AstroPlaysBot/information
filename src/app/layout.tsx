@@ -6,12 +6,13 @@ import FixedFooter from '../components/FixedFooter';
 export const metadata = {
   title: 'AstroPlays Discord Bot',
   description: 'Website für den Discord Bot AstroPlays',
+  viewport: 'width=device-width, initial-scale=1, viewport-fit=cover',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="de">
-      <body className="relative min-h-screen flex flex-col text-white">
+      <body className="relative flex flex-col text-white">
         {/* 🌌 GLOBALER CSS-HINTERGRUND */}
         <div className="bg-space pointer-events-none" />
 
