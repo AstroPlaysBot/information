@@ -2,12 +2,65 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Sterne-Hintergrund */
-.bg-stars {
+/* 🌌 Basis-Hintergrund */
+.bg-space {
+  position: fixed;
+  inset: 0;
+  z-index: -50;
+  background: radial-gradient(circle at bottom, #0b1026, #020617);
+  overflow: hidden;
+}
+
+/* ⭐ Sterne Layer */
+.bg-space::before,
+.bg-space::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-repeat: repeat;
+  background-size: 300px 300px;
+  animation: stars-move 120s linear infinite;
+}
+
+/* Kleine Sterne */
+.bg-space::before {
   background-image:
     radial-gradient(1px 1px at 20% 30%, white, transparent),
     radial-gradient(1px 1px at 80% 20%, white, transparent),
     radial-gradient(1px 1px at 40% 70%, white, transparent),
     radial-gradient(1px 1px at 60% 90%, white, transparent),
     radial-gradient(1px 1px at 10% 80%, white, transparent);
+  opacity: 0.8;
+}
+
+/* Größere, seltenere Sterne */
+.bg-space::after {
+  background-image:
+    radial-gradient(2px 2px at 15% 25%, #c7d2fe, transparent),
+    radial-gradient(2px 2px at 70% 40%, #e0e7ff, transparent),
+    radial-gradient(2px 2px at 50% 85%, #c7d2fe, transparent);
+  background-size: 500px 500px;
+  animation-duration: 180s;
+  opacity: 0.6;
+}
+
+/* ✨ Sanfte Bewegung */
+@keyframes stars-move {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-1000px);
+  }
+}
+
+/* 📱 Mobile Optimierung */
+@media (max-width: 640px) {
+  .bg-space::before {
+    background-size: 200px 200px;
+  }
+
+  .bg-space::after {
+    background-size: 350px 350px;
+  }
 }
