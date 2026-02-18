@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fetch from 'node-fetch';
 
 const CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!;
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET!;
