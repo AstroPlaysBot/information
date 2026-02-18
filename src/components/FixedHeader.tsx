@@ -3,10 +3,12 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { HiMenu, HiX } from 'react-icons/hi';
+import { useRouter } from 'next/navigation';
 
 const FixedHeader = () => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -18,30 +20,29 @@ const FixedHeader = () => {
     document.body.style.overflow = menuOpen ? 'hidden' : '';
   }, [menuOpen]);
 
-  const handleHomeClick = () => {
-    window.location.href = '/';
+  const handleHomeClick = () => router.push('/');
+  const handleLoginClick = () => {
+    router.push('/login'); // Weiterleitung auf Login-Seite
+    setMenuOpen(false);    // Menü schließen, falls offen
   };
-
   const closeMenu = () => setMenuOpen(false);
 
   return (
     <>
       {/* HEADER */}
-      <div className="fixed top-4 left-0 w-full z-50 px-3 sm:px-0 transition-all duration-300">
-        <div
-          className={`
-            mx-auto max-w-[1600px]
-            h-16 md:h-18
-            md:px-8
-            flex items-center justify-between
-            rounded-2xl
-            bg-neutral-800/70 border border-white/10
-            backdrop-blur-md backdrop-brightness-110 backdrop-saturate-120
-            transition-all duration-300 ease-out
-            px-3 sm:px-0
-            ${scrolled && !menuOpen ? 'shadow-xl scale-[1.02] backdrop-blur-lg' : ''}
-          `}
-        >
+      <div className={`fixed top-4 left-0 w-full px-3 sm:px-0 transition-all duration-300 ${menuOpen ? 'z-30' : 'z-50'}`}>
+        <div className={`
+          mx-auto max-w-[1600px]
+          h-16 md:h-18
+          md:px-8
+          flex items-center justify-between
+          rounded-2xl
+          bg-neutral-800/70 border border-white/10
+          backdrop-blur-md backdrop-brightness-110 backdrop-saturate-120
+          transition-all duration-300 ease-out
+          px-3 sm:px-0
+          ${scrolled && !menuOpen ? 'shadow-xl scale-[1.02] backdrop-blur-lg' : ''}
+        `}>
           {/* LOGO */}
           <div className="flex items-center gap-3 pl-3 sm:pl-0">
             <Image
@@ -59,15 +60,17 @@ const FixedHeader = () => {
 
           {/* DESKTOP NAV */}
           <nav className="hidden md:flex items-center gap-6 text-sm text-gray-300">
-            <button
-              onClick={handleHomeClick}
-              className="px-4 py-2 rounded-lg bg-white/10 text-white border border-white/20 hover:bg-white/20 transition"
-            >
+            <button onClick={handleHomeClick} className="px-4 py-2 rounded-lg bg-white/10 text-white border border-white/20 hover:bg-white/20 transition">
               Home
             </button>
             <a className="hover:text-white transition">Module</a>
             <a className="hover:text-white transition">Support</a>
-            <a className="hover:text-white transition">Einloggen</a>
+            <button
+              onClick={handleLoginClick}
+              className="px-4 py-2 rounded-lg bg-white/10 text-white border border-white/20 hover:bg-white/20 transition"
+            >
+              Einloggen
+            </button>
           </nav>
 
           {/* MOBILE MENU BUTTON */}
@@ -84,10 +87,7 @@ const FixedHeader = () => {
 
       {/* MOBILE OVERLAY */}
       {menuOpen && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={closeMenu}
-        >
+        <div className="fixed inset-0 z-40" onClick={closeMenu}>
           {/* Hintergrund, klickbar um Menü zu schließen */}
           <div className="absolute inset-0 bg-black/50"></div>
 
@@ -102,16 +102,17 @@ const FixedHeader = () => {
 
             <ul className="flex flex-col gap-4 text-lg">
               <li>
-                <button
-                  onClick={() => { handleHomeClick(); closeMenu(); }}
-                  className="px-4 py-2 rounded-lg bg-white/10 border border-white/20"
-                >
+                <button onClick={() => { handleHomeClick(); closeMenu(); }} className="px-4 py-2 rounded-lg bg-white/10 border border-white/20">
                   Home
                 </button>
               </li>
               <li><a className="hover:text-gray-300">Module</a></li>
               <li><a className="hover:text-gray-300">Support</a></li>
-              <li><a className="hover:text-gray-300">Einloggen</a></li>
+              <li>
+                <button onClick={handleLoginClick} className="px-4 py-2 rounded-lg bg-white/10 border border-white/20">
+                  Einloggen
+                </button>
+              </li>
             </ul>
           </div>
         </div>
