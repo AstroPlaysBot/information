@@ -11,14 +11,14 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="de" className="min-h-screen">
-      <body className="bg-neutral-950 flex flex-col min-h-screen text-white">
-        {/* GLOBALER HINTERGRUND */}
+    <html lang="de" className="h-full">
+      <body className="relative min-h-screen flex flex-col text-white">
+        {/* 🌌 GLOBALER BACKGROUND */}
         <Background />
 
         <FixedHeader />
 
-        <main className="pt-28 px-6 flex-1">
+        <main className="relative z-10 pt-28 px-6 flex-1">
           {children}
         </main>
 
