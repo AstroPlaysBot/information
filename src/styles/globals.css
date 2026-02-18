@@ -2,7 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 🌌 Basis-Hintergrund */
+/* =====================================================
+   ✅ GLOBAL FIX (wichtig für Mobile – kein weißer Balken)
+   ===================================================== */
+html,
+body {
+  background-color: #020617; /* exakt wie Space-Hintergrund */
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+/* =====================================================
+   🌌 SPACE BACKGROUND (global & fixed)
+   ===================================================== */
 .bg-space {
   position: fixed;
   inset: 0;
@@ -11,7 +23,7 @@
   overflow: hidden;
 }
 
-/* ⭐ Sterne Layer */
+/* ⭐ Sterne-Layer */
 .bg-space::before,
 .bg-space::after {
   content: '';
@@ -19,7 +31,7 @@
   inset: 0;
   background-repeat: repeat;
   background-size: 300px 300px;
-  animation: stars-move 120s linear infinite;
+  animation: stars-move linear infinite;
 }
 
 /* Kleine Sterne */
@@ -31,6 +43,7 @@
     radial-gradient(1px 1px at 60% 90%, white, transparent),
     radial-gradient(1px 1px at 10% 80%, white, transparent);
   opacity: 0.8;
+  animation-duration: 120s;
 }
 
 /* Größere, seltenere Sterne */
