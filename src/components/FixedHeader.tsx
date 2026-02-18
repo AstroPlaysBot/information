@@ -10,12 +10,14 @@ const FixedHeader = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
 
+  // Scroll-Effekt für Schatten/Scale
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener('scroll', onScroll);
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  // Body Overflow verhindern, wenn Mobile Menü offen ist
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : '';
   }, [menuOpen]);
@@ -26,10 +28,22 @@ const FixedHeader = () => {
     setMenuOpen(false);
   };
 
+  // Module Scroll-Funktion
   const handleModuleClick = () => {
-    const section = document.querySelector('#astro-moderation');
-    if (section) {
-      section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (window.location.pathname !== '/') {
+      // Wenn man nicht auf Startseite, zuerst navigieren
+      router.push('/', undefined, { shallow: true });
+      setTimeout(() => {
+        const section = document.querySelector('#astro-moderation');
+        if (section) {
+          section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100); // kleine Verzögerung bis Seite geladen
+    } else {
+      const section = document.querySelector('#astro-moderation');
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
     }
     setMenuOpen(false);
   };
@@ -88,21 +102,29 @@ const FixedHeader = () => {
       {/* MOBILE OVERLAY */}
       {menuOpen && (
         <div className="fixed inset-0 z-40" onClick={closeMenu}>
+          {/* Hintergrund klickbar */}
           <div className="absolute inset-0 bg-black/50"></div>
 
+          {/* Slide-in Menü */}
           <div
             className="absolute top-0 right-0 h-full w-3/4 max-w-xs bg-neutral-900 text-white p-6 transform transition-transform duration-300"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()} // verhindert dass Klick auf Menü selbst es schließt
           >
             <button onClick={closeMenu} className="mb-6 text-2xl">
               <HiX />
             </button>
 
             <ul className="flex flex-col gap-4 text-lg">
-              <li><button onClick={() => { handleHomeClick(); closeMenu(); }} className="hover:text-gray-300">Home</button></li>
-              <li><button onClick={() => { handleModuleClick(); closeMenu(); }} className="hover:text-gray-300">Module</button></li>
+              <li>
+                <button onClick={() => { handleHomeClick(); closeMenu(); }} className="hover:text-gray-300">Home</button>
+              </li>
+              <li>
+                <button onClick={() => { handleModuleClick(); closeMenu(); }} className="hover:text-gray-300">Module</button>
+              </li>
               <li><a className="hover:text-gray-300">Support</a></li>
-              <li><button onClick={() => { handleLoginClick(); closeMenu(); }} className="hover:text-gray-300">Einloggen</button></li>
+              <li>
+                <button onClick={() => { handleLoginClick(); closeMenu(); }} className="hover:text-gray-300">Einloggen</button>
+              </li>
             </ul>
           </div>
         </div>
