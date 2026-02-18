@@ -6,7 +6,7 @@ import Background from '../components/Background';
 export default function HomePage() {
   const modules = [
     {
-      group: 'Basic',
+      group: 'AstroModeration',
       items: [
         { name: 'AstroAutoRoles', info: 'Automatisches Rollenmanagement' },
         { name: 'AstroBoost', info: 'Boost-Funktionen für deinen Server' },
@@ -18,7 +18,7 @@ export default function HomePage() {
       ],
     },
     {
-      group: 'Protect',
+      group: 'AstroProtect',
       items: [
         { name: 'AstroLogs', info: 'Server Logs einsehen' },
         { name: 'AstroLock', info: 'Kanäle sperren' },
@@ -28,25 +28,33 @@ export default function HomePage() {
       ],
     },
     {
-      group: 'Premium',
+      group: 'AstroStreaming',
       items: [
-        { name: 'AstroTickets+', info: 'Premium Ticketsystem' },
+        { name: 'Kommt noch...', info: 'Streaming-Features in Arbeit' },
       ],
     },
     {
-      group: 'Streams',
+      group: 'AstroPLAYS',
       items: [
-        { name: 'Kommt noch...', info: 'Streaming-Features in Arbeit' },
+        { name: 'Minecraft', info: 'Whitelist System' },
+        { name: 'GTA V', info: 'Economy System' },
+        { name: 'Fortnite', info: 'Shop & Game Updates' },
+      ],
+    },
+    {
+      group: 'Premium Features',
+      items: [
+        { name: 'AstroTickets+', info: 'Premium Ticketsystem' },
       ],
     },
   ];
 
   return (
-    <>
+    <div className="overflow-x-hidden">
       <Background />
 
       {/* HERO SECTION */}
-      <section className="relative flex flex-col items-start justify-center min-h-[80vh] px-8 max-w-7xl mx-auto">
+      <section className="relative flex flex-col items-start justify-center min-h-screen px-8 max-w-7xl mx-auto">
         <h1 className="text-white text-5xl md:text-7xl font-extrabold leading-tight mb-6">
           Play, Manage,<br />Level Up.
         </h1>
@@ -124,6 +132,6 @@ export default function HomePage() {
           background-size: 200% 200%;
         }
       `}</style>
-    </>
+    </div>
   );
 }
