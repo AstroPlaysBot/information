@@ -22,9 +22,18 @@ const FixedHeader = () => {
 
   const handleHomeClick = () => router.push('/');
   const handleLoginClick = () => {
-    router.push('/login'); // Weiterleitung auf Login-Seite
-    setMenuOpen(false);    // Menü schließen, falls offen
+    router.push('/login');
+    setMenuOpen(false);
   };
+
+  const handleModuleClick = () => {
+    const section = document.querySelector('#astro-moderation');
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    setMenuOpen(false);
+  };
+
   const closeMenu = () => setMenuOpen(false);
 
   return (
@@ -44,7 +53,7 @@ const FixedHeader = () => {
           ${scrolled && !menuOpen ? 'shadow-xl scale-[1.02] backdrop-blur-lg' : ''}
         `}>
           {/* LOGO */}
-          <div className="flex items-center gap-3 pl-3 sm:pl-0">
+          <div className="flex items-center gap-3 pl-3 sm:pl-0 cursor-pointer" onClick={handleHomeClick}>
             <Image
               src="/astroplays.PNG"
               alt="AstroPlays Logo"
@@ -53,24 +62,15 @@ const FixedHeader = () => {
               className="rounded-md"
               priority
             />
-            <span className="text-white font-semibold text-lg sm:text-2xl">
-              AstroPlaysBot
-            </span>
+            <span className="text-white font-semibold text-lg sm:text-2xl">AstroPlaysBot</span>
           </div>
 
           {/* DESKTOP NAV */}
           <nav className="hidden md:flex items-center gap-6 text-sm text-gray-300">
-            <button onClick={handleHomeClick} className="px-4 py-2 rounded-lg bg-white/10 text-white border border-white/20 hover:bg-white/20 transition">
-              Home
-            </button>
-            <a className="hover:text-white transition">Module</a>
-            <a className="hover:text-white transition">Support</a>
-            <button
-              onClick={handleLoginClick}
-              className="px-4 py-2 rounded-lg bg-white/10 text-white border border-white/20 hover:bg-white/20 transition"
-            >
-              Einloggen
-            </button>
+            <button onClick={handleHomeClick} className="hover:text-white transition">Home</button>
+            <button onClick={handleModuleClick} className="hover:text-white transition">Module</button>
+            <a href="#support" className="hover:text-white transition">Support</a>
+            <button onClick={handleLoginClick} className="hover:text-white transition">Einloggen</button>
           </nav>
 
           {/* MOBILE MENU BUTTON */}
@@ -88,31 +88,21 @@ const FixedHeader = () => {
       {/* MOBILE OVERLAY */}
       {menuOpen && (
         <div className="fixed inset-0 z-40" onClick={closeMenu}>
-          {/* Hintergrund, klickbar um Menü zu schließen */}
           <div className="absolute inset-0 bg-black/50"></div>
 
-          {/* Slide-in Menu */}
           <div
             className="absolute top-0 right-0 h-full w-3/4 max-w-xs bg-neutral-900 text-white p-6 transform transition-transform duration-300"
-            onClick={(e) => e.stopPropagation()} // verhindert dass Klick auf Menü selbst es schließt
+            onClick={(e) => e.stopPropagation()}
           >
             <button onClick={closeMenu} className="mb-6 text-2xl">
               <HiX />
             </button>
 
             <ul className="flex flex-col gap-4 text-lg">
-              <li>
-                <button onClick={() => { handleHomeClick(); closeMenu(); }} className="px-4 py-2 rounded-lg bg-white/10 border border-white/20">
-                  Home
-                </button>
-              </li>
-              <li><a className="hover:text-gray-300">Module</a></li>
+              <li><button onClick={() => { handleHomeClick(); closeMenu(); }} className="hover:text-gray-300">Home</button></li>
+              <li><button onClick={() => { handleModuleClick(); closeMenu(); }} className="hover:text-gray-300">Module</button></li>
               <li><a className="hover:text-gray-300">Support</a></li>
-              <li>
-                <button onClick={handleLoginClick} className="px-4 py-2 rounded-lg bg-white/10 border border-white/20">
-                  Einloggen
-                </button>
-              </li>
+              <li><button onClick={() => { handleLoginClick(); closeMenu(); }} className="hover:text-gray-300">Einloggen</button></li>
             </ul>
           </div>
         </div>
