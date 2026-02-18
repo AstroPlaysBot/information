@@ -2,7 +2,6 @@ import '../styles/globals.css';
 import { ReactNode } from 'react';
 import FixedHeader from '../components/FixedHeader';
 import FixedFooter from '../components/FixedFooter';
-import Background from '../components/Background';
 
 export const metadata = {
   title: 'AstroPlays Discord Bot',
@@ -11,10 +10,10 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="de" className="h-full">
+    <html lang="de">
       <body className="relative min-h-screen flex flex-col text-white">
-        {/* 🌌 GLOBALER BACKGROUND */}
-        <Background />
+        {/* 🌌 GLOBALER CSS-HINTERGRUND */}
+        <div className="bg-space pointer-events-none" />
 
         <FixedHeader />
 
@@ -22,7 +21,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           {children}
         </main>
 
-        <FixedFooter />
+        <div className="relative z-10">
+          <FixedFooter />
+        </div>
       </body>
     </html>
   );
