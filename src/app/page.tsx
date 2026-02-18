@@ -7,6 +7,7 @@ export default function HomePage() {
   const modules = [
     {
       group: 'AstroModeration',
+      id: 'astro-moderation', // <- ID für Scrollziel
       items: [
         { name: 'AstroAutoRoles', info: 'Automatisches Rollenmanagement' },
         { name: 'AstroBoost', info: 'Boost-Funktionen für deinen Server' },
@@ -86,13 +87,15 @@ export default function HomePage() {
       {/* MODULES SECTION */}
       <section className="relative px-8 max-w-7xl mx-auto space-y-32 mt-32">
         {modules.map((group) => (
-          <div key={group.group} className="relative flex flex-col items-center text-center">
-            {/* Gruppenüberschrift */}
+          <div
+            key={group.group}
+            id={group.id ? group.id : undefined} // <- ID setzen, falls vorhanden
+            className="relative flex flex-col items-center text-center"
+          >
             <h2 className="text-4xl font-extrabold text-white mb-12">
               {group.group}
             </h2>
 
-            {/* Module Cards */}
             <div
               className={`
                 grid gap-8 z-10 relative
@@ -106,10 +109,8 @@ export default function HomePage() {
                   key={mod.name}
                   className="relative overflow-hidden rounded-2xl p-6 shadow-xl transform transition hover:scale-105 hover:shadow-2xl"
                 >
-                  {/* Animated Gradient Glow */}
                   <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-30 blur-2xl animate-[gradientMove_8s_linear_infinite]"></div>
 
-                  {/* Content */}
                   <div className="relative">
                     <h3 className="text-xl font-semibold text-white mb-2">{mod.name}</h3>
                     <p className="text-gray-200 text-sm">{mod.info}</p>
@@ -121,7 +122,6 @@ export default function HomePage() {
         ))}
       </section>
 
-      {/* Custom Tailwind Animation */}
       <style jsx global>{`
         @keyframes gradientMove {
           0% { background-position: 0% 50%; }
