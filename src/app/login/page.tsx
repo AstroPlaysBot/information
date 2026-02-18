@@ -2,15 +2,30 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 
+const DISCORD_CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
+const REDIRECT_URI = encodeURIComponent(`${process.env.NEXT_PUBLIC_APP_URL}/dashboard`);
+const DISCORD_SCOPE = encodeURIComponent('identify guilds'); // ggf. weitere Scopes
+const DISCORD_RESPONSE_TYPE = 'code';
+
 export default function LoginPage() {
   const router = useRouter();
+
+  const handleDashboardLogin = () => {
+    // Discord OAuth2 URL
+    const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=${DISCORD_RESPONSE_TYPE}&scope=${DISCORD_SCOPE}`;
+    window.location.href = discordAuthUrl;
+  };
+
+  const handleAdminClick = () => {
+    router.push('/admin');
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
       <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-12">
         {/* Dashboard Card */}
         <div
-          onClick={() => router.push('/dashboard')}
+          onClick={handleDashboardLogin}
           className="relative cursor-pointer overflow-hidden rounded-2xl p-8 shadow-2xl bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-600 transition-transform transform hover:scale-105 hover:shadow-3xl"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-30 blur-3xl animate-[gradientMove_8s_linear_infinite]"></div>
@@ -24,7 +39,7 @@ export default function LoginPage() {
 
         {/* Admin Dashboard Card */}
         <div
-          onClick={() => router.push('/admin')}
+          onClick={handleAdminClick}
           className="relative cursor-pointer overflow-hidden rounded-2xl p-8 shadow-2xl bg-gradient-to-r from-green-600 via-teal-600 to-cyan-500 transition-transform transform hover:scale-105 hover:shadow-3xl"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-green-400 via-teal-400 to-cyan-400 opacity-30 blur-3xl animate-[gradientMove_8s_linear_infinite]"></div>
@@ -37,6 +52,7 @@ export default function LoginPage() {
         </div>
       </div>
 
+      {/* Gradient Animation */}
       <style jsx global>{`
         @keyframes gradientMove {
           0% { background-position: 0% 50%; }
