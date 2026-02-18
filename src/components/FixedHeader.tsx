@@ -28,23 +28,23 @@ const FixedHeader = () => {
     setMenuOpen(false);
   };
 
-  // Module Scroll-Funktion
+  // Module Scroll-Funktion, TS-kompatibel
   const handleModuleClick = () => {
-    if (window.location.pathname !== '/') {
-      // Wenn man nicht auf Startseite, zuerst navigieren
-      router.push('/', undefined, { shallow: true });
-      setTimeout(() => {
-        const section = document.querySelector('#astro-moderation');
-        if (section) {
-          section.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }, 100); // kleine Verzögerung bis Seite geladen
-    } else {
+    const scrollToModule = () => {
       const section = document.querySelector('#astro-moderation');
       if (section) {
         section.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
+    };
+
+    if (window.location.pathname !== '/') {
+      // Wenn man nicht auf Startseite, zuerst zur Home navigieren
+      router.push('/'); 
+      setTimeout(scrollToModule, 200); // kleine Verzögerung bis Home geladen ist
+    } else {
+      scrollToModule();
     }
+
     setMenuOpen(false);
   };
 
@@ -108,7 +108,7 @@ const FixedHeader = () => {
           {/* Slide-in Menü */}
           <div
             className="absolute top-0 right-0 h-full w-3/4 max-w-xs bg-neutral-900 text-white p-6 transform transition-transform duration-300"
-            onClick={(e) => e.stopPropagation()} // verhindert dass Klick auf Menü selbst es schließt
+            onClick={(e) => e.stopPropagation()} // verhindert, dass Klick auf Menü es schließt
           >
             <button onClick={closeMenu} className="mb-6 text-2xl">
               <HiX />
