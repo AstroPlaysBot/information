@@ -6,8 +6,7 @@ import Background from '../components/Background';
 export default function HomePage() {
   const modules = [
     {
-      group: 'AstroBasics',
-      bgImage: '/boost.PNG',
+      group: 'Basic',
       items: [
         { name: 'AstroAutoRoles', info: 'Automatisches Rollenmanagement' },
         { name: 'AstroBoost', info: 'Boost-Funktionen für deinen Server' },
@@ -19,8 +18,7 @@ export default function HomePage() {
       ],
     },
     {
-      group: 'AstroProtect',
-      bgImage: '/shield.PNG',
+      group: 'Protect',
       items: [
         { name: 'AstroLogs', info: 'Server Logs einsehen' },
         { name: 'AstroLock', info: 'Kanäle sperren' },
@@ -30,15 +28,13 @@ export default function HomePage() {
       ],
     },
     {
-      group: 'AstroStar (Premium)',
-      bgImage: '/star.PNG',
+      group: 'Premium',
       items: [
         { name: 'AstroTickets+', info: 'Premium Ticketsystem' },
       ],
     },
     {
-      group: 'AstroStreams',
-      bgImage: '/stream.PNG',
+      group: 'Streams',
       items: [
         { name: 'Kommt noch...', info: 'Streaming-Features in Arbeit' },
       ],
@@ -60,7 +56,7 @@ export default function HomePage() {
           zu verwalten und auf das nächste Level zu bringen – alles an einem Ort.
         </p>
 
-        <div className="flex items-center gap-4 mb-32">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-32">
           <a
             href="/concept"
             className="inline-flex items-center justify-center rounded-lg
@@ -80,35 +76,54 @@ export default function HomePage() {
       </section>
 
       {/* MODULES SECTION */}
-      <section className="relative px-8 max-w-7xl mx-auto space-y-32">
+      <section className="relative px-8 max-w-7xl mx-auto space-y-32 mt-32">
         {modules.map((group) => (
           <div key={group.group} className="relative flex flex-col items-center text-center">
             {/* Gruppenüberschrift */}
-            <h2 className="text-4xl font-extrabold text-white mb-8">
+            <h2 className="text-4xl font-extrabold text-white mb-12">
               {group.group}
             </h2>
 
-            {/* Hintergrundbild */}
-            <div
-              className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-10 w-64 h-64 bg-contain bg-no-repeat pointer-events-none"
-              style={{ backgroundImage: `url(${group.bgImage})` }}
-            ></div>
-
             {/* Module Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 z-10 relative">
+            <div
+              className={`
+                grid gap-8 z-10 relative
+                ${group.items.length === 1
+                  ? 'grid-cols-1 justify-items-center'
+                  : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}
+              `}
+            >
               {group.items.map((mod) => (
                 <div
                   key={mod.name}
-                  className="bg-gray-900 bg-opacity-60 backdrop-blur-md rounded-xl p-6 hover:scale-105 transform transition"
+                  className="relative overflow-hidden rounded-2xl p-6 shadow-xl transform transition hover:scale-105 hover:shadow-2xl"
                 >
-                  <h3 className="text-xl font-semibold text-indigo-400 mb-2">{mod.name}</h3>
-                  <p className="text-gray-300 text-sm">{mod.info}</p>
+                  {/* Animated Gradient Glow */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-30 blur-2xl animate-[gradientMove_8s_linear_infinite]"></div>
+
+                  {/* Content */}
+                  <div className="relative">
+                    <h3 className="text-xl font-semibold text-white mb-2">{mod.name}</h3>
+                    <p className="text-gray-200 text-sm">{mod.info}</p>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         ))}
       </section>
+
+      {/* Custom Tailwind Animation */}
+      <style jsx global>{`
+        @keyframes gradientMove {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .animate-[gradientMove_8s_linear_infinite] {
+          background-size: 200% 200%;
+        }
+      `}</style>
     </>
   );
 }
