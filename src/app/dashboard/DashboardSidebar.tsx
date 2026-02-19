@@ -32,7 +32,8 @@ export default function DashboardSidebar() {
           <nav className="space-y-3">
             {sections.map(s => {
               const url = `/dashboard/${guildId}/${s.path}`;
-              const active = pathname === url || pathname === `/dashboard/${guildId}`;
+              // ✅ Fix: Button aktiv, wenn Pfad beginnt mit der Section-URL
+              const active = pathname?.startsWith(url);
 
               return (
                 <button
