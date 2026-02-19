@@ -1,5 +1,5 @@
 'use client';
-import DashboardSidebar from '../app/DashboardSidebar';
+import DashboardSidebar from '../app/dashboard/DashboardSidebar';
 
 export default function GuildLayout({ children }: { children: React.ReactNode }) {
   return (
