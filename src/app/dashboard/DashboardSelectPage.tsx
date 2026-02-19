@@ -13,30 +13,71 @@ interface Guild {
 export default function DashboardSelectPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const code = searchParams.get('code');
+  const code = searchParams?.get('code'); // optional chaining
 
   const [guilds, setGuilds] = useState<Guild[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!code) return;
+    if (!code) {
+      setError('Kein Discord-Code gefunden.');
+      setLoading(false);
+      return;
+    }
 
     fetch('/api/discord-auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code }),
     })
-      .then(res => res.json())
-      .then(data => setGuilds(data.guilds))
+      .then(async res => {
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`Discord Auth Fehler: ${text}`);
+        }
+        return res.json();
+      })
+      .then(data => {
+        console.log('Guilds from API:', data.guilds); // 🔹 Debug
+        if (!data.guilds || data.guilds.length === 0) {
+          setError('Keine Server gefunden. Bitte stelle sicher, dass du mindestens einen Server verwaltest.');
+        } else {
+          setGuilds(data.guilds);
+        }
+      })
+      .catch(err => {
+        console.error('Fetch error:', err);
+        setError(err.message || 'Fehler beim Laden der Server.');
+      })
       .finally(() => setLoading(false));
   }, [code]);
 
   if (loading)
-    return <div className="h-screen flex items-center justify-center text-white text-2xl">Loading…</div>;
+    return (
+      <div className="h-screen flex items-center justify-center text-white text-2xl">
+        Lade Server…
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="h-screen flex flex-col items-center justify-center text-white text-center p-6">
+        <p className="mb-6 text-red-500">{error}</p>
+        <button
+          onClick={() => router.push('/')}
+          className="px-6 py-3 rounded-xl bg-purple-600 hover:bg-pink-600 transition text-white font-semibold"
+        >
+          Zurück zur Startseite
+        </button>
+      </div>
+    );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black px-6 py-16 text-white">
-      <h1 className="text-5xl font-extrabold text-center mb-16 animate-fadeIn">Wähle einen Server</h1>
+      <h1 className="text-5xl font-extrabold text-center mb-16 animate-fadeIn">
+        Wähle einen Server
+      </h1>
 
       <motion.div
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto"
