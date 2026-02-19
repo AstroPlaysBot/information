@@ -1,42 +1,51 @@
 'use client';
+import { useParams, useRouter, usePathname } from 'next/navigation';
 
-import { useParams, usePathname, useRouter } from 'next/navigation';
-
-const navItems = [
+const sections = [
   { label: 'Übersicht', path: '' },
-  { label: 'Einstellungen', path: 'settings' },
-  { label: 'Moderation', path: 'moderation' },
-  { label: 'Logs', path: 'logs' },
+  {
+    label: 'AstroModeration',
+    path: 'moderation',
+  },
+  {
+    label: 'AstroProtect',
+    path: 'protect',
+  },
+  {
+    label: 'AstroStreams',
+    path: 'streams',
+  },
+  {
+    label: 'AstroPLAYS',
+    path: 'plays',
+  },
 ];
 
-export default function DashboardSidebar() {
+export default function Sidebar() {
   const { guildId } = useParams<{ guildId: string }>();
-  const pathname = usePathname();
   const router = useRouter();
+  const pathname = usePathname();
 
   return (
-    <aside className="w-72 border-r border-white/10 p-6 backdrop-blur-xl bg-white/5">
-      <h1 className="text-2xl font-extrabold mb-10 tracking-wide">
-        🚀 AstroPlays
-      </h1>
+    <aside className="hidden md:block w-72 border-r border-white/10 p-6 bg-white/5 backdrop-blur-xl">
+      <h1 className="text-2xl font-extrabold mb-10">🚀 AstroPlays</h1>
 
       <nav className="space-y-2">
-        {navItems.map((item) => {
-          const fullPath = `/dashboard/${guildId}/${item.path}`;
-          const active = pathname === fullPath || (item.path === '' && pathname === `/dashboard/${guildId}`);
+        {sections.map(s => {
+          const url = `/dashboard/${guildId}/${s.path}`;
+          const active = pathname === url || pathname === `/dashboard/${guildId}`;
 
           return (
             <button
-              key={item.label}
-              onClick={() => router.push(fullPath)}
-              className={`w-full text-left px-4 py-3 rounded-xl transition
-                ${
-                  active
-                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg'
-                    : 'hover:bg-white/10 text-gray-300'
-                }`}
+              key={s.label}
+              onClick={() => router.push(url)}
+              className={`w-full px-4 py-3 rounded-xl text-left transition ${
+                active
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600'
+                  : 'hover:bg-white/10 text-gray-300'
+              }`}
             >
-              {item.label}
+              {s.label}
             </button>
           );
         })}
