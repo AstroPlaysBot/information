@@ -3,12 +3,16 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { HiMenu, HiX } from 'react-icons/hi';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 const FixedHeader = () => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Header nur außerhalb von /dashboard anzeigen
+  if (pathname?.startsWith('/dashboard')) return null;
 
   // Scroll-Effekt für Schatten/Scale
   useEffect(() => {
@@ -28,19 +32,15 @@ const FixedHeader = () => {
     setMenuOpen(false);
   };
 
-  // Module Scroll-Funktion, TS-kompatibel
   const handleModuleClick = () => {
     const scrollToModule = () => {
       const section = document.querySelector('#astro-moderation');
-      if (section) {
-        section.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
+      if (section) section.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
     if (window.location.pathname !== '/') {
-      // Wenn man nicht auf Startseite, zuerst zur Home navigieren
-      router.push('/'); 
-      setTimeout(scrollToModule, 200); // kleine Verzögerung bis Home geladen ist
+      router.push('/');
+      setTimeout(scrollToModule, 200);
     } else {
       scrollToModule();
     }
@@ -68,14 +68,7 @@ const FixedHeader = () => {
         `}>
           {/* LOGO */}
           <div className="flex items-center gap-3 pl-3 sm:pl-0 cursor-pointer" onClick={handleHomeClick}>
-            <Image
-              src="/astroplays.PNG"
-              alt="AstroPlays Logo"
-              width={32}
-              height={32}
-              className="rounded-md"
-              priority
-            />
+            <Image src="/astroplays.PNG" alt="AstroPlays Logo" width={32} height={32} className="rounded-md" priority />
             <span className="text-white font-semibold text-lg sm:text-2xl">AstroPlaysBot</span>
           </div>
 
@@ -89,10 +82,7 @@ const FixedHeader = () => {
 
           {/* MOBILE MENU BUTTON */}
           <div className="md:hidden flex items-center">
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="text-white text-2xl focus:outline-none"
-            >
+            <button onClick={() => setMenuOpen(!menuOpen)} className="text-white text-2xl focus:outline-none">
               {menuOpen ? <HiX /> : <HiMenu />}
             </button>
           </div>
@@ -102,29 +92,17 @@ const FixedHeader = () => {
       {/* MOBILE OVERLAY */}
       {menuOpen && (
         <div className="fixed inset-0 z-40" onClick={closeMenu}>
-          {/* Hintergrund klickbar */}
           <div className="absolute inset-0 bg-black/50"></div>
-
-          {/* Slide-in Menü */}
           <div
             className="absolute top-0 right-0 h-full w-3/4 max-w-xs bg-neutral-900 text-white p-6 transform transition-transform duration-300"
-            onClick={(e) => e.stopPropagation()} // verhindert, dass Klick auf Menü es schließt
+            onClick={(e) => e.stopPropagation()}
           >
-            <button onClick={closeMenu} className="mb-6 text-2xl">
-              <HiX />
-            </button>
-
+            <button onClick={closeMenu} className="mb-6 text-2xl"><HiX /></button>
             <ul className="flex flex-col gap-4 text-lg">
-              <li>
-                <button onClick={() => { handleHomeClick(); closeMenu(); }} className="hover:text-gray-300">Home</button>
-              </li>
-              <li>
-                <button onClick={() => { handleModuleClick(); closeMenu(); }} className="hover:text-gray-300">Module</button>
-              </li>
+              <li><button onClick={() => { handleHomeClick(); closeMenu(); }} className="hover:text-gray-300">Home</button></li>
+              <li><button onClick={() => { handleModuleClick(); closeMenu(); }} className="hover:text-gray-300">Module</button></li>
               <li><a className="hover:text-gray-300">Support</a></li>
-              <li>
-                <button onClick={() => { handleLoginClick(); closeMenu(); }} className="hover:text-gray-300">Einloggen</button>
-              </li>
+              <li><button onClick={() => { handleLoginClick(); closeMenu(); }} className="hover:text-gray-300">Einloggen</button></li>
             </ul>
           </div>
         </div>
