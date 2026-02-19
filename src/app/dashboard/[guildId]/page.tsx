@@ -1,4 +1,4 @@
-import StatCard from '../app/dashboard/[guildId]/StatCard';
+import StatCard from './StatCard';
 
 export default function OverviewPage() {
   return (
