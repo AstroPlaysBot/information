@@ -8,6 +8,7 @@ const sections = [
   { label: 'AstroProtect', path: 'protect' },
   { label: 'AstroStreams', path: 'streams' },
   { label: 'AstroPLAYS', path: 'plays' },
+  { label: 'Premium', path: 'premium' }, // einfach eigenes Label
 ];
 
 export default function DashboardSidebar() {
@@ -15,7 +16,7 @@ export default function DashboardSidebar() {
   const router = useRouter();
   const pathname = usePathname();
 
-  if (!guildId) return null; // Sidebar nur anzeigen, wenn Server ausgewählt
+  if (!guildId) return null;
 
   return (
     <AnimatePresence>
@@ -30,9 +31,8 @@ export default function DashboardSidebar() {
           <h1 className="text-3xl font-extrabold mb-12 animate-fadeIn">🚀 AstroPLAYS</h1>
 
           <nav className="space-y-3">
-            {sections.map(s => {
+            {sections.map((s) => {
               const url = `/dashboard/${guildId}/${s.path}`;
-              // ✅ Fix: Button aktiv, wenn Pfad beginnt mit der Section-URL
               const active = pathname?.startsWith(url);
 
               return (
