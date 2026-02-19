@@ -1,6 +1,6 @@
 import '../styles/globals.css';
 import { ReactNode } from 'react';
-import ConditionalHeader from '../components/FixedHeader';
+import FixedHeader from '../components/FixedHeader';
 import FixedFooter from '../components/FixedFooter';
 
 export const metadata = {
