@@ -8,7 +8,7 @@ const sections = [
   { label: 'AstroProtect', path: 'protect' },
   { label: 'AstroStreams', path: 'streams' },
   { label: 'AstroPLAYS', path: 'plays' },
-  { label: 'Premium', path: 'premium' }, // einfach eigenes Label
+  { label: 'Premium', path: 'premium' }, // eigenes Label
 ];
 
 export default function DashboardSidebar() {
@@ -28,12 +28,16 @@ export default function DashboardSidebar() {
         className="w-80 border-r border-white/10 flex flex-col justify-between p-6 bg-white/5 backdrop-blur-3xl shadow-2xl"
       >
         <div>
-          <h1 className="text-3xl font-extrabold mb-12 animate-fadeIn">🚀 AstroPlays</h1>
+          <h1 className="text-3xl font-extrabold mb-12 animate-fadeIn">🚀 AstroPLAYS</h1>
 
           <nav className="space-y-3">
             {sections.map((s) => {
               const url = `/dashboard/${guildId}/${s.path}`;
-              const active = pathname?.startsWith(url);
+              
+              // ✅ Exakte Prüfung für aktiven Button
+              const active =
+                (s.path === '' && (pathname === `/dashboard/${guildId}` || pathname === `/dashboard/${guildId}/`)) ||
+                pathname === url;
 
               return (
                 <button
