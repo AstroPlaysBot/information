@@ -1,16 +1,11 @@
 'use client';
+import DashboardSidebar from '../app/DashboardSidebar';
 
-import DashboardSidebar from '@/app/dashboard/DashboardSidebar';
-
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function GuildLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-black via-gray-900 to-black text-white">
+    <div className="flex min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
       <DashboardSidebar />
-      <main className="flex-1 p-10 overflow-y-auto">
+      <main className="flex-1 p-6 md:p-10 overflow-y-auto">
         {children}
       </main>
     </div>
