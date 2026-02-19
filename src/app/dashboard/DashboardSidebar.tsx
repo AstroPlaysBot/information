@@ -28,7 +28,7 @@ export default function DashboardSidebar() {
         className="w-80 border-r border-white/10 flex flex-col justify-between p-6 bg-white/5 backdrop-blur-3xl shadow-2xl"
       >
         <div>
-          <h1 className="text-3xl font-extrabold mb-12 animate-fadeIn">🚀 AstroPLAYS</h1>
+          <h1 className="text-3xl font-extrabold mb-12 animate-fadeIn">🚀 AstroPlays</h1>
 
           <nav className="space-y-3">
             {sections.map((s) => {
