@@ -1,55 +1,63 @@
 'use client';
 import { useParams, useRouter, usePathname } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const sections = [
   { label: 'Übersicht', path: '' },
-  {
-    label: 'AstroModeration',
-    path: 'moderation',
-  },
-  {
-    label: 'AstroProtect',
-    path: 'protect',
-  },
-  {
-    label: 'AstroStreams',
-    path: 'streams',
-  },
-  {
-    label: 'AstroPLAYS',
-    path: 'plays',
-  },
+  { label: 'AstroModeration', path: 'moderation' },
+  { label: 'AstroProtect', path: 'protect' },
+  { label: 'AstroStreams', path: 'streams' },
+  { label: 'AstroPLAYS', path: 'plays' },
 ];
 
-export default function Sidebar() {
+export default function DashboardSidebar() {
   const { guildId } = useParams<{ guildId: string }>();
   const router = useRouter();
   const pathname = usePathname();
 
+  if (!guildId) return null; // Sidebar nur anzeigen, wenn Server ausgewählt
+
   return (
-    <aside className="hidden md:block w-72 border-r border-white/10 p-6 bg-white/5 backdrop-blur-xl">
-      <h1 className="text-2xl font-extrabold mb-10">🚀 AstroPlays</h1>
+    <AnimatePresence>
+      <motion.aside
+        initial={{ x: -300, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        exit={{ x: -300, opacity: 0 }}
+        transition={{ type: 'spring', stiffness: 120, damping: 20 }}
+        className="w-80 border-r border-white/10 flex flex-col justify-between p-6 bg-white/5 backdrop-blur-3xl shadow-2xl"
+      >
+        <div>
+          <h1 className="text-3xl font-extrabold mb-12 animate-fadeIn">🚀 AstroPLAYS</h1>
 
-      <nav className="space-y-2">
-        {sections.map(s => {
-          const url = `/dashboard/${guildId}/${s.path}`;
-          const active = pathname === url || pathname === `/dashboard/${guildId}`;
+          <nav className="space-y-3">
+            {sections.map(s => {
+              const url = `/dashboard/${guildId}/${s.path}`;
+              const active = pathname === url || pathname === `/dashboard/${guildId}`;
 
-          return (
-            <button
-              key={s.label}
-              onClick={() => router.push(url)}
-              className={`w-full px-4 py-3 rounded-xl text-left transition ${
-                active
-                  ? 'bg-gradient-to-r from-purple-600 to-pink-600'
-                  : 'hover:bg-white/10 text-gray-300'
-              }`}
-            >
-              {s.label}
-            </button>
-          );
-        })}
-      </nav>
-    </aside>
+              return (
+                <button
+                  key={s.label}
+                  onClick={() => router.push(url)}
+                  className={`w-full px-5 py-3 text-left rounded-xl transition font-medium ${
+                    active
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                      : 'hover:bg-white/10 text-gray-300'
+                  }`}
+                >
+                  {s.label}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        <button
+          onClick={() => router.push('/dashboard')}
+          className="mt-8 w-full py-3 rounded-xl text-center font-semibold bg-white/10 hover:bg-purple-600 hover:text-white shadow-lg transition"
+        >
+          Server wechseln
+        </button>
+      </motion.aside>
+    </AnimatePresence>
   );
 }
