@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useParams, useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Menü-Struktur
 const sections = [
   { label: 'AstroModeration', sub: ['AstroGreeting','AstroBoost','AstroBump','AstroAutoRoles','AstroCall','AstroClear','AstroTickets'] },
   { label: 'AstroProtect', sub: ['AstroShield','AstroModeration','AstroModlogs','AstroLogs','AstroLock'] },
@@ -11,7 +12,12 @@ const sections = [
   { label: 'Premium', sub: ['AstroTickets+'] },
 ];
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+// Layout Props korrekt definieren
+interface DashboardLayoutProps {
+  children: React.ReactNode;
+}
+
+export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { guildId } = useParams<{ guildId: string }>();
   const router = useRouter();
   const pathname = usePathname();
@@ -25,6 +31,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-gradient-to-br from-black via-gray-900 to-gray-950 text-white font-sans">
+      
       {/* Sidebar */}
       <aside className="w-80 h-screen fixed left-0 top-0 flex flex-col justify-between p-6 bg-gradient-to-b from-gray-900/80 to-black/80 backdrop-blur-3xl shadow-2xl">
         <div>
@@ -39,8 +46,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {/* Navigation */}
           <nav className="space-y-3">
             {sections.map((s) => {
-              const active =
-                pathname.includes(s.label.toLowerCase().replace(' ', ''));
+              const active = pathname.includes(s.label.toLowerCase().replace(' ', ''));
 
               return (
                 <div key={s.label}>
