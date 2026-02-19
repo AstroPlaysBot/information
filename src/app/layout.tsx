@@ -1,6 +1,6 @@
 import '../styles/globals.css';
 import { ReactNode } from 'react';
-import ConditionalHeader from '../components/ConditionalHeader';
+import ConditionalHeader from '../components/FixedHeader';
 import FixedFooter from '../components/FixedFooter';
 
 export const metadata = {
@@ -16,7 +16,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {/* 🌌 GLOBALER CSS-HINTERGRUND */}
         <div className="bg-space pointer-events-none" />
 
-        <ConditionalHeader />
+        <FixedHeader />
 
         <main className="relative z-10 pt-28 px-6 flex-1">
           {children}
