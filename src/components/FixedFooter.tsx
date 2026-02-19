@@ -1,7 +1,13 @@
 'use client';
 import React from 'react';
+import { usePathname } from 'next/navigation';
 
 const FixedFooter: React.FC = () => {
+  const pathname = usePathname();
+
+  // Footer auf /dashboard oder Unterseiten ausblenden
+  if (pathname.startsWith('/dashboard')) return null;
+
   return (
     <footer className="w-full bg-neutral-900/90 text-gray-300 p-4 md:p-6 mt-auto flex flex-col md:flex-row justify-between items-center gap-2 md:gap-0">
       {/* Link Gruppe */}
