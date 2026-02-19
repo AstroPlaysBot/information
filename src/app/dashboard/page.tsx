@@ -13,7 +13,7 @@ interface Guild {
 export default function DashboardSelectPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const code = searchParams?.get('code'); // optional chaining
+  const code = searchParams?.get('code');
 
   const [guilds, setGuilds] = useState<Guild[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,7 +39,6 @@ export default function DashboardSelectPage() {
         return res.json();
       })
       .then(data => {
-        console.log('Guilds from API:', data.guilds); // 🔹 Debug
         if (!data.guilds || data.guilds.length === 0) {
           setError('Keine Server gefunden. Bitte stelle sicher, dass du mindestens einen Server verwaltest.');
         } else {
