@@ -103,14 +103,7 @@ const FixedHeader = () => {
             {/* BEWERBEN BUTTON */}
             <button
               onClick={handleApplyClick}
-              className="
-                px-4 py-2 rounded-xl
-                bg-white/10 border border-white/15
-                hover:bg-purple-600 hover:border-purple-500
-                hover:text-white
-                transition-all duration-300
-                font-medium
-              "
+              className="hover:text-white transition"
             >
               Bewerben
             </button>
