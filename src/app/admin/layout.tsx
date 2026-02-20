@@ -1,4 +1,3 @@
-// app/admin/layout.tsx
 'use client';
 
 import { ReactNode, useEffect, useState } from "react";
@@ -14,23 +13,23 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // AccessToken vom Discord-Login aus localStorage
     const accessToken = localStorage.getItem("discordAccessToken");
-    if (!accessToken) {
-      router.push("/"); // Kein Token -> raus
+    const discordUserId = localStorage.getItem("discordUserId");
+
+    if (!accessToken || !discordUserId) {
+      router.push("/"); 
       return;
     }
 
-    // Prüfen, ob User Admin ist
     fetch("/api/check-admin", {
       method: "POST",
-      body: JSON.stringify({ accessToken }),
+      body: JSON.stringify({ accessToken, discordUserId }),
       headers: { "Content-Type": "application/json" },
     })
       .then(res => res.json())
       .then(data => {
-        if (!data.isAdmin) router.push("/"); // Kein Admin -> raus
-        else setLoading(false); // Admin -> Dashboard laden
+        if (!data.isAdmin) router.push("/"); 
+        else setLoading(false);
       })
       .catch(() => router.push("/"));
   }, [router]);
@@ -41,7 +40,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white overflow-hidden">
-      {/* Sidebar */}
       <aside className="w-80 p-8 border-r border-white/10 bg-white/5 backdrop-blur-2xl flex flex-col">
         <h1 className="text-3xl font-extrabold tracking-wide mb-12">Admin Panel</h1>
         <nav className="space-y-4">
@@ -55,7 +53,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         <div className="mt-auto text-xs text-gray-500">AstroPlays © Admin System</div>
       </aside>
 
-      {/* Content */}
       <main className="flex-1 p-12 overflow-y-auto">{children}</main>
     </div>
   );
