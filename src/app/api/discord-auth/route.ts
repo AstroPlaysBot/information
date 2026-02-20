@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 
 const CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!;
@@ -8,6 +9,7 @@ export async function POST(req: NextRequest) {
   const { code } = await req.json();
   if (!code) return NextResponse.json({ error: 'Code fehlt' }, { status: 400 });
 
+  // Token von Discord holen
   const params = new URLSearchParams();
   params.append('client_id', CLIENT_ID);
   params.append('client_secret', CLIENT_SECRET);
@@ -25,11 +27,13 @@ export async function POST(req: NextRequest) {
   const tokenData = await tokenRes.json();
   if (!tokenData.access_token) return NextResponse.json({ error: tokenData }, { status: 400 });
 
+  // User Info abrufen
   const userRes = await fetch('https://discord.com/api/users/@me', {
     headers: { Authorization: `Bearer ${tokenData.access_token}` },
   });
   const userData = await userRes.json();
 
+  // Optional: Guilds abrufen
   const guildsRes = await fetch('https://discord.com/api/users/@me/guilds', {
     headers: { Authorization: `Bearer ${tokenData.access_token}` },
   });
