@@ -1,4 +1,4 @@
-import { getApplicationById } from "../../../lib/applications";
+import { getApplicationById } from "@/lib/applications";
 import { notFound } from "next/navigation";
 
 interface Props {
