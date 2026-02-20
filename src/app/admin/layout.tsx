@@ -13,25 +13,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const accessToken = localStorage.getItem("discordAccessToken");
-    const discordUserId = localStorage.getItem("discordUserId");
+    const adminPassword = localStorage.getItem("adminPassword");
+    const envPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
 
-    if (!accessToken || !discordUserId) {
+    if (!adminPassword || adminPassword !== envPassword) {
       router.push("/"); 
-      return;
+    } else {
+      setLoading(false);
     }
-
-    fetch("/api/check-admin", {
-      method: "POST",
-      body: JSON.stringify({ accessToken, discordUserId }),
-      headers: { "Content-Type": "application/json" },
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (!data.isAdmin) router.push("/"); 
-        else setLoading(false);
-      })
-      .catch(() => router.push("/"));
   }, [router]);
 
   if (loading) {
