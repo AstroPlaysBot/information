@@ -1,65 +1,127 @@
+
 'use client';
+
 import React from 'react';
-import { useRouter } from 'next/navigation';
+import Background from '../components/Background';
 
-const DISCORD_CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
-const REDIRECT_URI = APP_URL ? encodeURIComponent(`${APP_URL}/dashboard`) : '';
-const DISCORD_SCOPE = encodeURIComponent('identify guilds'); 
-const DISCORD_RESPONSE_TYPE = 'code';
-
-export default function LoginPage() {
-  const router = useRouter();
-
-  const handleDashboardLogin = () => {
-    if (!DISCORD_CLIENT_ID || !APP_URL) {
-      alert('Fehler: Discord Client ID oder App URL ist nicht gesetzt!');
-      return;
-    }
-
-    const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=${DISCORD_RESPONSE_TYPE}&scope=${DISCORD_SCOPE}`;
-    window.location.href = discordAuthUrl;
-  };
-
-  const handleAdminClick = () => {
-    const password = prompt("Bitte Admin Passwort eingeben:");
-    if (password === process.env.NEXT_PUBLIC_ADMIN_PASSWORD) {
-      localStorage.setItem("adminPassword", password);
-      router.push("/admin");
-    } else {
-      alert("Falsches Passwort!");
-    }
-  };
+export default function HomePage() {
+  const modules = [
+    {
+      group: 'AstroModeration',
+      id: 'astro-moderation', // <- ID für Scrollziel
+      items: [
+        { name: 'AstroAutoRoles', info: 'Automatisches Rollenmanagement' },
+        { name: 'AstroBoost', info: 'Boost-Funktionen für deinen Server' },
+        { name: 'AstroBump', info: 'Server bump Reminder' },
+        { name: 'AstroCall', info: 'Voice-Channel Funktionen' },
+        { name: 'AstroClear', info: 'Nachrichten löschen leicht gemacht' },
+        { name: 'AstroGreeting', info: 'Willkommensnachrichten' },
+        { name: 'AstroTickets', info: 'Support-Tickets erstellen' },
+      ],
+    },
+    {
+      group: 'AstroProtect',
+      items: [
+        { name: 'AstroLogs', info: 'Server Logs einsehen' },
+        { name: 'AstroLock', info: 'Kanäle sperren' },
+        { name: 'AstroModeration', info: 'Moderationstools für Admins' },
+        { name: 'AstroModlogs', info: 'Moderations-Logs automatisch' },
+        { name: 'AstroShield', info: 'Schutz vor Spam & Raid' },
+      ],
+    },
+    {
+      group: 'AstroStreaming',
+      items: [
+        { name: 'Kommt noch...', info: 'Streaming-Features in Arbeit' },
+      ],
+    },
+    {
+      group: 'AstroPLAYS',
+      items: [
+        { name: 'Minecraft', info: 'Whitelist System' },
+        { name: 'GTA V', info: 'Economy System' },
+        { name: 'Fortnite', info: 'Shop & Game Updates' },
+      ],
+    },
+    {
+      group: 'Premium Features',
+      items: [
+        { name: 'AstroTickets+', info: 'Premium Ticketsystem' },
+      ],
+    },
+  ];
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
-      <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-12">
-        <div
-          onClick={handleDashboardLogin}
-          className="relative cursor-pointer overflow-hidden rounded-2xl p-8 shadow-2xl bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-600 transition-transform transform hover:scale-105 hover:shadow-3xl"
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-30 blur-3xl animate-[gradientMove_8s_linear_infinite]"></div>
-          <div className="relative z-10 text-center md:text-left">
-            <h2 className="text-3xl font-extrabold text-white mb-4">Dashboard</h2>
-            <p className="text-gray-200 text-lg">
-              Konfiguriere deinen Bot für deinen Discord-Server, alles an einem Ort.
-            </p>
-          </div>
-        </div>
+    <div className="overflow-x-hidden">
+      <Background />
 
-        <div
-          onClick={handleAdminClick}
-          className="relative cursor-pointer overflow-hidden rounded-2xl p-8 shadow-2xl bg-gradient-to-r from-green-600 via-teal-600 to-cyan-500 transition-transform transform hover:scale-105 hover:shadow-3xl"
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-green-400 via-teal-400 to-cyan-400 opacity-30 blur-3xl animate-[gradientMove_8s_linear_infinite]"></div>
-          <div className="relative z-10 text-center md:text-left">
-            <h2 className="text-3xl font-extrabold text-white mb-4">Admin Dashboard</h2>
-            <p className="text-gray-200 text-lg">
-              Überblick über Bewerbungen, Verwaltung von Mitgliedern und Server-Rollen.
-            </p>
-          </div>
+      {/* HERO SECTION */}
+      <section className="relative flex flex-col items-start justify-center min-h-screen px-8 max-w-7xl mx-auto">
+        <h1 className="text-white text-5xl md:text-7xl font-extrabold leading-tight mb-6">
+          Play, Manage,<br />Level Up.
+        </h1>
+
+        <p className="text-gray-300 text-lg md:text-xl max-w-2xl mb-8">
+          AstroPlays hilft dir dabei, deinen Discord-Server zu organisieren,
+          zu verwalten und auf das nächste Level zu bringen – alles an einem Ort.
+        </p>
+
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-32">
+          <a
+            href="/concept"
+            className="inline-flex items-center justify-center rounded-lg
+                       bg-indigo-600 hover:bg-indigo-500 transition
+                       text-white font-semibold px-6 py-3"
+          >
+            Zum Konzept
+          </a>
+
+          <a
+            href="/features"
+            className="text-white font-medium hover:underline"
+          >
+            Funktionen entdecken →
+          </a>
         </div>
-      </div>
+      </section>
+
+      {/* MODULES SECTION */}
+      <section className="relative px-8 max-w-7xl mx-auto space-y-32 mt-32">
+        {modules.map((group) => (
+          <div
+            key={group.group}
+            id={group.id ? group.id : undefined} // <- ID setzen, falls vorhanden
+            className="relative flex flex-col items-center text-center"
+          >
+            <h2 className="text-4xl font-extrabold text-white mb-12">
+              {group.group}
+            </h2>
+
+            <div
+              className={`
+                grid gap-8 z-10 relative
+                ${group.items.length === 1
+                  ? 'grid-cols-1 justify-items-center'
+                  : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}
+              `}
+            >
+              {group.items.map((mod) => (
+                <div
+                  key={mod.name}
+                  className="relative overflow-hidden rounded-2xl p-6 shadow-xl transform transition hover:scale-105 hover:shadow-2xl"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-30 blur-2xl animate-[gradientMove_8s_linear_infinite]"></div>
+
+                  <div className="relative">
+                    <h3 className="text-xl font-semibold text-white mb-2">{mod.name}</h3>
+                    <p className="text-gray-200 text-sm">{mod.info}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </section>
 
       <style jsx global>{`
         @keyframes gradientMove {
@@ -67,7 +129,9 @@ export default function LoginPage() {
           50% { background-position: 100% 50%; }
           100% { background-position: 0% 50%; }
         }
-        .animate-[gradientMove_8s_linear_infinite] { background-size: 200% 200%; }
+        .animate-[gradientMove_8s_linear_infinite] {
+          background-size: 200% 200%;
+        }
       `}</style>
     </div>
   );
