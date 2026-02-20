@@ -1,13 +1,25 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Background from '../components/Background';
 
 export default function HomePage() {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("access_token");
+    const userId = params.get("discord_user_id");
+    if (token && userId) {
+      localStorage.setItem("discordAccessToken", token);
+      localStorage.setItem("discordUserId", userId);
+      // URL sauber machen, keine sensiblen Daten mehr in der URL
+      window.history.replaceState({}, document.title, "/");
+    }
+  }, []);
+
   const modules = [
     {
       group: 'AstroModeration',
-      id: 'astro-moderation', // <- ID für Scrollziel
+      id: 'astro-moderation',
       items: [
         { name: 'AstroAutoRoles', info: 'Automatisches Rollenmanagement' },
         { name: 'AstroBoost', info: 'Boost-Funktionen für deinen Server' },
@@ -30,9 +42,7 @@ export default function HomePage() {
     },
     {
       group: 'AstroStreaming',
-      items: [
-        { name: 'Kommt noch...', info: 'Streaming-Features in Arbeit' },
-      ],
+      items: [{ name: 'Kommt noch...', info: 'Streaming-Features in Arbeit' }],
     },
     {
       group: 'AstroPLAYS',
@@ -44,9 +54,7 @@ export default function HomePage() {
     },
     {
       group: 'Premium Features',
-      items: [
-        { name: 'AstroTickets+', info: 'Premium Ticketsystem' },
-      ],
+      items: [{ name: 'AstroTickets+', info: 'Premium Ticketsystem' }],
     },
   ];
 
@@ -75,10 +83,7 @@ export default function HomePage() {
             Zum Konzept
           </a>
 
-          <a
-            href="/features"
-            className="text-white font-medium hover:underline"
-          >
+          <a href="/features" className="text-white font-medium hover:underline">
             Funktionen entdecken →
           </a>
         </div>
@@ -89,20 +94,17 @@ export default function HomePage() {
         {modules.map((group) => (
           <div
             key={group.group}
-            id={group.id ? group.id : undefined} // <- ID setzen, falls vorhanden
+            id={group.id ? group.id : undefined}
             className="relative flex flex-col items-center text-center"
           >
-            <h2 className="text-4xl font-extrabold text-white mb-12">
-              {group.group}
-            </h2>
+            <h2 className="text-4xl font-extrabold text-white mb-12">{group.group}</h2>
 
             <div
-              className={`
-                grid gap-8 z-10 relative
-                ${group.items.length === 1
+              className={`grid gap-8 z-10 relative ${
+                group.items.length === 1
                   ? 'grid-cols-1 justify-items-center'
-                  : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}
-              `}
+                  : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+              }`}
             >
               {group.items.map((mod) => (
                 <div
@@ -110,7 +112,6 @@ export default function HomePage() {
                   className="relative overflow-hidden rounded-2xl p-6 shadow-xl transform transition hover:scale-105 hover:shadow-2xl"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-30 blur-2xl animate-[gradientMove_8s_linear_infinite]"></div>
-
                   <div className="relative">
                     <h3 className="text-xl font-semibold text-white mb-2">{mod.name}</h3>
                     <p className="text-gray-200 text-sm">{mod.info}</p>
@@ -124,9 +125,15 @@ export default function HomePage() {
 
       <style jsx global>{`
         @keyframes gradientMove {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
+          0% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+          100% {
+            background-position: 0% 50%;
+          }
         }
         .animate-[gradientMove_8s_linear_infinite] {
           background-size: 200% 200%;
