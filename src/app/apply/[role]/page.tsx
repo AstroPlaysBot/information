@@ -13,7 +13,7 @@ export default function ApplyRole({ params }: { params: { role: string } }) {
     });
 
     // Weiterleitung nach Absenden
-    router.push('/thank-you');
+    router.push('/(pages)/thank-you');
   };
 
   return (
