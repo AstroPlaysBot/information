@@ -6,7 +6,6 @@ export default function ThankYouPage() {
 
   const goHome = () => {
     router.push('/');
-    router.refresh(); // Seite neu laden
   };
 
   return (
