@@ -1,23 +1,28 @@
 'use client';
+
 import React from 'react';
 import { useRouter } from 'next/navigation';
-
-const DISCORD_CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
-const REDIRECT_URI = APP_URL ? encodeURIComponent(`${APP_URL}/dashboard`) : '';
-const DISCORD_SCOPE = encodeURIComponent('identify guilds'); // ggf. weitere Scopes
-const DISCORD_RESPONSE_TYPE = 'code';
 
 export default function LoginPage() {
   const router = useRouter();
 
   const handleDashboardLogin = () => {
-    if (!DISCORD_CLIENT_ID || !APP_URL) {
-      alert('Fehler: Discord Client ID oder App URL ist nicht gesetzt! Bitte überprüfe deine Environment-Variablen.');
+    const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+
+    if (!clientId || !appUrl) {
+      alert(
+        'Fehler: Discord Client ID oder App URL ist nicht gesetzt! Bitte überprüfe deine Environment-Variablen.'
+      );
       return;
     }
 
-    const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=${DISCORD_RESPONSE_TYPE}&scope=${DISCORD_SCOPE}`;
+    const redirectUri = encodeURIComponent(`${appUrl}/dashboard`);
+    const scope = encodeURIComponent('identify guilds');
+    const responseType = 'code';
+
+    const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=${responseType}&scope=${scope}`;
+
     window.location.href = discordAuthUrl;
   };
 
