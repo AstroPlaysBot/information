@@ -31,7 +31,7 @@ const FixedHeader = () => {
     setMenuOpen(false);
   };
   const handleApplyClick = () => {
-    router.push('/bewerben');
+    router.push('/apply');
     setMenuOpen(false);
   };
 
