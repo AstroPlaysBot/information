@@ -1,82 +1,41 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 
-const CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!;
-const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET!;
-const REDIRECT_URI = `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`;
+export async function GET(req: NextRequest) {
+  const code = req.nextUrl.searchParams.get("code");
+  const clientId = process.env.DISCORD_CLIENT_ID;
+  const clientSecret = process.env.DISCORD_CLIENT_SECRET;
+  const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/discord-auth`;
 
-const MAIN_GUILD_ID = '1462894776671277241';
-const ADMIN_ROLE_ID = '1474507057154756919';
+  if (!code) return NextResponse.redirect("/");
 
-export async function POST(req: NextRequest) {
-  const { code } = await req.json();
-  if (!code) {
-    return NextResponse.json({ error: 'Code fehlt' }, { status: 400 });
-  }
-
-  /* ───────── TOKEN ───────── */
-  const params = new URLSearchParams({
-    client_id: CLIENT_ID,
-    client_secret: CLIENT_SECRET,
-    grant_type: 'authorization_code',
-    code,
-    redirect_uri: REDIRECT_URI,
-    scope: 'identify guilds',
-  });
-
-  const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: params.toString(),
+  // Token von Discord holen
+  const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: clientId!,
+      client_secret: clientSecret!,
+      grant_type: "authorization_code",
+      code,
+      redirect_uri: redirectUri,
+      scope: "identify guilds",
+    }),
   });
 
   const tokenData = await tokenRes.json();
-  if (!tokenData.access_token) {
-    return NextResponse.json({ error: tokenData }, { status: 400 });
-  }
-
   const accessToken = tokenData.access_token;
 
-  /* ───────── USER ───────── */
-  const userRes = await fetch('https://discord.com/api/users/@me', {
+  // Discord User Daten holen
+  const userRes = await fetch("https://discord.com/api/users/@me", {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
-  const user = await userRes.json();
 
-  /* ───────── GUILDS ───────── */
-  const guildsRes = await fetch('https://discord.com/api/users/@me/guilds', {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  const guilds = await guildsRes.json();
+  const userData = await userRes.json();
 
-  const isInMainGuild = guilds.some((g: any) => g.id === MAIN_GUILD_ID);
+  // Redirect zurück auf Frontend mit Query-Parametern
+  const redirect = new URL("/", req.url);
+  redirect.searchParams.set("access_token", accessToken);
+  redirect.searchParams.set("discord_user_id", userData.id);
 
-  /* ───────── MEMBER / ROLES ───────── */
-  let roles: string[] = [];
-  let isAdmin = false;
-
-  if (isInMainGuild) {
-    const memberRes = await fetch(
-      `https://discord.com/api/users/@me/guilds/${MAIN_GUILD_ID}/member`,
-      {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      }
-    );
-
-    if (memberRes.ok) {
-      const member = await memberRes.json();
-      roles = member.roles ?? [];
-      isAdmin = roles.includes(ADMIN_ROLE_ID);
-    }
-  }
-
-  /* ───────── RESPONSE ───────── */
-  return NextResponse.json({
-    user,
-    guilds,
-    permissions: {
-      isInMainGuild,
-      isAdmin,
-      roles,
-    },
-  });
+  return NextResponse.redirect(redirect);
 }
