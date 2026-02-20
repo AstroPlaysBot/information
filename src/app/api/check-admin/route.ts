@@ -1,22 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
-import { fetchDiscordMember } from "@/lib/discordApi";
-
-const ADMIN_ROLE_IDS = ['1474507057154756919'];
-const MAIN_GUILD_ID = '1462894776671277241';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
-  const { accessToken, discordUserId } = await req.json();
+  const { password } = await req.json();
+  const envPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
 
-  if (!accessToken || !discordUserId) return NextResponse.json({ isAdmin: false });
+  if (!password) return NextResponse.json({ isAdmin: false });
 
-  const memberRes = await fetch(`https://discord.com/api/users/@me/guilds/${MAIN_GUILD_ID}/member`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-
-  if (!memberRes.ok) return NextResponse.json({ isAdmin: false });
-
-  const member = await memberRes.json();
-  const isAdmin = member.roles.some((role: string) => ADMIN_ROLE_IDS.includes(role));
-
+  const isAdmin = password === envPassword;
   return NextResponse.json({ isAdmin });
 }
