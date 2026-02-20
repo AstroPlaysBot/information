@@ -1,41 +1,39 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(req: NextRequest) {
-  const code = req.nextUrl.searchParams.get("code");
-  const clientId = process.env.DISCORD_CLIENT_ID;
-  const clientSecret = process.env.DISCORD_CLIENT_SECRET;
-  const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/discord-auth`;
+const CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!;
+const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET!;
+const REDIRECT_URI = `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`;
 
-  if (!code) return NextResponse.redirect("/");
+export async function POST(req: NextRequest) {
+  const { code } = await req.json();
+  if (!code) return NextResponse.json({ error: 'Code fehlt' }, { status: 400 });
 
-  // Token von Discord holen
-  const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      client_id: clientId!,
-      client_secret: clientSecret!,
-      grant_type: "authorization_code",
-      code,
-      redirect_uri: redirectUri,
-      scope: "identify guilds",
-    }),
+  const params = new URLSearchParams();
+  params.append('client_id', CLIENT_ID);
+  params.append('client_secret', CLIENT_SECRET);
+  params.append('grant_type', 'authorization_code');
+  params.append('code', code);
+  params.append('redirect_uri', REDIRECT_URI);
+  params.append('scope', 'identify guilds');
+
+  const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params.toString(),
   });
 
   const tokenData = await tokenRes.json();
-  const accessToken = tokenData.access_token;
+  if (!tokenData.access_token) return NextResponse.json({ error: tokenData }, { status: 400 });
 
-  // Discord User Daten holen
-  const userRes = await fetch("https://discord.com/api/users/@me", {
-    headers: { Authorization: `Bearer ${accessToken}` },
+  const userRes = await fetch('https://discord.com/api/users/@me', {
+    headers: { Authorization: `Bearer ${tokenData.access_token}` },
   });
-
   const userData = await userRes.json();
 
-  // Redirect zurück auf Frontend mit Query-Parametern
-  const redirect = new URL("/dashboard", req.url);
-  redirect.searchParams.set("access_token", accessToken);
-  redirect.searchParams.set("discord_user_id", userData.id);
+  const guildsRes = await fetch('https://discord.com/api/users/@me/guilds', {
+    headers: { Authorization: `Bearer ${tokenData.access_token}` },
+  });
+  const guilds = await guildsRes.json();
 
-  return NextResponse.redirect(redirect);
+  return NextResponse.json({ user: userData, guilds });
 }
