@@ -1,5 +1,5 @@
 // app/admin/page.tsx
-import { getApplications } from "@/lib/applications";
+import { getApplications } from "../../lib/applications";
 import Link from "next/link";
 
 export default async function AdminInbox() {
