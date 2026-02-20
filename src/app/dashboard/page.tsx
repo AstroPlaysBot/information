@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 
 interface Guild {
@@ -12,41 +12,45 @@ interface Guild {
 
 export default function DashboardSelectPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const code = searchParams?.get('code');
 
   const [guilds, setGuilds] = useState<Guild[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Token aus URL oder localStorage
-    const params = new URLSearchParams(window.location.search);
-    const accessToken = params.get('access_token') || localStorage.getItem('discordAccessToken');
-    const discordUserId = params.get('discord_user_id') || localStorage.getItem('discordUserId');
-
-    if (!accessToken || !discordUserId) {
-      setError('Bitte zuerst über Discord einloggen.');
+    if (!code) {
+      setError('Kein Discord-Code gefunden.');
       setLoading(false);
       return;
     }
 
-    // Speichern, falls aus URL
-    if (params.get('access_token') && params.get('discord_user_id')) {
-      localStorage.setItem('discordAccessToken', accessToken);
-      localStorage.setItem('discordUserId', discordUserId);
-      window.history.replaceState({}, document.title, '/dashboard');
-    }
-
-    // Guilds holen
-    fetch('/api/get-guilds', {
+    fetch('/api/discord-auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accessToken, discordUserId }),
+      body: JSON.stringify({ code }),
     })
-      .then(res => res.json())
-      .then(data => setGuilds(data.guilds ?? []))
-      .catch(err => setError(err.message))
+      .then(async res => {
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`Discord Auth Fehler: ${text}`);
+        }
+        return res.json();
+      })
+      .then(data => {
+        if (!data.guilds || data.guilds.length === 0) {
+          setError('Keine Server gefunden. Bitte stelle sicher, dass du mindestens einen Server verwaltest.');
+        } else {
+          setGuilds(data.guilds);
+        }
+      })
+      .catch(err => {
+        console.error('Fetch error:', err);
+        setError(err.message || 'Fehler beim Laden der Server.');
+      })
       .finally(() => setLoading(false));
-  }, []);
+  }, [code]);
 
   if (loading)
     return (
@@ -57,99 +61,59 @@ export default function DashboardSelectPage() {
 
   if (error)
     return (
-      <div className="h-screen flex items-center justify-center text-red-500 text-center p-4">
-        {error}
+      <div className="h-screen flex flex-col items-center justify-center text-white text-center p-6">
+        <p className="mb-6 text-red-500">{error}</p>
+        <button
+          onClick={() => router.push('/')}
+          className="px-6 py-3 rounded-xl bg-purple-600 hover:bg-pink-600 transition text-white font-semibold"
+        >
+          Zurück zur Startseite
+        </button>
       </div>
     );
 
   return (
-    <div className="h-screen w-screen flex bg-gradient-to-br from-black via-gray-900 to-black text-white overflow-hidden">
-      {/* Sidebar */}
-      <motion.aside
-        initial={{ x: -40, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        transition={{ duration: 0.4 }}
-        className="w-80 hidden md:flex flex-col justify-between p-8
-                   bg-white/5 backdrop-blur-2xl border-r border-white/10"
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black px-6 py-16 text-white">
+      <h1 className="text-5xl font-extrabold text-center mb-16 animate-fadeIn">
+        Wähle einen Server
+      </h1>
+
+      <motion.div
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ staggerChildren: 0.1 }}
       >
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-wide mb-6">🚀 AstroPlays</h1>
-          <p className="text-gray-400 leading-relaxed">
-            Wähle einen Discord-Server aus, um das Dashboard freizuschalten.
-          </p>
-        </div>
-        <div className="text-sm text-gray-500">Sidebar wird nach Auswahl aktiviert</div>
-      </motion.aside>
-
-      {/* Server Grid */}
-      <div className="flex-1 flex flex-col p-10 overflow-hidden">
-        <motion.h1
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-5xl font-extrabold mb-10"
-        >
-          Server auswählen
-        </motion.h1>
-
-        <motion.div
-          className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-10 flex-1"
-          initial="hidden"
-          animate="show"
-          variants={{
-            hidden: { opacity: 0 },
-            show: { opacity: 1, transition: { staggerChildren: 0.08 } },
-          }}
-        >
-          {guilds.map(g => (
-            <motion.button
-              key={g.id}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => router.push(`/dashboard/${g.id}`)}
-              className="relative group h-64 rounded-3xl overflow-hidden shadow-2xl border border-white/10"
-            >
-              {g.icon ? (
-                <img
-                  src={`https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=512`}
-                  alt={g.name}
-                  className="absolute inset-0 w-full h-full object-cover scale-110 group-hover:scale-125 transition-transform duration-700"
-                />
-              ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-700 to-pink-600 flex items-center justify-center text-6xl font-bold">
-                  {g.name[0]}
-                </div>
-              )}
-
-              <div className="absolute inset-0 bg-black/60 group-hover:bg-black/40 transition" />
-
-              <div className="relative z-10 h-full flex flex-col justify-end p-6">
-                <h3 className="text-2xl font-bold">{g.name}</h3>
-                {g.owner && (
-                  <span className="mt-2 inline-block w-fit px-3 py-1 text-xs font-semibold rounded-full bg-purple-600 shadow-lg">
-                    Eigentümer
-                  </span>
-                )}
+        {guilds.map(g => (
+          <motion.button
+            key={g.id}
+            onClick={() => router.push(`/dashboard/${g.id}`)}
+            className="group relative overflow-hidden rounded-3xl shadow-2xl bg-gradient-to-br from-gray-800 to-gray-900 hover:from-purple-700 hover:to-pink-600 transition transform hover:scale-105"
+            whileHover={{ scale: 1.06 }}
+          >
+            {g.icon ? (
+              <img
+                src={`https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png`}
+                alt={g.name}
+                className="w-full h-40 object-cover rounded-t-3xl"
+              />
+            ) : (
+              <div className="w-full h-40 flex items-center justify-center bg-white/10 rounded-t-3xl">
+                <span className="text-3xl font-bold">{g.name[0]}</span>
               </div>
-            </motion.button>
-          ))}
-        </motion.div>
-
-        {/* Status Button */}
-        <motion.button
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          onClick={() => router.push('/dashboard/status')}
-          className="mt-10 py-5 rounded-2xl text-xl font-semibold tracking-wide
-                     bg-gradient-to-br from-neutral-800 to-neutral-900
-                     border border-white/10
-                     hover:border-purple-500/50
-                     hover:shadow-purple-500/20
-                     transition-all"
-        >
-          STATUS
-        </motion.button>
-      </div>
+            )}
+            <div className="p-6">
+              <h3 className="text-xl font-bold mb-2">{g.name}</h3>
+              {g.owner && (
+                <span className="inline-block px-2 py-1 text-xs font-semibold bg-purple-600 rounded-full shadow-lg">
+                  Eigentümer
+                </span>
+              )}
+            </div>
+            <div className="absolute top-0 left-0 w-full h-full bg-white/5 opacity-0 group-hover:opacity-10 transition"></div>
+          </motion.button>
+        ))}
+      </motion.div>
     </div>
   );
 }
