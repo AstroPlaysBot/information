@@ -4,8 +4,14 @@ import { useParams, useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const sections = [
-  { label: 'AstroModeration', sub: ['AstroGreeting','AstroBoost','AstroBump','AstroAutoRoles','AstroCall','AstroClear','AstroTickets'] },
-  { label: 'AstroProtect', sub: ['AstroShield','AstroModeration','AstroModlogs','AstroLogs','AstroLock'] },
+  {
+    label: 'AstroModeration',
+    sub: ['AstroGreeting','AstroBoost','AstroBump','AstroAutoRoles','AstroCall','AstroClear','AstroTickets'],
+  },
+  {
+    label: 'AstroProtect',
+    sub: ['AstroShield','AstroModeration','AstroModlogs','AstroLogs','AstroLock'],
+  },
   { label: 'AstroStreams', sub: ['Comming Soon...'] },
   { label: 'AstroPLAYS', sub: ['Minecraft','GTA V','Fortnite'] },
   { label: 'Premium', sub: ['AstroTickets+'] },
@@ -17,7 +23,7 @@ export default function DashboardSidebar() {
   const pathname = usePathname();
   const [openSection, setOpenSection] = useState<string | null>(null);
 
-  if (!guildId) return null;
+  if (!guildId) return null; // Sidebar erst anzeigen, wenn Server ausgewählt
 
   const handleSectionClick = (label: string) => {
     setOpenSection(prev => (prev === label ? null : label));
@@ -35,7 +41,7 @@ export default function DashboardSidebar() {
 
         <nav className="space-y-3">
           {sections.map((s) => {
-            const active = pathname.includes(s.label.toLowerCase().replace(' ', ''));
+            const active = pathname.toLowerCase().includes(s.label.toLowerCase().replace(' ', ''));
 
             return (
               <div key={s.label}>
@@ -61,7 +67,7 @@ export default function DashboardSidebar() {
                       {s.sub.map((sub) => (
                         <button
                           key={sub}
-                          onClick={() => console.log(`Clicked ${sub}`)}
+                          onClick={() => router.push(`/dashboard/${guildId}/${sub.toLowerCase()}`)}
                           className="w-full px-4 py-2 text-left rounded-lg text-gray-300 hover:bg-purple-700/30 hover:text-white transition-all"
                         >
                           {sub}
