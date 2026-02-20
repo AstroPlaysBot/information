@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
   const userData = await userRes.json();
 
   // Redirect zurück auf Frontend mit Query-Parametern
-  const redirect = new URL("/", req.url);
+  const redirect = new URL("/dashboard", req.url);
   redirect.searchParams.set("access_token", accessToken);
   redirect.searchParams.set("discord_user_id", userData.id);
 
