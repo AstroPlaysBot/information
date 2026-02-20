@@ -17,7 +17,7 @@ export default function LoginPage() {
       return;
     }
 
-    const redirectUri = encodeURIComponent(`${appUrl}/dashboard`);
+    const redirectUri = encodeURIComponent(`${appUrl}/api/discord-auth/callback`);
     const scope = encodeURIComponent('identify guilds');
     const responseType = 'code';
 
@@ -26,51 +26,17 @@ export default function LoginPage() {
     window.location.href = discordAuthUrl;
   };
 
-  const handleAdminClick = () => {
-    router.push('/admin');
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
-      <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-12">
-        {/* Dashboard Card */}
-        <div
-          onClick={handleDashboardLogin}
-          className="relative cursor-pointer overflow-hidden rounded-2xl p-8 shadow-2xl bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-600 transition-transform transform hover:scale-105 hover:shadow-3xl"
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-30 blur-3xl animate-[gradientMove_8s_linear_infinite]"></div>
-          <div className="relative z-10 text-center md:text-left">
-            <h2 className="text-3xl font-extrabold text-white mb-4">Dashboard</h2>
-            <p className="text-gray-200 text-lg">
-              Konfiguriere deinen Bot für deinen Discord-Server, passe Rollen, Module und Einstellungen einfach an – alles an einem Ort.
-            </p>
-          </div>
-        </div>
-
-        {/* Admin Dashboard Card */}
-        <div
-          onClick={handleAdminClick}
-          className="relative cursor-pointer overflow-hidden rounded-2xl p-8 shadow-2xl bg-gradient-to-r from-green-600 via-teal-600 to-cyan-500 transition-transform transform hover:scale-105 hover:shadow-3xl"
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-green-400 via-teal-400 to-cyan-400 opacity-30 blur-3xl animate-[gradientMove_8s_linear_infinite]"></div>
-          <div className="relative z-10 text-center md:text-left">
-            <h2 className="text-3xl font-extrabold text-white mb-4">Admin Dashboard</h2>
-            <p className="text-gray-200 text-lg">
-              Überblick über Bewerbungen, Verwaltung von Mitgliedern und Server-Rollen. Später: automatische Berechtigungsprüfung via Discord GuildID.
-            </p>
-          </div>
-        </div>
+      <div
+        onClick={handleDashboardLogin}
+        className="cursor-pointer rounded-2xl p-8 shadow-2xl bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-600 transition-transform transform hover:scale-105 hover:shadow-3xl"
+      >
+        <h2 className="text-3xl font-extrabold text-white mb-4">Dashboard Login</h2>
+        <p className="text-gray-200 text-lg">
+          Klicke hier, um dich über Discord einzuloggen und dein Dashboard zu öffnen.
+        </p>
       </div>
-
-      {/* Gradient Animation */}
-      <style jsx global>{`
-        @keyframes gradientMove {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-        .animate-[gradientMove_8s_linear_infinite] { background-size: 200% 200%; }
-      `}</style>
     </div>
   );
 }
