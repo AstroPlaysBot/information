@@ -17,7 +17,7 @@ export default function LoginPage() {
       return;
     }
 
-    const redirectUri = encodeURIComponent(`${appUrl}/api/discord-auth/callback`);
+    const redirectUri = encodeURIComponent(`${appUrl}/api/discord-auth`);
     const scope = encodeURIComponent('identify guilds');
     const responseType = 'code';
 
