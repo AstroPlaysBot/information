@@ -1,4 +1,5 @@
 // src/lib/applications.ts
+
 export interface Application {
   id: string;
   name: string;
@@ -7,6 +8,11 @@ export interface Application {
   claimedBy?: string;
   createdAt: string;
   content?: string;
+
+  // Neue Felder für UI
+  age?: number;
+  discord?: string;
+  answers?: string;
 }
 
 // TODO: Ersetze mit echter DB/API
