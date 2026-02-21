@@ -123,6 +123,28 @@ export default function HomePage() {
         ))}
       </section>
 
+      {/* APPLY SECTION */}
+      <section className="relative px-8 max-w-7xl mx-auto mt-48 mb-48 text-center">
+        <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-6">
+          Bewerben
+        </h2>
+
+        <p className="text-gray-300 max-w-2xl mx-auto mb-10 text-lg">
+          Du hast Lust, Teil unseres Teams zu werden und aktiv an AstroPlays
+          mitzuwirken? Dann bewirb dich jetzt und gestalte die Zukunft mit uns.
+        </p>
+
+        <a
+          href="/apply"
+          className="inline-flex items-center justify-center
+                     rounded-xl bg-indigo-600 hover:bg-indigo-500
+                     transition text-white font-semibold
+                     px-10 py-4 text-lg shadow-xl hover:shadow-2xl"
+        >
+          Jetzt bewerben →
+        </a>
+      </section>
+      
       <style jsx global>{`
         @keyframes gradientMove {
           0% { background-position: 0% 50%; }
