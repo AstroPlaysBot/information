@@ -123,6 +123,31 @@ export default function HomePage() {
         ))}
       </section>
 
+      {/* SUPPORT SECTION */}
+      <section 
+        id="support"
+        className="relative px-8 max-w-7xl mx-auto mt-48 mb-48 text-center">
+        <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-6">
+          Support
+        </h2>
+
+        <p className="text-gray-300 max-w-3xl mx-auto mb-6 text-lg">
+          Du hast Fragen, Probleme oder brauchst Hilfe bei der Nutzung von AstroPlays? 
+          Kein Problem! Unser Support-Team steht dir jederzeit zur Verfügung. 
+          Schreibe uns eine Mail an <a href="mailto:astroplays.help@gmail.com" className="underline text-indigo-400">astroplays.help@gmail.com</a> 
+          oder trete unserem Discord-Server bei, um direkt mit uns zu chatten: 
+          <a href="https://discord.gg/jtxQA7jnKa" target="_blank" rel="noopener noreferrer" className="underline text-indigo-400">
+            Discord Server
+          </a>.
+        </p>
+
+        <p className="text-gray-400 max-w-2xl mx-auto text-md">
+          Unser Team beantwortet deine Fragen so schnell wie möglich. 
+          Bitte gib möglichst detaillierte Informationen zu deinem Anliegen an, 
+          damit wir dir effizient helfen können.
+        </p>
+      </section>
+      
       {/* APPLY SECTION */}
       <section 
         id="apply"
