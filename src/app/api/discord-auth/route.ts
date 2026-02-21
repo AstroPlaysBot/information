@@ -7,11 +7,11 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL!;
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const code = url.searchParams.get('code');
-  const state = url.searchParams.get('state'); // dashboard oder adminboard
+  const state = url.searchParams.get('state'); // adminboard
 
   if (!code) return NextResponse.redirect(`${APP_URL}/login?error=no_code`);
 
-  // 1️⃣ Token bei Discord holen
+  // Token bei Discord holen
   const params = new URLSearchParams();
   params.append('client_id', CLIENT_ID);
   params.append('client_secret', CLIENT_SECRET);
@@ -28,31 +28,18 @@ export async function GET(req: Request) {
 
   const tokenData = await tokenRes.json();
   if (!tokenData.access_token) {
-    console.error('Token Error:', tokenData);
     return NextResponse.redirect(`${APP_URL}/login?error=oauth_failed`);
   }
 
-  // 2️⃣ User Infos abrufen
-  const userRes = await fetch('https://discord.com/api/users/@me', {
+  // Admin-Check
+  const checkRes = await fetch(`${APP_URL}/api/admin-check`, {
     headers: { Authorization: `Bearer ${tokenData.access_token}` },
   });
-  const userData = await userRes.json();
+  const checkJson = await checkRes.json();
 
-  let redirectPath = '/dashboard'; // default für normale Users
-
-  // 3️⃣ Adminboard-Check
-  if (state === 'adminboard') {
-    const checkRes = await fetch(`${APP_URL}/api/admin-check`, {
-      headers: { Authorization: `Bearer ${tokenData.access_token}` },
-    });
-    const checkJson = await checkRes.json();
-    if (checkJson.allowed) {
-      redirectPath = '/adminboard'; // hat Rolle → Adminboard
-    } else {
-      redirectPath = '/'; // keine Rechte → Home
-    }
+  if (checkJson.allowed) {
+    return NextResponse.redirect(`${APP_URL}/adminboard`);
+  } else {
+    return NextResponse.redirect(`${APP_URL}/`); // keine Rechte
   }
-
-  // 4️⃣ Redirect
-  return NextResponse.redirect(`${APP_URL}${redirectPath}`);
 }
