@@ -1,21 +1,25 @@
-
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 const CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!;
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET!;
-const REDIRECT_URI = `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`;
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL!; // z.B. https://deine-domain.de
 
-export async function POST(req: NextRequest) {
-  const { code } = await req.json();
-  if (!code) return NextResponse.json({ error: 'Code fehlt' }, { status: 400 });
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const code = url.searchParams.get('code');
+  const state = url.searchParams.get('state'); // 'dashboard' oder 'adminboard'
 
-  // Token von Discord holen
+  if (!code) {
+    return NextResponse.redirect(`${APP_URL}/login?error=no_code`);
+  }
+
+  // Token bei Discord abrufen
   const params = new URLSearchParams();
   params.append('client_id', CLIENT_ID);
   params.append('client_secret', CLIENT_SECRET);
   params.append('grant_type', 'authorization_code');
   params.append('code', code);
-  params.append('redirect_uri', REDIRECT_URI);
+  params.append('redirect_uri', `${APP_URL}/api/discord-auth`); // MUSS exakt so im Discord-Portal stehen
   params.append('scope', 'identify guilds');
 
   const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
@@ -25,9 +29,11 @@ export async function POST(req: NextRequest) {
   });
 
   const tokenData = await tokenRes.json();
-  if (!tokenData.access_token) return NextResponse.json({ error: tokenData }, { status: 400 });
+  if (!tokenData.access_token) {
+    return NextResponse.redirect(`${APP_URL}/login?error=oauth_failed`);
+  }
 
-  // User Info abrufen
+  // User Infos abrufen
   const userRes = await fetch('https://discord.com/api/users/@me', {
     headers: { Authorization: `Bearer ${tokenData.access_token}` },
   });
@@ -39,5 +45,11 @@ export async function POST(req: NextRequest) {
   });
   const guilds = await guildsRes.json();
 
-  return NextResponse.json({ user: userData, guilds });
+  // Hier entscheidest du wohin weitergeleitet wird
+  const redirectPath = state === 'adminboard' ? '/adminboard' : '/dashboard';
+
+  // Optional: User/Guilds im Cookie/Session speichern (z.B. JWT)
+  // ...
+
+  return NextResponse.redirect(`${APP_URL}${redirectPath}`);
 }
