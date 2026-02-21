@@ -22,8 +22,27 @@ export default function LoginPage() {
     window.location.href = discordAuthUrl;
   };
 
-  const handleAdminClick = () => {
-    router.push('/admin');
+  const handleAdminClick = async () => {
+    const accessToken = localStorage.getItem('discord_access_token');
+
+    if (!accessToken) {
+      router.push('/');
+      return;
+    }
+
+    const res = await fetch('/api/admin-check', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const data = await res.json();
+
+    if (data.allowed) {
+      router.push('/admin');
+    } else {
+      router.push('/');
+    }
   };
 
   return (
