@@ -38,7 +38,7 @@ export async function GET(req: Request) {
   });
   const userData = await userRes.json();
 
-  let redirectPath = '/dashboard'; // default
+  let redirectPath = '/dashboard'; // default für normale Users
 
   // 3️⃣ Adminboard-Check
   if (state === 'adminboard') {
@@ -47,7 +47,9 @@ export async function GET(req: Request) {
     });
     const checkJson = await checkRes.json();
     if (checkJson.allowed) {
-      redirectPath = '/adminboard';
+      redirectPath = '/adminboard'; // hat Rolle → Adminboard
+    } else {
+      redirectPath = '/'; // keine Rechte → Home
     }
   }
 
