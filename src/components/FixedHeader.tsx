@@ -11,7 +11,7 @@ const FixedHeader = () => {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Header nicht im Dashboard anzeigen
+  // Header nicht im Dashboard / Admin anzeigen
   if (pathname?.startsWith('/dashboard')) return null;
   if (pathname?.startsWith('/admin')) return null;
 
@@ -25,20 +25,22 @@ const FixedHeader = () => {
     document.body.style.overflow = menuOpen ? 'hidden' : '';
   }, [menuOpen]);
 
-  const handleHomeClick = () => router.push('/');
-  const handleLoginClick = () => {
-    router.push('/login');
+  const handleHomeClick = () => {
+    router.push('/');
     setMenuOpen(false);
   };
-  const handleApplyClick = () => {
-    router.push('/apply');
+
+  const handleLoginClick = () => {
+    router.push('/login');
     setMenuOpen(false);
   };
 
   const handleModuleClick = () => {
     const scrollToModule = () => {
       const section = document.querySelector('#astro-moderation');
-      if (section) section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
     };
 
     if (window.location.pathname !== '/') {
@@ -51,12 +53,34 @@ const FixedHeader = () => {
     setMenuOpen(false);
   };
 
+  const handleApplyClick = () => {
+    const scrollToApply = () => {
+      const section = document.querySelector('#apply');
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    };
+
+    if (window.location.pathname !== '/') {
+      router.push('/');
+      setTimeout(scrollToApply, 200);
+    } else {
+      scrollToApply();
+    }
+
+    setMenuOpen(false);
+  };
+
   const closeMenu = () => setMenuOpen(false);
 
   return (
     <>
       {/* HEADER */}
-      <div className={`fixed top-4 left-0 w-full px-3 transition-all duration-300 ${menuOpen ? 'z-30' : 'z-50'}`}>
+      <div
+        className={`fixed top-4 left-0 w-full px-3 transition-all duration-300 ${
+          menuOpen ? 'z-30' : 'z-50'
+        }`}
+      >
         <div
           className={`
             mx-auto max-w-[1600px]
@@ -93,26 +117,20 @@ const FixedHeader = () => {
             <button onClick={handleHomeClick} className="hover:text-white transition">
               Home
             </button>
+
             <button onClick={handleModuleClick} className="hover:text-white transition">
               Module
             </button>
+
             <a href="#support" className="hover:text-white transition">
               Support
             </a>
 
-            {/* BEWERBEN BUTTON */}
-            <button
-              onClick={handleApplyClick}
-              className="hover:text-white transition"
-            >
+            <button onClick={handleApplyClick} className="hover:text-white transition">
               Bewerben
             </button>
 
-            {/* LOGIN */}
-            <button
-              onClick={handleLoginClick}
-              className="hover:text-white transition"
-            >
+            <button onClick={handleLoginClick} className="hover:text-white transition">
               Einloggen
             </button>
           </nav>
@@ -148,24 +166,16 @@ const FixedHeader = () => {
 
             <ul className="flex flex-col gap-5 text-lg">
               <li>
-                <button onClick={() => { handleHomeClick(); closeMenu(); }}>
-                  Home
-                </button>
+                <button onClick={handleHomeClick}>Home</button>
               </li>
               <li>
-                <button onClick={() => { handleModuleClick(); closeMenu(); }}>
-                  Module
-                </button>
+                <button onClick={handleModuleClick}>Module</button>
               </li>
               <li>
-                <button onClick={() => { handleApplyClick(); closeMenu(); }}>
-                  Bewerben
-                </button>
+                <button onClick={handleApplyClick}>Bewerben</button>
               </li>
               <li>
-                <button onClick={() => { handleLoginClick(); closeMenu(); }}>
-                  Einloggen
-                </button>
+                <button onClick={handleLoginClick}>Einloggen</button>
               </li>
             </ul>
           </div>
