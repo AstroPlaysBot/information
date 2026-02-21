@@ -1,91 +1,70 @@
-
 'use client';
 import React from 'react';
-import { useRouter } from 'next/navigation';
 
 const DISCORD_CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
-const REDIRECT_URI = APP_URL ? encodeURIComponent(`${APP_URL}/dashboard`) : '';
-const DISCORD_SCOPE = encodeURIComponent('identify guilds'); // ggf. weitere Scopes
+
+const DISCORD_SCOPE = encodeURIComponent('identify guilds');
 const DISCORD_RESPONSE_TYPE = 'code';
 
+/**
+ * Startet Discord OAuth und merkt sich,
+ * wohin nach dem Login weitergeleitet werden soll
+ */
+function startDiscordAuth(target: 'dashboard' | 'adminboard') {
+  if (!DISCORD_CLIENT_ID || !APP_URL) {
+    alert('Fehler: Discord Client ID oder App URL fehlt');
+    return;
+  }
+
+  const redirectUri = encodeURIComponent(`${APP_URL}/api/discord-auth`);
+  const state = target; // <-- WICHTIG
+
+  const discordAuthUrl =
+    `https://discord.com/api/oauth2/authorize` +
+    `?client_id=${DISCORD_CLIENT_ID}` +
+    `&redirect_uri=${redirectUri}` +
+    `&response_type=${DISCORD_RESPONSE_TYPE}` +
+    `&scope=${DISCORD_SCOPE}` +
+    `&state=${state}`;
+
+  window.location.href = discordAuthUrl;
+}
+
 export default function LoginPage() {
-  const router = useRouter();
-
-  const handleDashboardLogin = () => {
-    if (!DISCORD_CLIENT_ID || !APP_URL) {
-      alert('Fehler: Discord Client ID oder App URL ist nicht gesetzt! Bitte überprüfe deine Environment-Variablen.');
-      return;
-    }
-
-    const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=${DISCORD_RESPONSE_TYPE}&scope=${DISCORD_SCOPE}`;
-    window.location.href = discordAuthUrl;
-  };
-
-  const handleAdminClick = async () => {
-    const accessToken = localStorage.getItem('discord_access_token');
-
-    if (!accessToken) {
-      router.push('/');
-      return;
-    }
-
-    const res = await fetch('/api/admin-check', {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    const data = await res.json();
-
-    if (data.allowed) {
-      router.push('/admin');
-    } else {
-      router.push('/');
-    }
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
       <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-12">
-        {/* Dashboard Card */}
+
+        {/* Dashboard */}
         <div
-          onClick={handleDashboardLogin}
-          className="relative cursor-pointer overflow-hidden rounded-2xl p-8 shadow-2xl bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-600 transition-transform transform hover:scale-105 hover:shadow-3xl"
+          onClick={() => startDiscordAuth('dashboard')}
+          className="relative cursor-pointer overflow-hidden rounded-2xl p-8 shadow-2xl
+                     bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-600
+                     transition-transform hover:scale-105"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-30 blur-3xl animate-[gradientMove_8s_linear_infinite]"></div>
-          <div className="relative z-10 text-center md:text-left">
-            <h2 className="text-3xl font-extrabold text-white mb-4">Dashboard</h2>
-            <p className="text-gray-200 text-lg">
-              Konfiguriere deinen Bot für deinen Discord-Server, passe Rollen, Module und Einstellungen einfach an – alles an einem Ort.
-            </p>
-          </div>
+          <h2 className="text-3xl font-extrabold text-white mb-4">Dashboard</h2>
+          <p className="text-gray-200 text-lg">
+            Konfiguriere deinen Bot für deinen Discord-Server.
+          </p>
         </div>
 
-        {/* Admin Dashboard Card */}
+        {/* Admin Dashboard */}
         <div
-          onClick={handleAdminClick}
-          className="relative cursor-pointer overflow-hidden rounded-2xl p-8 shadow-2xl bg-gradient-to-r from-green-600 via-teal-600 to-cyan-500 transition-transform transform hover:scale-105 hover:shadow-3xl"
+          onClick={() => startDiscordAuth('adminboard')}
+          className="relative cursor-pointer overflow-hidden rounded-2xl p-8 shadow-2xl
+                     bg-gradient-to-r from-green-600 via-teal-600 to-cyan-500
+                     transition-transform hover:scale-105"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-green-400 via-teal-400 to-cyan-400 opacity-30 blur-3xl animate-[gradientMove_8s_linear_infinite]"></div>
-          <div className="relative z-10 text-center md:text-left">
-            <h2 className="text-3xl font-extrabold text-white mb-4">Admin Dashboard</h2>
-            <p className="text-gray-200 text-lg">
-              Überblick über Bewerbungen, Verwaltung von Mitgliedern und Server-Rollen. Später: automatische Berechtigungsprüfung via Discord GuildID.
-            </p>
-          </div>
+          <h2 className="text-3xl font-extrabold text-white mb-4">
+            Admin Dashboard
+          </h2>
+          <p className="text-gray-200 text-lg">
+            Bewerbungen, Admin-Funktionen & Verwaltung.
+          </p>
         </div>
+
       </div>
-
-      {/* Gradient Animation */}
-      <style jsx global>{`
-        @keyframes gradientMove {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-        .animate-[gradientMove_8s_linear_infinite] { background-size: 200% 200%; }
-      `}</style>
     </div>
   );
 }
