@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 
 interface Guild {
@@ -12,35 +12,25 @@ interface Guild {
 
 export default function DashboardSelectPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const code = searchParams?.get('code');
-
   const [guilds, setGuilds] = useState<Guild[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!code) {
-      setError('Kein Discord-Code gefunden.');
-      setLoading(false);
-      return;
-    }
-
-    fetch('/api/discord-auth', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code }),
-    })
+    // Direkter Aufruf der API, die die Guilds des eingeloggten Users zurückgibt
+    fetch('/api/user-guilds')
       .then(async res => {
         if (!res.ok) {
           const text = await res.text();
-          throw new Error(`Discord Auth Fehler: ${text}`);
+          throw new Error(`Fehler beim Laden der Server: ${text}`);
         }
         return res.json();
       })
       .then(data => {
         if (!data.guilds || data.guilds.length === 0) {
-          setError('Keine Server gefunden. Bitte stelle sicher, dass du mindestens einen Server verwaltest.');
+          setError(
+            'Keine Server gefunden. Bitte stelle sicher, dass du mindestens einen Server verwaltest.'
+          );
         } else {
           setGuilds(data.guilds);
         }
@@ -50,7 +40,7 @@ export default function DashboardSelectPage() {
         setError(err.message || 'Fehler beim Laden der Server.');
       })
       .finally(() => setLoading(false));
-  }, [code]);
+  }, []);
 
   if (loading)
     return (
