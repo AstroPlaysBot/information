@@ -124,7 +124,9 @@ export default function HomePage() {
       </section>
 
       {/* APPLY SECTION */}
-      <section className="relative px-8 max-w-7xl mx-auto mt-48 mb-48 text-center">
+      <section 
+        id="apply"
+        className="relative px-8 max-w-7xl mx-auto mt-48 mb-48 text-center">
         <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-6">
           Bewerben
         </h2>
