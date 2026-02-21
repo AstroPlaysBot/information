@@ -3,17 +3,15 @@ import { NextResponse } from 'next/server';
 const CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!;
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET!;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL!;
-const ADMIN_GUILD_ID = process.env.ADMIN_GUILD_ID!; // Dein Server
-const ADMIN_ROLE_ID = process.env.ADMIN_ROLE_ID!;   // Role-ID für Admins
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const code = url.searchParams.get('code');
-  const state = url.searchParams.get('state');
+  const state = url.searchParams.get('state'); // dashboard oder adminboard
 
   if (!code) return NextResponse.redirect(`${APP_URL}/login?error=no_code`);
 
-  // Token abrufen
+  // 1️⃣ Token bei Discord holen
   const params = new URLSearchParams();
   params.append('client_id', CLIENT_ID);
   params.append('client_secret', CLIENT_SECRET);
@@ -29,32 +27,30 @@ export async function GET(req: Request) {
   });
 
   const tokenData = await tokenRes.json();
-  if (!tokenData.access_token)
+  if (!tokenData.access_token) {
+    console.error('Token Error:', tokenData);
     return NextResponse.redirect(`${APP_URL}/login?error=oauth_failed`);
+  }
 
-  // User & Guilds abrufen
+  // 2️⃣ User Infos abrufen
   const userRes = await fetch('https://discord.com/api/users/@me', {
     headers: { Authorization: `Bearer ${tokenData.access_token}` },
   });
   const userData = await userRes.json();
 
-  const guildsRes = await fetch('https://discord.com/api/users/@me/guilds', {
-    headers: { Authorization: `Bearer ${tokenData.access_token}` },
-  });
-  const guilds = await guildsRes.json();
+  let redirectPath = '/dashboard'; // default
 
-  let redirectPath = '/dashboard';
-
-  // Adminboard nur für User mit Rolle auf bestimmten Server
+  // 3️⃣ Adminboard-Check
   if (state === 'adminboard') {
-    const adminGuild = guilds.find((g: any) => g.id === ADMIN_GUILD_ID);
-    if (!adminGuild || !(adminGuild.owner || adminGuild.permissions & 0x8)) {
-      // 0x8 = Administrator permission
-      redirectPath = '/'; // Kein Admin → zurück auf Homepage
-    } else {
+    const checkRes = await fetch(`${APP_URL}/api/admin-check`, {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` },
+    });
+    const checkJson = await checkRes.json();
+    if (checkJson.allowed) {
       redirectPath = '/adminboard';
     }
   }
 
+  // 4️⃣ Redirect
   return NextResponse.redirect(`${APP_URL}${redirectPath}`);
 }
