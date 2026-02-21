@@ -37,6 +37,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
       <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-12">
 
+        {/* Dashboard */}
         <div
           onClick={() => startDiscordAuth('dashboard')}
           className="relative cursor-pointer overflow-hidden rounded-2xl p-8 shadow-2xl
@@ -49,6 +50,7 @@ export default function LoginPage() {
           </p>
         </div>
 
+        {/* Admin Dashboard */}
         <div
           onClick={() => startDiscordAuth('adminboard')}
           className="relative cursor-pointer overflow-hidden rounded-2xl p-8 shadow-2xl
