@@ -156,10 +156,10 @@ export default function HomePage() {
         <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-6">Support</h2>
         <p className="text-gray-300 max-w-3xl mx-auto mb-6 text-lg">
           Du hast Fragen, Probleme oder brauchst Hilfe bei der Nutzung von AstroPlays? 
-          Kein Problem! Unser Support-Team steht dir jederzeit zur Verfügung. 
+          Kein Problem! Unser Support-Team steht dir jederzeit zur Verfügung.\n\n 
           Schreibe uns eine Mail an <a href="mailto:astroplays.help@gmail.com" className="underline text-indigo-400">astroplays.help@gmail.com</a> 
           oder trete unserem Discord-Server bei, um direkt mit uns zu chatten: 
-          <a href="https://discord.gg/jtxQA7jnKa" target="_blank" rel="noopener noreferrer" className="underline text-indigo-400">Discord Server</a>.
+          <a href="https://discord.gg/jtxQA7jnKa" target="_blank" rel="noopener noreferrer" className="underline text-indigo-400">AstroPlays</a>.
         </p>
 
         <p className="text-gray-400 max-w-2xl mx-auto text-md">
