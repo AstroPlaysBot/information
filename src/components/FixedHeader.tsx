@@ -38,11 +38,14 @@ const FixedHeader = () => {
     setMenuOpen(false);
   };
 
-  // Smooth Scroll zu Section
+  // Smooth Scroll zu Section mit Header-Offset
   const goSection = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      const headerHeight = 80; // Höhe deines Headers in px (anpassen falls nötig)
+      const elementPosition = element.getBoundingClientRect().top + window.scrollY;
+      const offsetPosition = elementPosition - headerHeight - 8; // kleiner Abstand
+      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
     } else {
       // fallback: push URL + scroll nach render
       router.push(`/#${id}`);
