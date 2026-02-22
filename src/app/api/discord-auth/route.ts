@@ -8,6 +8,7 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const code = url.searchParams.get('code');
   const state = url.searchParams.get('state');
+  const redirectParam = url.searchParams.get('redirect'); // NEU
 
   if (!code) return NextResponse.redirect(`${APP_URL}/login?error=no_code`);
 
@@ -40,7 +41,6 @@ export async function GET(req: Request) {
 
   // Adminboard?
   if (state === 'adminboard') {
-    // Hier kannst du prüfen, ob Rolle vorhanden
     const checkRes = await fetch(`${APP_URL}/api/admin-check`, {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
@@ -52,8 +52,9 @@ export async function GET(req: Request) {
     }
   }
 
-  // Normaler Dashboard-Redirect
-  return NextResponse.redirect(`${APP_URL}/dashboard?token=${tokenData.access_token}`);
+  // Redirect zu Bewerbungsseite oder Dashboard
+  const redirectTo = redirectParam ? redirectParam : '/dashboard';
+  return NextResponse.redirect(`${APP_URL}${redirectTo}?token=${tokenData.access_token}`);
 }
 
 // Optional für Client-Fetch (Dashboard)
