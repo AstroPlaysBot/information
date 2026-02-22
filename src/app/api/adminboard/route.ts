@@ -24,11 +24,13 @@ export async function POST(req: Request) {
 
     const created = await prisma.application.create({
       data: {
+        id: crypto.randomUUID(),
         name: data.name,
         age: data.age,
         email: data.email,
         role: data.role,          // z.B. 'Beta Tester'
         answers: data.answers,    // JSON-Objekt
+        answers: data.answers || {},
         submittedAt: new Date(),
       },
     });
