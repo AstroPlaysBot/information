@@ -21,6 +21,7 @@ export default function ModeratorApplyPage() {
     ticketExperience: '',
     conflictHandling: '',
     availability: '',
+    languages: '',
     phoneReachable: '',
   });
 
@@ -43,6 +44,7 @@ export default function ModeratorApplyPage() {
       'Ticket Erfahrung': form.ticketExperience,
       'Konfliktmanagement': form.conflictHandling,
       'Verfügbarkeit': form.availability,
+      'Welche Sprachkenntnisse besitzt du?': form.languages,
       'Telefon erreichbar': form.phoneReachable,
     };
 
@@ -67,7 +69,16 @@ export default function ModeratorApplyPage() {
 
       if (data.success) {
         setShowToast({ type: 'success', message: 'Bewerbung gesendet!' });
-        setForm({ age: '', email: '', discordExperience: '', ticketExperience: '', conflictHandling: '', availability: '', phoneReachable: '' });
+        setForm({
+          age: '',
+          email: '',
+          discordExperience: '',
+          ticketExperience: '',
+          conflictHandling: '',
+          availability: '',
+          languages: '',
+          phoneReachable: '',
+        });
         setTimeout(() => router.push('/'), 500);
       } else {
         setShowToast({ type: 'error', message: 'Fehler beim Absenden: ' + data.error });
@@ -124,7 +135,8 @@ export default function ModeratorApplyPage() {
         <textarea name="ticketExperience" value={form.ticketExperience} onChange={handleChange} placeholder="Hast du Erfahrung mit Ticketsystemen?" className="p-3 rounded-xl bg-gray-800 text-white"/>
         <textarea name="conflictHandling" value={form.conflictHandling} onChange={handleChange} placeholder="Wie gehst du mit Konflikten um?" className="p-3 rounded-xl bg-gray-800 text-white"/>
         <textarea name="availability" value={form.availability} onChange={handleChange} placeholder="Wie viel Zeit kannst du investieren?" className="p-3 rounded-xl bg-gray-800 text-white"/>
-        <input name="phoneReachable" value={form.phoneReachable} onChange={handleChange} placeholder="Können wir dich telefonisch erreichen?" className="p-3 rounded-xl bg-gray-800 text-white"/>
+        <textarea name="languages" value={form.languages} onChange={handleChange} placeholder="Welche Sprachkenntnisse besitzt du?" className="p-3 rounded-xl bg-gray-800 text-white"/>
+        <input name="phoneReachable" value={form.phoneReachable} onChange={handleChange} placeholder="Telefon erreichbar" className="p-3 rounded-xl bg-gray-800 text-white"/>
 
         <button type="submit" disabled={!isFormValid} className={`py-3 rounded-xl font-semibold shadow-lg transition ${isFormValid ? 'bg-purple-600 hover:bg-pink-600' : 'bg-gray-700 cursor-not-allowed'}`}>
           Bewerbung abschicken
