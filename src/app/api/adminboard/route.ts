@@ -22,7 +22,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, application: created });
   } catch (error) {
-    console.error('ADMINBOARD POST ERROR:', error);
-    return NextResponse.json({ success: false, error: 'Speichern fehlgeschlagen' }, { status: 500 });
-  }
+      console.error('ADMINBOARD POST ERROR:', error);
+      return NextResponse.json({ success: false, error: (error as any).message || 'Speichern fehlgeschlagen' }, { status: 500 });
+    }
 }
