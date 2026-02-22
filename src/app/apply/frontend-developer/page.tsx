@@ -17,10 +17,10 @@ export default function FrontendDevApplyPage() {
   const [form, setForm] = useState({
     age: '',
     email: '',
-    languageExperience: '',
     frameworkExperience: '',
     uiExperience: '',
-    problemSolving: '',
+    projectPortfolio: '',
+    teamwork: '',
     phoneReachable: '',
   });
 
@@ -39,10 +39,10 @@ export default function FrontendDevApplyPage() {
     }
 
     const answers = {
-      'Programmiersprachen': form.languageExperience,
-      'Framework Erfahrung': form.frameworkExperience,
+      'Frontend-Frameworks': form.frameworkExperience,
       'UI/UX Erfahrung': form.uiExperience,
-      'Problembehandlung': form.problemSolving,
+      'Projekt/Portfolio': form.projectPortfolio,
+      'Teamarbeit': form.teamwork,
       'Telefon erreichbar': form.phoneReachable,
     };
 
@@ -67,7 +67,15 @@ export default function FrontendDevApplyPage() {
 
       if (data.success) {
         setShowToast({ type: 'success', message: 'Bewerbung gesendet!' });
-        setForm({ age: '', email: '', languageExperience: '', frameworkExperience: '', uiExperience: '', problemSolving: '', phoneReachable: '' });
+        setForm({
+          age: '',
+          email: '',
+          frameworkExperience: '',
+          uiExperience: '',
+          projectPortfolio: '',
+          teamwork: '',
+          phoneReachable: '',
+        });
         setTimeout(() => router.push('/'), 500);
       } else {
         setShowToast({ type: 'error', message: 'Fehler beim Absenden: ' + data.error });
@@ -120,11 +128,11 @@ export default function FrontendDevApplyPage() {
       <form onSubmit={handleSubmit} className="max-w-3xl mx-auto flex flex-col gap-6">
         <input name="age" value={form.age} onChange={handleChange} placeholder="Alter" className="p-3 rounded-xl bg-gray-800 text-white"/>
         <input name="email" value={form.email} onChange={handleChange} placeholder="Email Adresse" className="p-3 rounded-xl bg-gray-800 text-white"/>
-        <textarea name="languageExperience" value={form.languageExperience} onChange={handleChange} placeholder="Welche Programmiersprachen beherrschst du?" className="p-3 rounded-xl bg-gray-800 text-white"/>
-        <textarea name="frameworkExperience" value={form.frameworkExperience} onChange={handleChange} placeholder="Welche Frameworks beherrschst du?" className="p-3 rounded-xl bg-gray-800 text-white"/>
-        <textarea name="uiExperience" value={form.uiExperience} onChange={handleChange} placeholder="Hast du Erfahrung mit UI/UX Design?" className="p-3 rounded-xl bg-gray-800 text-white"/>
-        <textarea name="problemSolving" value={form.problemSolving} onChange={handleChange} placeholder="Beschreibe deine Herangehensweise bei Problemstellungen" className="p-3 rounded-xl bg-gray-800 text-white"/>
-        <input name="phoneReachable" value={form.phoneReachable} onChange={handleChange} placeholder="Können wir dich telefonisch erreichen?" className="p-3 rounded-xl bg-gray-800 text-white"/>
+        <textarea name="frameworkExperience" value={form.frameworkExperience} onChange={handleChange} placeholder="Frontend-Frameworks" className="p-3 rounded-xl bg-gray-800 text-white"/>
+        <textarea name="uiExperience" value={form.uiExperience} onChange={handleChange} placeholder="UI/UX Erfahrung" className="p-3 rounded-xl bg-gray-800 text-white"/>
+        <textarea name="projectPortfolio" value={form.projectPortfolio} onChange={handleChange} placeholder="Projekt/Portfolio" className="p-3 rounded-xl bg-gray-800 text-white"/>
+        <textarea name="teamwork" value={form.teamwork} onChange={handleChange} placeholder="Teamarbeit" className="p-3 rounded-xl bg-gray-800 text-white"/>
+        <input name="phoneReachable" value={form.phoneReachable} onChange={handleChange} placeholder="Telefon erreichbar" className="p-3 rounded-xl bg-gray-800 text-white"/>
 
         <button type="submit" disabled={!isFormValid} className={`py-3 rounded-xl font-semibold shadow-lg transition ${isFormValid ? 'bg-purple-600 hover:bg-pink-600' : 'bg-gray-700 cursor-not-allowed'}`}>
           Bewerbung abschicken
