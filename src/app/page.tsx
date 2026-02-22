@@ -17,6 +17,7 @@ export default function HomePage() {
 
   const closeError = () => setShowError(false);
 
+  // === MODULE DATA ===
   const modules = [
     {
       group: 'AstroModeration',
@@ -63,9 +64,12 @@ export default function HomePage() {
     <div className="overflow-x-hidden relative">
       <Background />
 
+      {/* BLOCKER OVERLAY wenn Warnung aktiv ist */}
+      {showError && <div className="fixed inset-0 z-[49] bg-black/40 backdrop-blur-sm" />}
+
       {/* ERROR MODAL */}
       {showError && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div className="relative bg-neutral-900 text-white rounded-2xl shadow-xl max-w-md w-full p-6 md:p-8">
             <button
               onClick={closeError}
@@ -120,9 +124,7 @@ export default function HomePage() {
             id={group.id ? group.id : undefined}
             className="relative flex flex-col items-center text-center"
           >
-            <h2 className="text-4xl font-extrabold text-white mb-12">
-              {group.group}
-            </h2>
+            <h2 className="text-4xl font-extrabold text-white mb-12">{group.group}</h2>
 
             <div
               className={`grid gap-8 z-10 relative
@@ -136,7 +138,6 @@ export default function HomePage() {
                   className="relative overflow-hidden rounded-2xl p-6 shadow-xl transform transition hover:scale-105 hover:shadow-2xl"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-30 blur-2xl animate-[gradientMove_8s_linear_infinite]"></div>
-
                   <div className="relative">
                     <h3 className="text-xl font-semibold text-white mb-2">{mod.name}</h3>
                     <p className="text-gray-200 text-sm">{mod.info}</p>
@@ -152,18 +153,13 @@ export default function HomePage() {
       <section 
         id="support"
         className="relative px-8 max-w-7xl mx-auto mt-48 mb-48 text-center">
-        <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-6">
-          Support
-        </h2>
-
+        <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-6">Support</h2>
         <p className="text-gray-300 max-w-3xl mx-auto mb-6 text-lg">
           Du hast Fragen, Probleme oder brauchst Hilfe bei der Nutzung von AstroPlays? 
           Kein Problem! Unser Support-Team steht dir jederzeit zur Verfügung. 
           Schreibe uns eine Mail an <a href="mailto:astroplays.help@gmail.com" className="underline text-indigo-400">astroplays.help@gmail.com</a> 
           oder trete unserem Discord-Server bei, um direkt mit uns zu chatten: 
-          <a href="https://discord.gg/jtxQA7jnKa" target="_blank" rel="noopener noreferrer" className="underline text-indigo-400">
-            Discord Server
-          </a>.
+          <a href="https://discord.gg/jtxQA7jnKa" target="_blank" rel="noopener noreferrer" className="underline text-indigo-400">Discord Server</a>.
         </p>
 
         <p className="text-gray-400 max-w-2xl mx-auto text-md">
@@ -172,15 +168,12 @@ export default function HomePage() {
           damit wir dir effizient helfen können.
         </p>
       </section>
-      
+
       {/* APPLY SECTION */}
       <section 
         id="apply"
         className="relative px-8 max-w-7xl mx-auto mt-48 mb-48 text-center">
-        <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-6">
-          Bewerben
-        </h2>
-
+        <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-6">Bewerben</h2>
         <p className="text-gray-300 max-w-2xl mx-auto mb-10 text-lg">
           Du hast Lust, Teil unseres Teams zu werden und aktiv an AstroPlays
           mitzuwirken? Dann bewirb dich jetzt und gestalte die Zukunft mit uns.
@@ -196,7 +189,7 @@ export default function HomePage() {
           Jetzt bewerben →
         </a>
       </section>
-      
+
       <style jsx global>{`
         @keyframes gradientMove {
           0% { background-position: 0% 50%; }
