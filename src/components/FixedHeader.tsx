@@ -40,17 +40,26 @@ const FixedHeader = () => {
 
   // Smooth Scroll zu Section mit Header-Offset
   const goSection = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      const headerHeight = 80; // Höhe deines Headers in px (anpassen falls nötig)
-      const elementPosition = element.getBoundingClientRect().top + window.scrollY;
-      const offsetPosition = elementPosition - headerHeight - 8; // kleiner Abstand
-      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
-    } else {
-      // fallback: push URL + scroll nach render
-      router.push(`/#${id}`);
-    }
     setMenuOpen(false);
+
+    const scrollToSection = () => {
+      const element = document.getElementById(id);
+      if (!element) return;
+      const headerHeight = 80; // Höhe deines Headers
+      const elementPosition = element.getBoundingClientRect().top + window.scrollY;
+      const offsetPosition = elementPosition - headerHeight - 8;
+      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+    };
+
+    // Prüfen, ob wir bereits auf Homepage sind
+    if (pathname !== '/') {
+      // Navigiere erst auf Homepage, dann scrollen nach render
+      router.push('/');
+      // Kleine Verzögerung, bis der DOM gerendert ist
+      setTimeout(scrollToSection, 100); 
+    } else {
+      scrollToSection();
+    }
   };
 
   return (
