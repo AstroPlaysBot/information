@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function BetaTesterApplyPage() {
+export default function BackendDevApplyPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -17,9 +17,10 @@ export default function BetaTesterApplyPage() {
   const [form, setForm] = useState({
     age: '',
     email: '',
-    whyBeta: '',
-    modulesInterest: '',
-    priorExperience: '',
+    languageExperience: '',
+    databaseExperience: '',
+    apiExperience: '',
+    problemSolving: '',
     phoneReachable: '',
   });
 
@@ -33,15 +34,20 @@ export default function BetaTesterApplyPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isFormValid || !user) {
-      setShowToast({ type: 'error', message: 'Bitte alle Felder ausfüllen und Discord-Daten laden!' });
+    if (!isFormValid) {
+      setShowToast({ type: 'error', message: 'Bitte alle Felder ausfüllen!' });
+      return;
+    }
+    if (!user) {
+      setShowToast({ type: 'error', message: 'Discord-Daten konnten nicht geladen werden.' });
       return;
     }
 
     const answers = {
-      'Warum Beta Tester': form.whyBeta,
-      'Module Interesse': form.modulesInterest,
-      'Vorherige Erfahrung': form.priorExperience,
+      'Programmiersprachen': form.languageExperience,
+      'Datenbank Erfahrung': form.databaseExperience,
+      'API Erfahrung': form.apiExperience,
+      'Problembehandlung': form.problemSolving,
       'Telefon erreichbar': form.phoneReachable,
     };
 
@@ -57,14 +63,24 @@ export default function BetaTesterApplyPage() {
           accountCreated: user.created_at,
           age: form.age,
           email: form.email,
-          role: 'Beta Tester',
+          role: 'Backend Developer',
           answers,
         }),
       });
+
       const data = await res.json();
+
       if (data.success) {
         setShowToast({ type: 'success', message: 'Bewerbung gesendet!' });
-        setForm({ age: '', email: '', whyBeta: '', modulesInterest: '', priorExperience: '', phoneReachable: '' });
+        setForm({
+          age: '',
+          email: '',
+          languageExperience: '',
+          databaseExperience: '',
+          apiExperience: '',
+          problemSolving: '',
+          phoneReachable: '',
+        });
         setTimeout(() => router.push('/'), 500);
       } else {
         setShowToast({ type: 'error', message: 'Fehler beim Absenden: ' + data.error });
@@ -79,9 +95,10 @@ export default function BetaTesterApplyPage() {
     async function fetchDiscordUser() {
       const token = searchParams.get('token');
       if (!token) {
-        router.push('/apply/betatester');
+        router.push('/apply/backend-developer');
         return;
       }
+
       try {
         const res = await fetch('https://discord.com/api/users/@me', {
           headers: { Authorization: `Bearer ${token}` },
@@ -98,9 +115,8 @@ export default function BetaTesterApplyPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-950 text-white px-6 py-16 relative">
-      <h1 className="text-4xl font-extrabold mb-10 text-center">Bewerbung: Beta Tester</h1>
+      <h1 className="text-4xl font-extrabold mb-10 text-center">Bewerbung: Backend Developer</h1>
 
-      {/* Discord Info */}
       {user && (
         <div className="flex items-center gap-4 mb-8">
           <img
@@ -110,7 +126,9 @@ export default function BetaTesterApplyPage() {
           />
           <div>
             <p className="font-bold text-xl">{user.username}#{user.discriminator}</p>
-            <p className="text-gray-400 text-sm">Account erstellt: {new Date(user.created_at).toLocaleDateString()}</p>
+            <p className="text-gray-400 text-sm">
+              Account erstellt: {new Date(user.created_at).toLocaleDateString()}
+            </p>
           </div>
         </div>
       )}
@@ -118,9 +136,10 @@ export default function BetaTesterApplyPage() {
       <form onSubmit={handleSubmit} className="max-w-3xl mx-auto flex flex-col gap-6">
         <input name="age" value={form.age} onChange={handleChange} placeholder="Alter" className="p-3 rounded-xl bg-gray-800 text-white"/>
         <input name="email" value={form.email} onChange={handleChange} placeholder="Email Adresse" className="p-3 rounded-xl bg-gray-800 text-white"/>
-        <textarea name="whyBeta" value={form.whyBeta} onChange={handleChange} placeholder="Warum möchtest du Beta Tester werden?" className="p-3 rounded-xl bg-gray-800 text-white"/>
-        <textarea name="modulesInterest" value={form.modulesInterest} onChange={handleChange} placeholder="Welche Module interessieren dich besonders?" className="p-3 rounded-xl bg-gray-800 text-white"/>
-        <textarea name="priorExperience" value={form.priorExperience} onChange={handleChange} placeholder="Hast du bereits Erfahrung als Beta Tester oder mit ähnlichen Projekten?" className="p-3 rounded-xl bg-gray-800 text-white"/>
+        <textarea name="languageExperience" value={form.languageExperience} onChange={handleChange} placeholder="Welche Programmiersprachen beherrschst du?" className="p-3 rounded-xl bg-gray-800 text-white"/>
+        <textarea name="databaseExperience" value={form.databaseExperience} onChange={handleChange} placeholder="Hast du Erfahrung mit Datenbanken?" className="p-3 rounded-xl bg-gray-800 text-white"/>
+        <textarea name="apiExperience" value={form.apiExperience} onChange={handleChange} placeholder="Hast du Erfahrung mit APIs oder Backend-Architekturen?" className="p-3 rounded-xl bg-gray-800 text-white"/>
+        <textarea name="problemSolving" value={form.problemSolving} onChange={handleChange} placeholder="Beschreibe deine Herangehensweise bei Problemstellungen" className="p-3 rounded-xl bg-gray-800 text-white"/>
         <input name="phoneReachable" value={form.phoneReachable} onChange={handleChange} placeholder="Können wir dich telefonisch erreichen?" className="p-3 rounded-xl bg-gray-800 text-white"/>
 
         <button type="submit" disabled={!isFormValid} className={`py-3 rounded-xl font-semibold shadow-lg transition ${isFormValid ? 'bg-purple-600 hover:bg-pink-600' : 'bg-gray-700 cursor-not-allowed'}`}>
