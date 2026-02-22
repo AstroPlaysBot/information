@@ -38,8 +38,15 @@ const FixedHeader = () => {
     setMenuOpen(false);
   };
 
+  // Smooth Scroll zu Section
   const goSection = (id: string) => {
-    router.push(`/#${id}`);
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      // fallback: push URL + scroll nach render
+      router.push(`/#${id}`);
+    }
     setMenuOpen(false);
   };
 
@@ -65,10 +72,7 @@ const FixedHeader = () => {
           `}
         >
           {/* LOGO */}
-          <div
-            className="flex items-center gap-3 cursor-pointer"
-            onClick={goHome}
-          >
+          <div className="flex items-center gap-3 cursor-pointer" onClick={goHome}>
             <Image
               src="/astroplays.PNG"
               alt="AstroPlays Logo"
@@ -84,41 +88,16 @@ const FixedHeader = () => {
 
           {/* DESKTOP NAV */}
           <nav className="hidden md:flex items-center gap-6 text-sm text-gray-300">
-            <button onClick={goHome} className="hover:text-white transition">
-              Home
-            </button>
-            <button
-              onClick={() => goSection('astro-moderation')}
-              className="hover:text-white transition"
-            >
-              Module
-            </button>
-            <button
-              onClick={() => goSection('support')}
-              className="hover:text-white transition"
-            >
-              Support
-            </button>
-            <button
-              onClick={() => goSection('apply')}
-              className="hover:text-white transition"
-            >
-              Bewerben
-            </button>
-            <button
-              onClick={goLogin}
-              className="hover:text-white transition"
-            >
-              Einloggen
-            </button>
+            <button onClick={goHome} className="hover:text-white transition">Home</button>
+            <button onClick={() => goSection('astro-moderation')} className="hover:text-white transition">Module</button>
+            <button onClick={() => goSection('support')} className="hover:text-white transition">Support</button>
+            <button onClick={() => goSection('apply')} className="hover:text-white transition">Bewerben</button>
+            <button onClick={goLogin} className="hover:text-white transition">Einloggen</button>
           </nav>
 
           {/* MOBILE BUTTON */}
           <div className="md:hidden">
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="text-white text-2xl"
-            >
+            <button onClick={() => setMenuOpen(!menuOpen)} className="text-white text-2xl">
               {menuOpen ? <HiX /> : <HiMenu />}
             </button>
           </div>
@@ -133,10 +112,7 @@ const FixedHeader = () => {
             className="absolute top-0 right-0 h-full w-3/4 max-w-xs bg-neutral-900 text-white p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <button
-              onClick={() => setMenuOpen(false)}
-              className="mb-6 text-2xl"
-            >
+            <button onClick={() => setMenuOpen(false)} className="mb-6 text-2xl">
               <HiX />
             </button>
 
