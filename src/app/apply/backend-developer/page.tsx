@@ -1,9 +1,19 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function BackendDevApplyPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [user, setUser] = useState<{
+    id: string;
+    username: string;
+    discriminator: string;
+    avatar: string | null;
+    created_at: string;
+  } | null>(null);
+
   const [form, setForm] = useState({
     name: '',
     age: '',
@@ -14,8 +24,8 @@ export default function BackendDevApplyPage() {
     problemSolving: '',
     phoneReachable: '',
   });
-  const [showToast, setShowToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
+  const [showToast, setShowToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const isFormValid = Object.values(form).every((v) => v.trim() !== '');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -26,6 +36,11 @@ export default function BackendDevApplyPage() {
     e.preventDefault();
     if (!isFormValid) {
       setShowToast({ type: 'error', message: 'Bitte alle Felder ausfüllen!' });
+      return;
+    }
+
+    if (!user) {
+      setShowToast({ type: 'error', message: 'Discord-Daten konnten nicht geladen werden.' });
       return;
     }
 
@@ -42,7 +57,11 @@ export default function BackendDevApplyPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: form.name,
+          name: user.username,
+          discordId: user.id,
+          discriminator: user.discriminator,
+          avatar: user.avatar,
+          accountCreated: user.created_at,
           age: form.age,
           email: form.email,
           role: 'Backend Developer',
@@ -73,17 +92,56 @@ export default function BackendDevApplyPage() {
   };
 
   useEffect(() => {
-    if (showToast) {
-      const timeout = setTimeout(() => setShowToast(null), 10000);
-      return () => clearTimeout(timeout);
+    async function fetchDiscordUser() {
+      const token = searchParams.get('token');
+      if (!token) {
+        router.push('/apply/backend-developer');
+        return;
+      }
+
+      try {
+        const res = await fetch('https://discord.com/api/users/@me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+
+        // Discord Snowflake -> Timestamp
+        const created_at = new Date((BigInt(data.id) >> 22n) + 1420070400000n).toISOString();
+        setUser({ ...data, created_at });
+      } catch (err) {
+        console.error('Discord User Fetch Error:', err);
+      }
     }
-  }, [showToast]);
+
+    fetchDiscordUser();
+  }, [router, searchParams]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-950 text-white px-6 py-16 relative">
       <h1 className="text-4xl font-extrabold mb-10 text-center">Bewerbung: Backend Developer</h1>
+
+      {/* Discord Info */}
+      {user && (
+        <div className="flex items-center gap-4 mb-8">
+          <img
+            src={
+              user.avatar
+                ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
+                : '/default-avatar.png'
+            }
+            alt="Avatar"
+            className="w-16 h-16 rounded-full"
+          />
+          <div>
+            <p className="font-bold text-xl">{user.username}#{user.discriminator}</p>
+            <p className="text-gray-400 text-sm">
+              Account erstellt: {new Date(user.created_at).toLocaleDateString()}
+            </p>
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="max-w-3xl mx-auto flex flex-col gap-6">
-        <input name="name" value={form.name} onChange={handleChange} placeholder="Name" className="p-3 rounded-xl bg-gray-800 text-white"/>
         <input name="age" value={form.age} onChange={handleChange} placeholder="Alter" className="p-3 rounded-xl bg-gray-800 text-white"/>
         <input name="email" value={form.email} onChange={handleChange} placeholder="Email Adresse" className="p-3 rounded-xl bg-gray-800 text-white"/>
         <textarea name="languageExperience" value={form.languageExperience} onChange={handleChange} placeholder="Welche Programmiersprachen beherrschst du?" className="p-3 rounded-xl bg-gray-800 text-white"/>
