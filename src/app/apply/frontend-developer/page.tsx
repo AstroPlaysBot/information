@@ -14,7 +14,9 @@ export default function FrontendDevApplyPage() {
     teamwork: '',
     phoneReachable: '',
   });
-  const [showToast, setShowToast] = useState(false);
+  const [showToast, setShowToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const isFormValid = Object.values(form).every((v) => v.trim() !== '');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -22,6 +24,11 @@ export default function FrontendDevApplyPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isFormValid) {
+      setShowToast({ type: 'error', message: 'Bitte alle Felder ausfüllen!' });
+      return;
+    }
+
     const answers = {
       'Frontend-Frameworks': form.frameworkExperience,
       'UI/UX Erfahrung': form.uiExperience,
@@ -44,7 +51,7 @@ export default function FrontendDevApplyPage() {
       });
       const data = await res.json();
       if (data.success) {
-        setShowToast(true);
+        setShowToast({ type: 'success', message: 'Bewerbung gesendet!' });
         setForm({
           name: '',
           age: '',
@@ -56,11 +63,21 @@ export default function FrontendDevApplyPage() {
           phoneReachable: '',
         });
         setTimeout(() => router.push('/'), 500);
-      } else alert('Fehler: ' + data.error);
-    } catch (err) { alert('Unerwarteter Fehler'); console.error(err); }
+      } else {
+        setShowToast({ type: 'error', message: 'Fehler beim Absenden: ' + data.error });
+      }
+    } catch (err) {
+      console.error(err);
+      setShowToast({ type: 'error', message: 'Unerwarteter Fehler beim Absenden.' });
+    }
   };
 
-  useEffect(() => { if (showToast) { const t = setTimeout(() => setShowToast(false), 10000); return () => clearTimeout(t); } }, [showToast]);
+  useEffect(() => {
+    if (showToast) {
+      const timeout = setTimeout(() => setShowToast(null), 10000);
+      return () => clearTimeout(timeout);
+    }
+  }, [showToast]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-950 text-white px-6 py-16 relative">
@@ -74,15 +91,24 @@ export default function FrontendDevApplyPage() {
         <textarea name="projectPortfolio" value={form.projectPortfolio} onChange={handleChange} placeholder="Zeig uns ein Projekt oder Portfolio" className="p-3 rounded-xl bg-gray-800 text-white"/>
         <textarea name="teamwork" value={form.teamwork} onChange={handleChange} placeholder="Wie arbeitest du im Team?" className="p-3 rounded-xl bg-gray-800 text-white"/>
         <input name="phoneReachable" value={form.phoneReachable} onChange={handleChange} placeholder="Können wir dich telefonisch erreichen?" className="p-3 rounded-xl bg-gray-800 text-white"/>
-        <button type="submit" className="py-3 bg-purple-600 hover:bg-pink-600 rounded-xl font-semibold shadow-lg transition">
+
+        <button
+          type="submit"
+          disabled={!isFormValid}
+          className={`py-3 rounded-xl font-semibold shadow-lg transition ${isFormValid ? 'bg-purple-600 hover:bg-pink-600' : 'bg-gray-700 cursor-not-allowed'}`}
+        >
           Bewerbung abschicken
         </button>
       </form>
 
       {showToast && (
-        <div className="fixed bottom-6 right-6 bg-green-600 text-white px-4 py-2 rounded shadow-lg flex items-center gap-4 opacity-100 transition-opacity duration-1000">
-          Bewerbung gesendet
-          <button className="font-bold" onClick={() => setShowToast(false)}>×</button>
+        <div
+          className={`fixed bottom-6 right-6 px-4 py-2 rounded shadow-lg flex items-center gap-4 transition-opacity duration-1000 ${
+            showToast.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+          }`}
+        >
+          {showToast.message}
+          <button className="font-bold" onClick={() => setShowToast(null)}>×</button>
         </div>
       )}
     </div>
