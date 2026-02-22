@@ -14,9 +14,28 @@ export async function GET() {
     return NextResponse.json({ applications });
   } catch (error) {
     console.error('ADMINBOARD ERROR:', error);
-    return NextResponse.json(
-      { error: 'Datenbankfehler' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Datenbankfehler' }, { status: 500 });
+  }
+}
+
+export async function POST(req: Request) {
+  try {
+    const data = await req.json();
+
+    const created = await prisma.application.create({
+      data: {
+        name: data.name,
+        age: data.age,
+        email: data.email,
+        role: data.role,          // z.B. 'Beta Tester'
+        answers: data.answers,    // JSON-Objekt
+        submittedAt: new Date(),
+      },
+    });
+
+    return NextResponse.json({ success: true, application: created });
+  } catch (error) {
+    console.error('ADMINBOARD POST ERROR:', error);
+    return NextResponse.json({ success: false, error: 'Speichern fehlgeschlagen' }, { status: 500 });
   }
 }
