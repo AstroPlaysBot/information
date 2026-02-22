@@ -48,7 +48,7 @@ export async function GET(req: Request) {
     if (checkJson.allowed) {
       return NextResponse.redirect(`${APP_URL}/adminboard`);
     } else {
-      return NextResponse.redirect(`${APP_URL}/`);
+      return NextResponse.redirect(`${APP_URL}/?error=admin_forbidden`);
     }
   }
 
