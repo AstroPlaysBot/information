@@ -38,6 +38,12 @@ const applications: ApplicationType[] = [
 export default function ApplyPage() {
   const router = useRouter();
 
+  const handleApply = (appId: string) => {
+    // Leite zuerst zu Discord OAuth weiter und speichere den redirect
+    const redirectUrl = encodeURIComponent(`/apply/${appId}`);
+    window.location.href = `/api/discord-auth?redirect=${redirectUrl}`;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-950 text-white px-6 py-16">
       <h1 className="text-5xl font-extrabold text-center mb-12 animate-fadeIn">
@@ -71,7 +77,7 @@ export default function ApplyPage() {
             </div>
 
             <button
-              onClick={() => router.push(`/apply/${app.id}`)}
+              onClick={() => handleApply(app.id)}
               className="mt-4 py-3 px-6 rounded-xl bg-purple-600 hover:bg-pink-600 text-white font-semibold shadow-lg transition-all"
             >
               Bewerben
