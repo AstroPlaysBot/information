@@ -1,14 +1,26 @@
-
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Background from '../components/Background';
+import { useSearchParams } from 'next/navigation';
 
 export default function HomePage() {
+  const [showError, setShowError] = useState(false);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const errorParam = searchParams.get('error');
+    if (errorParam === 'admin_forbidden') {
+      setShowError(true);
+    }
+  }, [searchParams]);
+
+  const closeError = () => setShowError(false);
+
   const modules = [
     {
       group: 'AstroModeration',
-      id: 'astro-moderation', // <- ID für Scrollziel
+      id: 'astro-moderation',
       items: [
         { name: 'AstroAutoRoles', info: 'Automatisches Rollenmanagement' },
         { name: 'AstroBoost', info: 'Boost-Funktionen für deinen Server' },
@@ -31,9 +43,7 @@ export default function HomePage() {
     },
     {
       group: 'AstroStreaming',
-      items: [
-        { name: 'Kommt noch...', info: 'Streaming-Features in Arbeit' },
-      ],
+      items: [{ name: 'Kommt noch...', info: 'Streaming-Features in Arbeit' }],
     },
     {
       group: 'AstroPLAYS',
@@ -45,15 +55,32 @@ export default function HomePage() {
     },
     {
       group: 'Premium Features',
-      items: [
-        { name: 'AstroTickets+', info: 'Premium Ticketsystem' },
-      ],
+      items: [{ name: 'AstroTickets+', info: 'Premium Ticketsystem' }],
     },
   ];
 
   return (
-    <div className="overflow-x-hidden">
+    <div className="overflow-x-hidden relative">
       <Background />
+
+      {/* ERROR MODAL */}
+      {showError && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="relative bg-neutral-900 text-white rounded-2xl shadow-xl max-w-md w-full p-6 md:p-8">
+            <button
+              onClick={closeError}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl md:text-3xl"
+            >
+              &times;
+            </button>
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">Warnung!</h2>
+            <p className="text-gray-300 text-sm md:text-base">
+              Du hast dich versucht in unser Adminboard einzuloggen. Wie es aussieht, fehlen dir
+              dafür die benötigten Berechtigungen!
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* HERO SECTION */}
       <section className="relative flex flex-col items-start justify-center min-h-screen px-8 max-w-7xl mx-auto">
@@ -90,7 +117,7 @@ export default function HomePage() {
         {modules.map((group) => (
           <div
             key={group.group}
-            id={group.id ? group.id : undefined} // <- ID setzen, falls vorhanden
+            id={group.id ? group.id : undefined}
             className="relative flex flex-col items-center text-center"
           >
             <h2 className="text-4xl font-extrabold text-white mb-12">
@@ -98,12 +125,10 @@ export default function HomePage() {
             </h2>
 
             <div
-              className={`
-                grid gap-8 z-10 relative
+              className={`grid gap-8 z-10 relative
                 ${group.items.length === 1
                   ? 'grid-cols-1 justify-items-center'
-                  : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}
-              `}
+                  : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}
             >
               {group.items.map((mod) => (
                 <div
