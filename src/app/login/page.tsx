@@ -58,7 +58,7 @@ export default function LoginPage() {
                      transition-transform hover:scale-105"
         >
           <h2 className="text-3xl font-extrabold text-white mb-4">
-            Admin Dashboard
+            Adminboard
           </h2>
           <p className="text-gray-200 text-lg">
             Bewerbungen, Admin-Funktionen & Verwaltung.
