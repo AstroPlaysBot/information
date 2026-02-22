@@ -1,7 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+const prisma = globalThis.prisma || new PrismaClient();
+if (process.env.NODE_ENV !== 'production') globalThis.prisma = prisma;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') return res.status(405).end();
@@ -14,6 +15,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(200).json({ applications });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Datenbankfehler' });
+    res.status(500).json({ error: 'Datenbankfehler', details: err instanceof Error ? err.message : err });
   }
 }
