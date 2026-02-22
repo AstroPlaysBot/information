@@ -1,7 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = globalThis.prisma || new PrismaClient();
+// Type für globalThis erweitern
+declare global {
+  // eslint-disable-next-line no-var
+  var prisma: PrismaClient | undefined;
+}
+
+// prisma global oder neu
+const prisma = globalThis.prisma ?? new PrismaClient();
 if (process.env.NODE_ENV !== 'production') globalThis.prisma = prisma;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
