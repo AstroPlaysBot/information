@@ -6,10 +6,10 @@ interface Application {
   id: string;
   role: 'Beta Tester' | 'Moderator' | 'Frontend Developer' | 'Backend Developer';
   name: string;
-  age: string;
-  email: string;
-  answers: Record<string, string>;
-  submittedAt: string;
+  age?: string;
+  email?: string;
+  answers?: Record<string, string>;
+  submittedAt?: string;
 }
 
 const roleColors: Record<Application['role'], string> = {
@@ -22,19 +22,43 @@ const roleColors: Record<Application['role'], string> = {
 export default function AdminBoard() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'All' | Application['role']>('All');
   const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/adminboard')
       .then(res => res.json())
-      .then(data => setApplications(data.applications))
+      .then(data => {
+        if (data?.applications) {
+          setApplications(data.applications);
+        } else {
+          setApplications([]);
+        }
+      })
+      .catch(err => {
+        console.error('Fehler beim Laden der Bewerbungen:', err);
+        setError('Bewerbungen konnten nicht geladen werden.');
+        setApplications([]);
+      })
       .finally(() => setLoading(false));
   }, []);
 
   const filteredApps = filter === 'All' ? applications : applications.filter(a => a.role === filter);
 
-  if (loading) return <div className="h-screen flex justify-center items-center text-white text-2xl">Lade Bewerbungen…</div>;
+  if (loading)
+    return (
+      <div className="h-screen flex justify-center items-center text-white text-2xl">
+        Lade Bewerbungen…
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="h-screen flex justify-center items-center text-red-500 text-2xl">
+        {error}
+      </div>
+    );
 
   return (
     <div className="min-h-screen bg-gray-900 px-6 py-12 text-white">
@@ -69,30 +93,47 @@ export default function AdminBoard() {
             >
               {/* Header */}
               <div
-                className={`flex justify-between items-center p-4 cursor-pointer ${roleColors[app.role]} bg-opacity-80`}
+                className={`flex justify-between items-center p-4 cursor-pointer ${
+                  roleColors[app.role]
+                } bg-opacity-80`}
                 onClick={() => setExpanded(expanded === app.id ? null : app.id)}
               >
                 <h2 className="text-xl font-bold">{app.role}</h2>
-                <span className="text-sm">{new Date(app.submittedAt).toLocaleString()}</span>
+                <span className="text-sm">
+                  {app.submittedAt ? new Date(app.submittedAt).toLocaleString() : '–'}
+                </span>
               </div>
 
               {/* Collapsible Content */}
               {expanded === app.id && (
                 <div className="p-4 border-t border-gray-700">
                   <p className="text-gray-200 mb-2">
-                    <strong>Name:</strong> {app.name} | <strong>Alter:</strong> {app.age} | <strong>Email:</strong> {app.email}
+                    <strong>Name:</strong> {app.name || '–'} |{' '}
+                    <strong>Alter:</strong> {app.age || '–'} | <strong>Email:</strong> {app.email || '–'}
                   </p>
+
                   <div className="flex flex-col gap-2 text-gray-300">
-                    {Object.entries(app.answers).map(([q, a]) => (
-                      <div key={q}>
-                        <strong>{q}:</strong> {a}
-                      </div>
-                    ))}
+                    {app.answers && Object.keys(app.answers).length > 0 ? (
+                      Object.entries(app.answers).map(([q, a]) => (
+                        <div key={q}>
+                          <strong>{q}:</strong> {a}
+                        </div>
+                      ))
+                    ) : (
+                      <div>Keine Antworten vorhanden.</div>
+                    )}
                   </div>
+
                   <div className="mt-4 flex gap-2">
-                    <button className="px-3 py-1 rounded bg-green-600 hover:bg-green-500 transition">Akzeptieren</button>
-                    <button className="px-3 py-1 rounded bg-red-600 hover:bg-red-500 transition">Ablehnen</button>
-                    <button className="px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 transition">Details kopieren</button>
+                    <button className="px-3 py-1 rounded bg-green-600 hover:bg-green-500 transition">
+                      Akzeptieren
+                    </button>
+                    <button className="px-3 py-1 rounded bg-red-600 hover:bg-red-500 transition">
+                      Ablehnen
+                    </button>
+                    <button className="px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 transition">
+                      Details kopieren
+                    </button>
                   </div>
                 </div>
               )}
