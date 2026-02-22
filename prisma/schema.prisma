@@ -1,0 +1,23 @@
+// prisma/schema.prisma
+
+// 1️⃣ Datenquelle: Supabase (PostgreSQL)
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // holt die URL aus .env oder Vercel
+}
+
+// 2️⃣ Prisma Client Generator
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 3️⃣ Modell für Bewerbungen
+model Application {
+  id          String   @id @default(cuid())   // eindeutige ID
+  name        String
+  role        String                            // z.B. "Moderator", "Frontend Developer"
+  age         String
+  email       String
+  answers     Json                              // speichert deine Antworten als JSON
+  submittedAt DateTime @default(now())         // automatisch Timestamp
+}
