@@ -15,7 +15,6 @@ export default function BackendDevApplyPage() {
   } | null>(null);
 
   const [form, setForm] = useState({
-    name: '',
     age: '',
     email: '',
     languageExperience: '',
@@ -26,6 +25,7 @@ export default function BackendDevApplyPage() {
   });
 
   const [showToast, setShowToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
   const isFormValid = Object.values(form).every((v) => v.trim() !== '');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -38,7 +38,6 @@ export default function BackendDevApplyPage() {
       setShowToast({ type: 'error', message: 'Bitte alle Felder ausfüllen!' });
       return;
     }
-
     if (!user) {
       setShowToast({ type: 'error', message: 'Discord-Daten konnten nicht geladen werden.' });
       return;
@@ -68,11 +67,12 @@ export default function BackendDevApplyPage() {
           answers,
         }),
       });
+
       const data = await res.json();
+
       if (data.success) {
         setShowToast({ type: 'success', message: 'Bewerbung gesendet!' });
         setForm({
-          name: '',
           age: '',
           email: '',
           languageExperience: '',
@@ -104,15 +104,12 @@ export default function BackendDevApplyPage() {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
-
-        // Discord Snowflake -> Timestamp
         const created_at = new Date((BigInt(data.id) >> 22n) + 1420070400000n).toISOString();
         setUser({ ...data, created_at });
       } catch (err) {
         console.error('Discord User Fetch Error:', err);
       }
     }
-
     fetchDiscordUser();
   }, [router, searchParams]);
 
@@ -120,15 +117,10 @@ export default function BackendDevApplyPage() {
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-950 text-white px-6 py-16 relative">
       <h1 className="text-4xl font-extrabold mb-10 text-center">Bewerbung: Backend Developer</h1>
 
-      {/* Discord Info */}
       {user && (
         <div className="flex items-center gap-4 mb-8">
           <img
-            src={
-              user.avatar
-                ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
-                : '/default-avatar.png'
-            }
+            src={user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : '/default-avatar.png'}
             alt="Avatar"
             className="w-16 h-16 rounded-full"
           />
@@ -150,21 +142,13 @@ export default function BackendDevApplyPage() {
         <textarea name="problemSolving" value={form.problemSolving} onChange={handleChange} placeholder="Beschreibe deine Herangehensweise bei Problemstellungen" className="p-3 rounded-xl bg-gray-800 text-white"/>
         <input name="phoneReachable" value={form.phoneReachable} onChange={handleChange} placeholder="Können wir dich telefonisch erreichen?" className="p-3 rounded-xl bg-gray-800 text-white"/>
 
-        <button
-          type="submit"
-          disabled={!isFormValid}
-          className={`py-3 rounded-xl font-semibold shadow-lg transition ${isFormValid ? 'bg-purple-600 hover:bg-pink-600' : 'bg-gray-700 cursor-not-allowed'}`}
-        >
+        <button type="submit" disabled={!isFormValid} className={`py-3 rounded-xl font-semibold shadow-lg transition ${isFormValid ? 'bg-purple-600 hover:bg-pink-600' : 'bg-gray-700 cursor-not-allowed'}`}>
           Bewerbung abschicken
         </button>
       </form>
 
       {showToast && (
-        <div
-          className={`fixed bottom-6 right-6 px-4 py-2 rounded shadow-lg flex items-center gap-4 transition-opacity duration-1000 ${
-            showToast.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
-          }`}
-        >
+        <div className={`fixed bottom-6 right-6 px-4 py-2 rounded shadow-lg flex items-center gap-4 transition-opacity duration-1000 ${showToast.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
           {showToast.message}
           <button className="font-bold" onClick={() => setShowToast(null)}>×</button>
         </div>
