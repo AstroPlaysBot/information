@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function BackendDevApplyPage() {
+export default function BetaTesterApplyPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -17,10 +17,9 @@ export default function BackendDevApplyPage() {
   const [form, setForm] = useState({
     age: '',
     email: '',
-    languageExperience: '',
-    databaseExperience: '',
-    apiExperience: '',
-    problemSolving: '',
+    whyBeta: '',
+    modulesInterest: '',
+    priorExperience: '',
     phoneReachable: '',
   });
 
@@ -44,10 +43,9 @@ export default function BackendDevApplyPage() {
     }
 
     const answers = {
-      'Programmiersprachen': form.languageExperience,
-      'Datenbank Erfahrung': form.databaseExperience,
-      'API Erfahrung': form.apiExperience,
-      'Problembehandlung': form.problemSolving,
+      'Warum Beta Tester': form.whyBeta,
+      'Module Interesse': form.modulesInterest,
+      'Vorherige Erfahrung': form.priorExperience,
       'Telefon erreichbar': form.phoneReachable,
     };
 
@@ -63,7 +61,7 @@ export default function BackendDevApplyPage() {
           accountCreated: user.created_at,
           age: form.age,
           email: form.email,
-          role: 'Backend Developer',
+          role: 'Beta Tester',
           answers,
         }),
       });
@@ -75,10 +73,9 @@ export default function BackendDevApplyPage() {
         setForm({
           age: '',
           email: '',
-          languageExperience: '',
-          databaseExperience: '',
-          apiExperience: '',
-          problemSolving: '',
+          whyBeta: '',
+          modulesInterest: '',
+          priorExperience: '',
           phoneReachable: '',
         });
         setTimeout(() => router.push('/'), 500);
@@ -95,7 +92,7 @@ export default function BackendDevApplyPage() {
     async function fetchDiscordUser() {
       const token = searchParams.get('token');
       if (!token) {
-        router.push('/apply/backend-developer');
+        router.push('/apply/beta-tester');
         return;
       }
 
@@ -115,7 +112,7 @@ export default function BackendDevApplyPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-950 text-white px-6 py-16 relative">
-      <h1 className="text-4xl font-extrabold mb-10 text-center">Bewerbung: Backend Developer</h1>
+      <h1 className="text-4xl font-extrabold mb-10 text-center">Bewerbung: Beta Tester</h1>
 
       {user && (
         <div className="flex items-center gap-4 mb-8">
@@ -136,11 +133,10 @@ export default function BackendDevApplyPage() {
       <form onSubmit={handleSubmit} className="max-w-3xl mx-auto flex flex-col gap-6">
         <input name="age" value={form.age} onChange={handleChange} placeholder="Alter" className="p-3 rounded-xl bg-gray-800 text-white"/>
         <input name="email" value={form.email} onChange={handleChange} placeholder="Email Adresse" className="p-3 rounded-xl bg-gray-800 text-white"/>
-        <textarea name="languageExperience" value={form.languageExperience} onChange={handleChange} placeholder="Welche Programmiersprachen beherrschst du?" className="p-3 rounded-xl bg-gray-800 text-white"/>
-        <textarea name="databaseExperience" value={form.databaseExperience} onChange={handleChange} placeholder="Hast du Erfahrung mit Datenbanken?" className="p-3 rounded-xl bg-gray-800 text-white"/>
-        <textarea name="apiExperience" value={form.apiExperience} onChange={handleChange} placeholder="Hast du Erfahrung mit APIs oder Backend-Architekturen?" className="p-3 rounded-xl bg-gray-800 text-white"/>
-        <textarea name="problemSolving" value={form.problemSolving} onChange={handleChange} placeholder="Beschreibe deine Herangehensweise bei Problemstellungen" className="p-3 rounded-xl bg-gray-800 text-white"/>
-        <input name="phoneReachable" value={form.phoneReachable} onChange={handleChange} placeholder="Können wir dich telefonisch erreichen?" className="p-3 rounded-xl bg-gray-800 text-white"/>
+        <textarea name="whyBeta" value={form.whyBeta} onChange={handleChange} placeholder="Warum Beta Tester?" className="p-3 rounded-xl bg-gray-800 text-white"/>
+        <textarea name="modulesInterest" value={form.modulesInterest} onChange={handleChange} placeholder="Module Interesse" className="p-3 rounded-xl bg-gray-800 text-white"/>
+        <textarea name="priorExperience" value={form.priorExperience} onChange={handleChange} placeholder="Vorherige Erfahrung" className="p-3 rounded-xl bg-gray-800 text-white"/>
+        <input name="phoneReachable" value={form.phoneReachable} onChange={handleChange} placeholder="Telefon erreichbar" className="p-3 rounded-xl bg-gray-800 text-white"/>
 
         <button type="submit" disabled={!isFormValid} className={`py-3 rounded-xl font-semibold shadow-lg transition ${isFormValid ? 'bg-purple-600 hover:bg-pink-600' : 'bg-gray-700 cursor-not-allowed'}`}>
           Bewerbung abschicken
