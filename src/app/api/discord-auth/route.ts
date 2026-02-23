@@ -7,7 +7,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL!;
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const code = url.searchParams.get('code');
-  const redirectParam = url.searchParams.get('redirect');
+  const redirectParam = url.searchParams.get('redirect'); // z.B. "moderator"
 
   // 🔹 Wenn kein Code da ist, starten wir OAuth
   if (!code) {
@@ -47,10 +47,11 @@ export async function GET(req: Request) {
   const userData = await userRes.json();
 
   // 🔹 Redirect nach OAuth
-  const state = url.searchParams.get('state');
   let redirectTo = '/dashboard';
+  const state = url.searchParams.get('state'); // z.B. apply_moderator
   if (state && state.startsWith('apply_')) {
-    redirectTo = `/apply/${state.replace('apply_', '')}`;
+    const role = state.replace('apply_', ''); // nur "moderator"
+    redirectTo = `/apply/${role}`;           // jetzt korrekt: /apply/moderator
   }
 
   return NextResponse.redirect(`${APP_URL}${redirectTo}?token=${tokenData.access_token}`);
