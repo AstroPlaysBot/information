@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 const GUILD_ID = '1462894776671277241';
 const ROLE_ID = '1474507057154756919';
 
-export default async function AdminBoardPage() {
+export default async function AdminboardPage() {
   const token = cookies().get('discord_token')?.value;
   if (!token) redirect('/');
 
@@ -37,7 +37,7 @@ export default async function AdminBoardPage() {
     const appsData = await appsRes.json();
     const applications = appsData?.applications || [];
 
-    return <AdminBoardClient applications={applications} />;
+    return <AdminboardClient applications={applications} />;
   } catch (err) {
     console.error(err);
     redirect('/?error=no_admin');
