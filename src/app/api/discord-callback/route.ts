@@ -1,3 +1,4 @@
+// app/api/discord-callback/route.ts
 import { NextResponse } from 'next/server';
 
 const CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!;
@@ -34,7 +35,7 @@ export async function GET(req: Request) {
       return NextResponse.redirect(`${APP_URL}/?error=oauth`);
     }
 
-    // Cookie setzen
+    // Cookie setzen und weiterleiten
     const res = NextResponse.redirect(`${APP_URL}/${state === 'adminboard' ? 'adminboard' : 'dashboard'}`);
     res.cookies.set('discord_token', tokenData.access_token, {
       httpOnly: true,
