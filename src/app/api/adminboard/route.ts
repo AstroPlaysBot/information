@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
@@ -18,15 +19,10 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const data = await req.json();
-
     const created = await prisma.application.create({
       data: {
         id: crypto.randomUUID(),
         name: data.name,
-        discord_id: data.discordId || null,
-        discriminator: data.discriminator || null,
-        avatar: data.avatar || null,
-        account_created: data.accountCreated || null,
         age: data.age || null,
         email: data.email || null,
         role: data.role,
@@ -34,7 +30,6 @@ export async function POST(req: Request) {
         submittedAt: new Date(),
       },
     });
-
     return NextResponse.json({ success: true, application: created });
   } catch (error) {
     console.error('ADMINBOARD POST ERROR:', error);
