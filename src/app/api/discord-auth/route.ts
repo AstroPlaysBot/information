@@ -7,10 +7,10 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL!;
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const code = url.searchParams.get('code');
-  const redirectParam = url.searchParams.get('redirect'); // z.B. "moderator" für Bewerbungen
-  const state = url.searchParams.get('state'); // optional, z.B. "dashboard" oder "adminboard"
+  const redirectParam = url.searchParams.get('redirect'); // Bewerbungsrole
+  const state = url.searchParams.get('state'); // optional: dashboard/adminboard/apply
 
-  // 🔹 Kein Code → OAuth starten
+  // Kein Code → OAuth starten
   if (!code) {
     let oauthState = 'dashboard';
     if (redirectParam) oauthState = `apply_${redirectParam}`;
@@ -24,7 +24,7 @@ export async function GET(req: Request) {
     return NextResponse.redirect(discordAuthUrl);
   }
 
-  // 🔹 Code vorhanden → Token holen
+  // Code vorhanden → Token holen
   const params = new URLSearchParams();
   params.append('client_id', CLIENT_ID);
   params.append('client_secret', CLIENT_SECRET);
@@ -38,19 +38,20 @@ export async function GET(req: Request) {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: params.toString(),
   });
+
   const tokenData = await tokenRes.json();
   if (!tokenData.access_token) {
     console.error('Token Error:', tokenData);
     return NextResponse.redirect(`${APP_URL}/login?error=oauth_failed`);
   }
 
-  // 🔹 User Infos holen
+  // User Infos
   const userRes = await fetch('https://discord.com/api/users/@me', {
     headers: { Authorization: `Bearer ${tokenData.access_token}` },
   });
   const userData = await userRes.json();
 
-  // 🔹 Redirect je nach Flow
+  // Redirect je nach Flow
   let redirectTo = '/dashboard';
   const currentState = url.searchParams.get('state');
 
@@ -68,7 +69,7 @@ export async function GET(req: Request) {
   return NextResponse.redirect(`${APP_URL}${redirectTo}?token=${tokenData.access_token}`);
 }
 
-// 🔹 POST für Dashboard/Adminboard
+// POST → Dashboard/Adminboard
 export async function POST(req: Request) {
   const body = await req.json();
   const code = body.code;
@@ -91,11 +92,17 @@ export async function POST(req: Request) {
   const tokenData = await tokenRes.json();
   if (!tokenData.access_token) return NextResponse.json({ error: 'OAuth failed' }, { status: 400 });
 
-  // Guilds nur für Dashboard
+  // User Infos
+  const userRes = await fetch('https://discord.com/api/users/@me', {
+    headers: { Authorization: `Bearer ${tokenData.access_token}` },
+  });
+  const userData = await userRes.json();
+
+  // Guilds für Dashboard
   const guildsRes = await fetch('https://discord.com/api/users/@me/guilds', {
     headers: { Authorization: `Bearer ${tokenData.access_token}` },
   });
   const guilds = await guildsRes.json();
 
-  return NextResponse.json({ guilds });
+  return NextResponse.json({ guilds, user: userData });
 }
