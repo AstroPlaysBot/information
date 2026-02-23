@@ -1,176 +1,28 @@
-'use client';
-import { useEffect, useState } from 'react';
+// src/app/adminboard/page.tsx
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import AdminBoardClient, { Application } from './AdminBoardClient';
 
-interface Application {
-  id: string;
-  role: 'Beta Tester' | 'Moderator' | 'Frontend Developer' | 'Backend Developer';
-  name: string;
-  discordId?: string;
-  discriminator?: string;
-  avatar?: string | null;
-  accountCreated?: string;
-  age?: string;
-  email?: string;
-  answers?: Record<string, string>;
-  submittedAt?: string;
-}
+export default async function AdminBoardPage() {
+  // 🍪 Token aus Cookie
+  const token = cookies().get('discord_token')?.value;
+  if (!token) redirect('/');
 
-export default function AdminBoardPage() {
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'All' | Application['role']>('All');
-  const [expanded, setExpanded] = useState<string | null>(null);
+  // 🔹 Admin-Check via API
+  const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/admin-check`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+  });
+  const check = await res.json();
+  if (!check.allowed) redirect('/?error=no_admin');
 
-  useEffect(() => {
-    const token = cookies().get('discord_token')?.value;
-    if (!token) {
-      redirect('/');
-      return;
-    }
+  // 🔹 Bewerbungen laden
+  const appsRes = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/adminboard`, {
+    cache: 'no-store',
+  });
+  const appsData = await appsRes.json();
+  const applications: Application[] = appsData?.applications || [];
 
-    // Admin-Check
-    fetch('/api/admin-check', { headers: { Authorization: `Bearer ${token}` } })
-      .then((res) => res.json())
-      .then((data) => {
-        if (!data.allowed) redirect('/?error=no_admin');
-      })
-      .catch(() => redirect('/?error=no_admin'));
-
-    // Lade Bewerbungen
-    fetch('/api/adminboard')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data?.applications) setApplications(data.applications);
-      })
-      .catch((err) => {
-        console.error('Fehler beim Laden der Bewerbungen:', err);
-        setError('Bewerbungen konnten nicht geladen werden.');
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
-  const filteredApps = filter === 'All' ? applications : applications.filter((a) => a.role === filter);
-
-  if (loading)
-    return <div className="h-screen flex justify-center items-center text-white text-2xl">Lade Bewerbungen…</div>;
-
-  if (error)
-    return <div className="h-screen flex justify-center items-center text-red-500 text-2xl">{error}</div>;
-
-  const roleColors: Record<Application['role'], string> = {
-    'Beta Tester': 'bg-purple-600',
-    'Moderator': 'bg-indigo-600',
-    'Frontend Developer': 'bg-green-600',
-    'Backend Developer': 'bg-red-600',
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-900 px-6 py-12 text-white">
-      <h1 className="text-4xl font-extrabold mb-8 text-center">Admin Dashboard – Bewerbungen</h1>
-
-      <div className="flex flex-wrap justify-center gap-3 mb-8">
-        {['All', 'Beta Tester', 'Moderator', 'Frontend Developer', 'Backend Developer'].map((r) => (
-          <button
-            key={r}
-            onClick={() => setFilter(r as any)}
-            className={`px-4 py-2 rounded-lg font-semibold transition ${
-              filter === r ? 'bg-white text-gray-900 shadow-lg' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-            }`}
-          >
-            {r}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex flex-col gap-6 max-w-6xl mx-auto">
-        <AnimatePresence>
-          {filteredApps.map((app) => (
-            <motion.div
-              key={app.id}
-              className="bg-gray-800 rounded-2xl shadow-lg overflow-hidden"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-            >
-              <div
-                className={`flex justify-between items-center p-4 cursor-pointer ${roleColors[app.role]} bg-opacity-80`}
-                onClick={() => setExpanded(expanded === app.id ? null : app.id)}
-              >
-                <h2 className="text-xl font-bold">{app.role}</h2>
-                <span className="text-sm">
-                  {app.submittedAt ? new Date(app.submittedAt).toLocaleString() : '–'}
-                </span>
-              </div>
-
-              {expanded === app.id && (
-                <div className="p-4 border-t border-gray-700 flex flex-col gap-4">
-                  {app.discordId && (
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={
-                          app.avatar
-                            ? `https://cdn.discordapp.com/avatars/${app.discordId}/${app.avatar}.png`
-                            : '/default-avatar.png'
-                        }
-                        alt="Avatar"
-                        className="w-12 h-12 rounded-full"
-                      />
-                      <p className="text-blue-400 font-bold hover:underline cursor-pointer">
-                        <a
-                          href={`https://discord.com/users/${app.discordId}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {app.name}#{app.discriminator}
-                        </a>
-                      </p>
-                      <p className="text-gray-300 text-sm ml-auto">
-                        Account erstellt: {app.accountCreated ? new Date(app.accountCreated).toLocaleDateString() : '–'}
-                      </p>
-                    </div>
-                  )}
-
-                  <p className="text-gray-200 mb-2">
-                    <strong>Alter:</strong> {app.age || '–'} | <strong>Email:</strong> {app.email || '–'}
-                  </p>
-
-                  <div className="flex flex-col gap-2 text-gray-300">
-                    {app.answers && Object.keys(app.answers).length > 0 ? (
-                      Object.entries(app.answers).map(([q, a]) => (
-                        <div key={q}>
-                          <strong>{q}:</strong> {a}
-                        </div>
-                      ))
-                    ) : (
-                      <div>Keine Antworten vorhanden.</div>
-                    )}
-                  </div>
-
-                  <div className="mt-4 flex gap-2">
-                    <button className="px-3 py-1 rounded bg-green-600 hover:bg-green-500 transition">
-                      Akzeptieren
-                    </button>
-                    <button className="px-3 py-1 rounded bg-red-600 hover:bg-red-500 transition">
-                      Ablehnen
-                    </button>
-                    <button className="px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 transition">
-                      Details kopieren
-                    </button>
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          ))}
-        </AnimatePresence>
-
-        {filteredApps.length === 0 && (
-          <p className="text-center text-gray-400 mt-12 text-lg">Keine Bewerbungen für diese Rolle gefunden.</p>
-        )}
-      </div>
-    </div>
-  );
+  // 🔹 Server Component gibt die Daten an Client Component weiter
+  return <AdminBoardClient applications={applications} />;
 }
