@@ -7,9 +7,9 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL!;
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const code = url.searchParams.get('code');
-  const redirectParam = url.searchParams.get('redirect'); // z.B. "moderator"
+  const redirectParam = url.searchParams.get('redirect'); // nur "moderator", "betatester" usw.
 
-  // 🔹 Wenn kein Code da ist, starten wir OAuth
+  // 🔹 Kein Code -> OAuth starten
   if (!code) {
     const redirectUri = `${APP_URL}/api/discord-auth`;
     const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
@@ -19,7 +19,7 @@ export async function GET(req: Request) {
     return NextResponse.redirect(discordAuthUrl);
   }
 
-  // 🔹 Code ist da → Token holen
+  // 🔹 Code da -> Token holen
   const params = new URLSearchParams();
   params.append('client_id', CLIENT_ID);
   params.append('client_secret', CLIENT_SECRET);
@@ -51,7 +51,7 @@ export async function GET(req: Request) {
   const state = url.searchParams.get('state'); // z.B. apply_moderator
   if (state && state.startsWith('apply_')) {
     const role = state.replace('apply_', ''); // nur "moderator"
-    redirectTo = `/apply/${role}`;           // jetzt korrekt: /apply/moderator
+    redirectTo = `/apply/${role}`;            // sauber: /apply/moderator
   }
 
   return NextResponse.redirect(`${APP_URL}${redirectTo}?token=${tokenData.access_token}`);
