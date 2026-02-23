@@ -1,38 +1,15 @@
 'use client';
 import React from 'react';
-
-const DISCORD_CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
-
-const DISCORD_SCOPE = encodeURIComponent('identify guilds');
-const DISCORD_RESPONSE_TYPE = 'code';
-
-function startDiscordAuth(target: 'dashboard' | 'adminboard') {
-  if (!DISCORD_CLIENT_ID || !APP_URL) {
-    alert('Fehler: Discord Client ID oder App URL fehlt');
-    return;
-  }
-
-  // Redirect URI unterscheidet sich für Adminboard
-  const redirectUri =
-    target === 'dashboard'
-      ? encodeURIComponent(`${APP_URL}/dashboard`)       // normales Dashboard
-      : encodeURIComponent(`${APP_URL}/api/discord-auth`); // Adminboard
-
-  const state = target;
-
-  const discordAuthUrl =
-    `https://discord.com/api/oauth2/authorize` +
-    `?client_id=${DISCORD_CLIENT_ID}` +
-    `&redirect_uri=${redirectUri}` +
-    `&response_type=${DISCORD_RESPONSE_TYPE}` +
-    `&scope=${DISCORD_SCOPE}` +
-    `&state=${state}`;
-
-  window.location.href = discordAuthUrl;
-}
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
+  const router = useRouter();
+
+  function startDiscordAuth(target: 'dashboard' | 'adminboard') {
+    // 👉 OAuth IMMER über die API starten
+    router.push(`/api/discord-auth?state=${target}`);
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
       <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-12">
@@ -50,7 +27,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Admin Dashboard */}
+        {/* Adminboard */}
         <div
           onClick={() => startDiscordAuth('adminboard')}
           className="relative cursor-pointer overflow-hidden rounded-2xl p-8 shadow-2xl
