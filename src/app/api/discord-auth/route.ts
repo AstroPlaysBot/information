@@ -1,4 +1,4 @@
-
+// app/api/discord-auth/route.ts
 import { NextResponse } from 'next/server';
 
 const CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!;
@@ -10,17 +10,20 @@ export async function GET(req: Request) {
   const code = url.searchParams.get('code');
   const redirectParam = url.searchParams.get('redirect'); // z.B. "moderator"
 
-  // 🔹 Wenn kein Code da ist, starten wir OAuth
+  // 🔹 Schritt 1: Kein Code → OAuth starten
   if (!code) {
     const redirectUri = `${APP_URL}/api/discord-auth`;
-    const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
-      redirectUri
-    )}&response_type=code&scope=identify&state=apply_${redirectParam || ''}`;
+    const discordAuthUrl = `https://discord.com/api/oauth2/authorize` +
+      `?client_id=${CLIENT_ID}` +
+      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+      `&response_type=code` +
+      `&scope=identify` +
+      `&state=${redirectParam || 'dashboard'}`; // state = Zielseite
 
     return NextResponse.redirect(discordAuthUrl);
   }
 
-  // 🔹 Code ist da → Token holen
+  // 🔹 Schritt 2: Code da → Token holen
   const params = new URLSearchParams();
   params.append('client_id', CLIENT_ID);
   params.append('client_secret', CLIENT_SECRET);
@@ -36,24 +39,30 @@ export async function GET(req: Request) {
   });
 
   const tokenData = await tokenRes.json();
+
   if (!tokenData.access_token) {
-    console.error('Token Error:', tokenData);
+    console.error('Discord Token Error:', tokenData);
     return NextResponse.redirect(`${APP_URL}/login?error=oauth_failed`);
   }
 
-  // 🔹 User Infos holen
+  // 🔹 Schritt 3: User Daten holen
   const userRes = await fetch('https://discord.com/api/users/@me', {
     headers: { Authorization: `Bearer ${tokenData.access_token}` },
   });
   const userData = await userRes.json();
 
-  // 🔹 Redirect nach OAuth
-  let redirectTo = '/dashboard';
-  const state = url.searchParams.get('state'); // z.B. apply_moderator
+  // 🔹 Schritt 4: Zielseite bestimmen
+  let redirectTo = '/dashboard'; // default
+  const state = url.searchParams.get('state');
+
   if (state && state.startsWith('apply_')) {
-    const role = state.replace('apply_', ''); // nur "moderator"
-    redirectTo = `/apply/${role}`;           // jetzt korrekt: /apply/moderator
+    // z.B. apply_moderator → /apply/moderator
+    const role = state.replace('apply_', '');
+    redirectTo = `/apply/${role}`;
+  } else if (state && state === 'adminboard') {
+    redirectTo = '/adminboard';
   }
 
+  // 🔹 Schritt 5: Weiterleitung mit Token
   return NextResponse.redirect(`${APP_URL}${redirectTo}?token=${tokenData.access_token}`);
 }
