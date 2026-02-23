@@ -1,4 +1,3 @@
-// app/api/discord-auth/route.ts
 import { NextResponse } from 'next/server';
 
 const CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!;
@@ -8,7 +7,8 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL!;
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const code = url.searchParams.get('code');
-  const redirectParam = url.searchParams.get('redirect'); // z.B. "moderator"
+  const redirectParam = url.searchParams.get('redirect'); // z.B. "/apply/moderator"
+  const state = url.searchParams.get('state'); // z.B. "dashboard" oder "adminboard"
 
   // 🔹 Schritt 1: Kein Code → OAuth starten
   if (!code) {
@@ -18,7 +18,7 @@ export async function GET(req: Request) {
       `&redirect_uri=${encodeURIComponent(redirectUri)}` +
       `&response_type=code` +
       `&scope=identify` +
-      `&state=${redirectParam || 'dashboard'}`; // state = Zielseite
+      `&state=${state || ''}`; // state kann leer sein
 
     return NextResponse.redirect(discordAuthUrl);
   }
@@ -52,15 +52,15 @@ export async function GET(req: Request) {
   const userData = await userRes.json();
 
   // 🔹 Schritt 4: Zielseite bestimmen
-  let redirectTo = '/dashboard'; // default
-  const state = url.searchParams.get('state');
+  let redirectTo = '/dashboard'; // Default
 
-  if (state && state.startsWith('apply_')) {
-    // z.B. apply_moderator → /apply/moderator
-    const role = state.replace('apply_', '');
-    redirectTo = `/apply/${role}`;
-  } else if (state && state === 'adminboard') {
+  if (redirectParam) {
+    // z.B. redirect=/apply/moderator → genau dahin
+    redirectTo = redirectParam;
+  } else if (state === 'adminboard') {
     redirectTo = '/adminboard';
+  } else if (state === 'dashboard') {
+    redirectTo = '/dashboard';
   }
 
   // 🔹 Schritt 5: Weiterleitung mit Token
