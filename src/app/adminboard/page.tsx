@@ -7,6 +7,10 @@ interface Application {
   id: string;
   role: 'Beta Tester' | 'Moderator' | 'Frontend Developer' | 'Backend Developer';
   name: string;
+  discordId?: string;
+  discriminator?: string;
+  avatar?: string | null;
+  accountCreated?: string; // ISO String
   age?: string;
   email?: string;
   answers?: Record<string, string>;
@@ -29,15 +33,12 @@ export default function AdminBoard() {
 
   useEffect(() => {
     fetch('/api/adminboard')
-      .then(res => res.json())
-      .then(data => {
-        if (data?.applications) {
-          setApplications(data.applications);
-        } else {
-          setApplications([]);
-        }
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.applications) setApplications(data.applications);
+        else setApplications([]);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error('Fehler beim Laden der Bewerbungen:', err);
         setError('Bewerbungen konnten nicht geladen werden.');
         setApplications([]);
@@ -45,7 +46,7 @@ export default function AdminBoard() {
       .finally(() => setLoading(false));
   }, []);
 
-  const filteredApps = filter === 'All' ? applications : applications.filter(a => a.role === filter);
+  const filteredApps = filter === 'All' ? applications : applications.filter((a) => a.role === filter);
 
   if (loading)
     return (
@@ -67,7 +68,7 @@ export default function AdminBoard() {
 
       {/* Filter Buttons */}
       <div className="flex flex-wrap justify-center gap-3 mb-8">
-        {['All', 'Beta Tester', 'Moderator', 'Frontend Developer', 'Backend Developer'].map(r => (
+        {['All', 'Beta Tester', 'Moderator', 'Frontend Developer', 'Backend Developer'].map((r) => (
           <button
             key={r}
             onClick={() => setFilter(r as any)}
@@ -84,7 +85,7 @@ export default function AdminBoard() {
 
       <div className="flex flex-col gap-6 max-w-6xl mx-auto">
         <AnimatePresence>
-          {filteredApps.map(app => (
+          {filteredApps.map((app) => (
             <motion.div
               key={app.id}
               className="bg-gray-800 rounded-2xl shadow-lg overflow-hidden"
@@ -107,9 +108,35 @@ export default function AdminBoard() {
 
               {/* Collapsible Content */}
               {expanded === app.id && (
-                <div className="p-4 border-t border-gray-700">
+                <div className="p-4 border-t border-gray-700 flex flex-col gap-4">
+                  {/* Discord Info */}
+                  {app.discordId && (
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={
+                          app.avatar
+                            ? `https://cdn.discordapp.com/avatars/${app.discordId}/${app.avatar}.png`
+                            : '/default-avatar.png'
+                        }
+                        alt="Avatar"
+                        className="w-12 h-12 rounded-full"
+                      />
+                      <p className="text-blue-400 font-bold hover:underline cursor-pointer">
+                        <a
+                          href={`https://discord.com/users/${app.discordId}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {app.name}#{app.discriminator}
+                        </a>
+                      </p>
+                      <p className="text-gray-300 text-sm ml-auto">
+                        Account erstellt: {app.accountCreated ? new Date(app.accountCreated).toLocaleDateString() : '–'}
+                      </p>
+                    </div>
+                  )}
+
                   <p className="text-gray-200 mb-2">
-                    <strong>Name:</strong> {app.name || '–'} |{' '}
                     <strong>Alter:</strong> {app.age || '–'} | <strong>Email:</strong> {app.email || '–'}
                   </p>
 
