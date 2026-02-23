@@ -1,13 +1,11 @@
 'use client';
 import React from 'react';
-import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
-  const router = useRouter();
 
   function startDiscordAuth(target: 'dashboard' | 'adminboard') {
-    // 👉 OAuth IMMER über die API starten
-    router.push(`/api/discord-auth?state=${target}`);
+    // ⚡ Browser-Redirect statt router.push → sicher für OAuth
+    window.location.href = `/api/discord-auth?state=${target}`;
   }
 
   return (
