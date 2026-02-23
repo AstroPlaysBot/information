@@ -1,6 +1,7 @@
-
 'use client';
 import { useEffect, useState } from 'react';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Application {
@@ -10,21 +11,14 @@ interface Application {
   discordId?: string;
   discriminator?: string;
   avatar?: string | null;
-  accountCreated?: string; // ISO String
+  accountCreated?: string;
   age?: string;
   email?: string;
   answers?: Record<string, string>;
   submittedAt?: string;
 }
 
-const roleColors: Record<Application['role'], string> = {
-  'Beta Tester': 'bg-purple-600',
-  'Moderator': 'bg-indigo-600',
-  'Frontend Developer': 'bg-green-600',
-  'Backend Developer': 'bg-red-600',
-};
-
-export default function AdminBoard() {
+export default function AdminBoardPage() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,16 +26,29 @@ export default function AdminBoard() {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
+    const token = cookies().get('discord_token')?.value;
+    if (!token) {
+      redirect('/');
+      return;
+    }
+
+    // Admin-Check
+    fetch('/api/admin-check', { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.allowed) redirect('/?error=no_admin');
+      })
+      .catch(() => redirect('/?error=no_admin'));
+
+    // Lade Bewerbungen
     fetch('/api/adminboard')
       .then((res) => res.json())
       .then((data) => {
         if (data?.applications) setApplications(data.applications);
-        else setApplications([]);
       })
       .catch((err) => {
         console.error('Fehler beim Laden der Bewerbungen:', err);
         setError('Bewerbungen konnten nicht geladen werden.');
-        setApplications([]);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -49,33 +56,29 @@ export default function AdminBoard() {
   const filteredApps = filter === 'All' ? applications : applications.filter((a) => a.role === filter);
 
   if (loading)
-    return (
-      <div className="h-screen flex justify-center items-center text-white text-2xl">
-        Lade Bewerbungen…
-      </div>
-    );
+    return <div className="h-screen flex justify-center items-center text-white text-2xl">Lade Bewerbungen…</div>;
 
   if (error)
-    return (
-      <div className="h-screen flex justify-center items-center text-red-500 text-2xl">
-        {error}
-      </div>
-    );
+    return <div className="h-screen flex justify-center items-center text-red-500 text-2xl">{error}</div>;
+
+  const roleColors: Record<Application['role'], string> = {
+    'Beta Tester': 'bg-purple-600',
+    'Moderator': 'bg-indigo-600',
+    'Frontend Developer': 'bg-green-600',
+    'Backend Developer': 'bg-red-600',
+  };
 
   return (
     <div className="min-h-screen bg-gray-900 px-6 py-12 text-white">
       <h1 className="text-4xl font-extrabold mb-8 text-center">Admin Dashboard – Bewerbungen</h1>
 
-      {/* Filter Buttons */}
       <div className="flex flex-wrap justify-center gap-3 mb-8">
         {['All', 'Beta Tester', 'Moderator', 'Frontend Developer', 'Backend Developer'].map((r) => (
           <button
             key={r}
             onClick={() => setFilter(r as any)}
             className={`px-4 py-2 rounded-lg font-semibold transition ${
-              filter === r
-                ? 'bg-white text-gray-900 shadow-lg'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              filter === r ? 'bg-white text-gray-900 shadow-lg' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
             }`}
           >
             {r}
@@ -93,11 +96,8 @@ export default function AdminBoard() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
             >
-              {/* Header */}
               <div
-                className={`flex justify-between items-center p-4 cursor-pointer ${
-                  roleColors[app.role]
-                } bg-opacity-80`}
+                className={`flex justify-between items-center p-4 cursor-pointer ${roleColors[app.role]} bg-opacity-80`}
                 onClick={() => setExpanded(expanded === app.id ? null : app.id)}
               >
                 <h2 className="text-xl font-bold">{app.role}</h2>
@@ -106,10 +106,8 @@ export default function AdminBoard() {
                 </span>
               </div>
 
-              {/* Collapsible Content */}
               {expanded === app.id && (
                 <div className="p-4 border-t border-gray-700 flex flex-col gap-4">
-                  {/* Discord Info */}
                   {app.discordId && (
                     <div className="flex items-center gap-3">
                       <img
