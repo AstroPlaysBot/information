@@ -8,18 +8,26 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL!;
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const code = url.searchParams.get('code');
-  const state = url.searchParams.get('state');
+  const redirectParam = url.searchParams.get('redirect'); // z.B. "moderator"
 
-  if (!code) return NextResponse.redirect(`${APP_URL}/login?error=no_code`);
+  // 🔹 Wenn kein Code da ist, starten wir OAuth
+  if (!code) {
+    const redirectUri = `${APP_URL}/api/discord-auth`;
+    const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
+      redirectUri
+    )}&response_type=code&scope=identify&state=apply_${redirectParam || ''}`;
 
-  // Token holen
+    return NextResponse.redirect(discordAuthUrl);
+  }
+
+  // 🔹 Code ist da → Token holen
   const params = new URLSearchParams();
   params.append('client_id', CLIENT_ID);
   params.append('client_secret', CLIENT_SECRET);
   params.append('grant_type', 'authorization_code');
   params.append('code', code);
   params.append('redirect_uri', `${APP_URL}/api/discord-auth`);
-  params.append('scope', 'identify guilds');
+  params.append('scope', 'identify');
 
   const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
     method: 'POST',
@@ -33,59 +41,19 @@ export async function GET(req: Request) {
     return NextResponse.redirect(`${APP_URL}/login?error=oauth_failed`);
   }
 
-  // User Infos
+  // 🔹 User Infos holen
   const userRes = await fetch('https://discord.com/api/users/@me', {
     headers: { Authorization: `Bearer ${tokenData.access_token}` },
   });
   const userData = await userRes.json();
 
-  // Adminboard?
-  if (state === 'adminboard') {
-    // Hier kannst du prüfen, ob Rolle vorhanden
-    const checkRes = await fetch(`${APP_URL}/api/admin-check`, {
-      headers: { Authorization: `Bearer ${tokenData.access_token}` },
-    });
-    const checkJson = await checkRes.json();
-    if (checkJson.allowed) {
-      return NextResponse.redirect(`${APP_URL}/adminboard`);
-    } else {
-      return NextResponse.redirect(`${APP_URL}/?error=admin_forbidden`);
-    }
+  // 🔹 Redirect nach OAuth
+  let redirectTo = '/dashboard';
+  const state = url.searchParams.get('state'); // z.B. apply_moderator
+  if (state && state.startsWith('apply_')) {
+    const role = state.replace('apply_', ''); // nur "moderator"
+    redirectTo = `/apply/${role}`;           // jetzt korrekt: /apply/moderator
   }
 
-  // Normaler Dashboard-Redirect
-  return NextResponse.redirect(`${APP_URL}/dashboard?token=${tokenData.access_token}`);
-}
-
-// Optional für Client-Fetch (Dashboard)
-export async function POST(req: Request) {
-  const body = await req.json();
-  const code = body.code;
-  if (!code) return NextResponse.json({ error: 'No code provided' }, { status: 400 });
-
-  // Token holen wie oben
-  const params = new URLSearchParams();
-  params.append('client_id', CLIENT_ID);
-  params.append('client_secret', CLIENT_SECRET);
-  params.append('grant_type', 'authorization_code');
-  params.append('code', code);
-  params.append('redirect_uri', `${APP_URL}/dashboard`);
-  params.append('scope', 'identify guilds');
-
-  const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: params.toString(),
-  });
-
-  const tokenData = await tokenRes.json();
-  if (!tokenData.access_token) return NextResponse.json({ error: 'OAuth failed' }, { status: 400 });
-
-  // User Guilds abrufen
-  const guildsRes = await fetch('https://discord.com/api/users/@me/guilds', {
-    headers: { Authorization: `Bearer ${tokenData.access_token}` },
-  });
-  const guilds = await guildsRes.json();
-
-  return NextResponse.json({ guilds });
+  return NextResponse.redirect(`${APP_URL}${redirectTo}?token=${tokenData.access_token}`);
 }
