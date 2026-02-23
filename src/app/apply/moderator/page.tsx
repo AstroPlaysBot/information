@@ -101,7 +101,10 @@ export default function ModeratorApplyPage() {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
-        const created_at = new Date((BigInt(data.id) >> 22n) + 1420070400000n).toISOString();
+        const created_at = new Date(
+          Number((BigInt(data.id) >> 22n) + 1420070400000n)
+        ).toISOString();
+
         setUser({ ...data, created_at });
       } catch (err) {
         console.error('Discord User Fetch Error:', err);
