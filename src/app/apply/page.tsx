@@ -88,7 +88,16 @@ export default function ApplyFormPage() {
     }
   };
 
-  if (loading) return <div className="text-center text-white mt-20">Lade Discord-Daten…</div>;
+  if (loading) 
+    return <div className="text-center text-white mt-20">Lade Discord-Daten…</div>;
+
+  if (!user) {
+    return (
+      <div className="text-center text-white mt-20">
+        Benutzer konnte nicht geladen werden
+      </div>
+    );
+  }
 
   if (success)
     return <div className="text-center text-white mt-20 text-2xl">✅ Bewerbung erfolgreich abgeschickt!</div>;
