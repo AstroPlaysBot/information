@@ -1,6 +1,6 @@
-'use client';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+// app/dashboard/page.tsx
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { motion } from 'framer-motion';
 
 interface Guild {
@@ -10,58 +10,51 @@ interface Guild {
   owner: boolean;
 }
 
-export default function DashboardSelectPage() {
-  const router = useRouter();
-  const [guilds, setGuilds] = useState<Guild[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+// Server Component
+export default async function DashboardSelectPage() {
+  const cookieStore = cookies();
+  const token = cookieStore.get('discord_token')?.value;
 
-  useEffect(() => {
-    setLoading(true);
+  if (!token) {
+    // Kein Token → Weiterleitung auf Login/Startseite
+    redirect('/');
+  }
 
-    fetch('/api/discord-guilds')
-      .then(async res => {
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(`Fehler beim Laden der Server: ${text}`);
-        }
-        return res.json();
-      })
-      .then(data => {
-        if (!data.guilds || data.guilds.length === 0) {
-          setError(
-            'Keine Server gefunden. Bitte stelle sicher, dass du mindestens einen Server verwaltest.'
-          );
-        } else {
-          setGuilds(data.guilds);
-        }
-      })
-      .catch(err => {
-        console.error('Fetch error:', err);
-        setError(err.message || 'Fehler beim Laden der Server.');
-      })
-      .finally(() => setLoading(false));
-  }, []);
+  let guilds: Guild[] = [];
+  let error: string | null = null;
 
-  if (loading)
-    return (
-      <div className="h-screen flex items-center justify-center text-white text-2xl">
-        Lade Server…
-      </div>
-    );
+  try {
+    const res = await fetch('https://discord.com/api/users/@me/guilds', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-  if (error)
+    if (!res.ok) throw new Error('Discord API Fehler');
+
+    const data = await res.json();
+    if (!data || data.length === 0) {
+      error =
+        'Keine Server gefunden. Bitte stelle sicher, dass du mindestens einen Server verwaltest.';
+    } else {
+      guilds = data;
+    }
+  } catch (err) {
+    console.error('Discord Guild Fetch Error:', err);
+    error = 'Fehler beim Laden der Server.';
+  }
+
+  if (error) {
     return (
       <div className="h-screen flex flex-col items-center justify-center text-white text-center p-6">
         <p className="mb-6 text-red-500">{error}</p>
         <button
-          onClick={() => router.push('/')}
+          onClick={() => redirect('/')}
           className="px-6 py-3 rounded-xl bg-purple-600 hover:bg-pink-600 transition text-white font-semibold"
         >
           Zurück zur Startseite
         </button>
       </div>
     );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black px-6 py-16 text-white">
@@ -78,7 +71,7 @@ export default function DashboardSelectPage() {
         {guilds.map(g => (
           <motion.button
             key={g.id}
-            onClick={() => router.push(`/dashboard/${g.id}`)}
+            onClick={() => redirect(`/dashboard/${g.id}`)}
             className="group relative overflow-hidden rounded-3xl shadow-2xl bg-gradient-to-br from-gray-800 to-gray-900 hover:from-purple-700 hover:to-pink-600 transition transform hover:scale-105"
             whileHover={{ scale: 1.06 }}
           >
