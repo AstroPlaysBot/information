@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 
 interface Guild {
@@ -12,26 +12,14 @@ interface Guild {
 
 export default function DashboardSelectPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const code = searchParams?.get('code'); // Discord Code aus URL
-
   const [guilds, setGuilds] = useState<Guild[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!code) {
-      setError('Kein Discord-Code gefunden.');
-      setLoading(false);
-      return;
-    }
+    setLoading(true);
 
-    // POST an die API, um Token zu holen und Guilds zu bekommen
-    fetch('/api/discord-auth', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code }),
-    })
+    fetch('/api/discord-guilds')
       .then(async res => {
         if (!res.ok) {
           const text = await res.text();
@@ -53,7 +41,7 @@ export default function DashboardSelectPage() {
         setError(err.message || 'Fehler beim Laden der Server.');
       })
       .finally(() => setLoading(false));
-  }, [code]);
+  }, []);
 
   if (loading)
     return (
