@@ -7,23 +7,23 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL!;
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const code = url.searchParams.get('code');
-  const redirectParam = url.searchParams.get('redirect'); // z.B. "/apply/moderator"
-  const state = url.searchParams.get('state'); // z.B. "dashboard" oder "adminboard"
+  const state = url.searchParams.get('state'); // z.B. "/apply/moderator", "dashboard" oder "adminboard"
 
   // 🔹 Schritt 1: Kein Code → OAuth starten
   if (!code) {
     const redirectUri = `${APP_URL}/api/discord-auth`;
-    const discordAuthUrl = `https://discord.com/api/oauth2/authorize` +
+    const discordAuthUrl =
+      `https://discord.com/api/oauth2/authorize` +
       `?client_id=${CLIENT_ID}` +
       `&redirect_uri=${encodeURIComponent(redirectUri)}` +
       `&response_type=code` +
       `&scope=identify` +
-      `&state=${state || ''}`; // state kann leer sein
+      `&state=${encodeURIComponent(state || '')}`; // state wird an Discord weitergegeben
 
     return NextResponse.redirect(discordAuthUrl);
   }
 
-  // 🔹 Schritt 2: Code da → Token holen
+  // 🔹 Schritt 2: Code vorhanden → Token holen
   const params = new URLSearchParams();
   params.append('client_id', CLIENT_ID);
   params.append('client_secret', CLIENT_SECRET);
@@ -54,13 +54,15 @@ export async function GET(req: Request) {
   // 🔹 Schritt 4: Zielseite bestimmen
   let redirectTo = '/dashboard'; // Default
 
-  if (redirectParam) {
-    // z.B. redirect=/apply/moderator → genau dahin
-    redirectTo = redirectParam;
-  } else if (state === 'adminboard') {
-    redirectTo = '/adminboard';
-  } else if (state === 'dashboard') {
-    redirectTo = '/dashboard';
+  if (state) {
+    // state kann "/apply/moderator", "dashboard" oder "adminboard" sein
+    if (state.startsWith('/apply/')) {
+      redirectTo = state;
+    } else if (state === 'dashboard') {
+      redirectTo = '/dashboard';
+    } else if (state === 'adminboard') {
+      redirectTo = '/adminboard';
+    }
   }
 
   // 🔹 Schritt 5: Weiterleitung mit Token
