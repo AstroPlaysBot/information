@@ -1,13 +1,21 @@
-
 'use client';
 import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 interface ApplicationType {
   id: string; // für URL
   title: string;
   description: string;
   perks?: string[];
+}
+
+interface DiscordUser {
+  id: string;
+  username: string;
+  discriminator: string;
+  avatar: string | null;
+  createdAt: string;
 }
 
 const applications: ApplicationType[] = [
@@ -38,16 +46,70 @@ const applications: ApplicationType[] = [
 
 export default function ApplyPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [discordUser, setDiscordUser] = useState<DiscordUser | null>(null);
+
+  const token = searchParams.get('token');
+
+  // 🔹 Discord-Daten holen
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchUser = async () => {
+      try {
+        const res = await fetch('https://discord.com/api/users/@me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        const createdAt = new Date(
+          ((BigInt(data.id) >> BigInt(22)) + BigInt(1420070400000))
+            .toString()
+        ).toISOString();
+
+        setDiscordUser({
+          id: data.id,
+          username: data.username,
+          discriminator: data.discriminator,
+          avatar: data.avatar,
+          createdAt,
+        });
+      } catch (err) {
+        console.error('Discord API Error:', err);
+      }
+    };
+
+    fetchUser();
+  }, [token]);
 
   const handleApply = (appId: string) => {
-    // Leite zu Discord OAuth weiter
-    // redirect param = Seite, auf die der Nutzer nach Login kommt
-    const redirectUrl = encodeURIComponent(`/apply/${appId}`);
-    window.location.href = `/api/discord-auth?redirect=${redirectUrl}`;
+    // state enthält den Zielpfad direkt
+    const state = `/apply/${appId}`;
+    window.location.href = `/api/discord-auth?state=${encodeURIComponent(state)}`;
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-950 text-white px-6 py-16">
+      {/* 🔹 Discord Profil oben links */}
+      {discordUser && (
+        <div className="flex items-center gap-4 mb-8">
+          <img
+            className="w-12 h-12 rounded-full"
+            src={
+              discordUser.avatar
+                ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`
+                : '/default-avatar.png'
+            }
+            alt="Avatar"
+          />
+          <div>
+            <p className="font-bold">{discordUser.username}#{discordUser.discriminator}</p>
+            <p className="text-gray-400 text-sm">
+              Account erstellt: {new Date(discordUser.createdAt).toLocaleDateString()}
+            </p>
+          </div>
+        </div>
+      )}
+
       <h1 className="text-5xl font-extrabold text-center mb-12 opacity-0 animate-fadeIn">
         Bewirb dich für eine Rolle
       </h1>
@@ -58,11 +120,7 @@ export default function ApplyPage() {
         animate="visible"
         variants={{
           hidden: {},
-          visible: {
-            transition: {
-              staggerChildren: 0.15,
-            },
-          },
+          visible: { transition: { staggerChildren: 0.15 } },
         }}
       >
         {applications.map((app) => (
@@ -98,13 +156,8 @@ export default function ApplyPage() {
       </motion.div>
 
       <style jsx>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 1s ease forwards;
-        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .animate-fadeIn { animation: fadeIn 1s ease forwards; }
       `}</style>
     </div>
   );
