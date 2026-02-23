@@ -1,9 +1,9 @@
 // src/app/adminboard/page.tsx
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import AdminBoardClient, { Application } from './AdminBoardClient';
+import AdminboardClient, { Application } from './AdminboardClient';
 
-export default async function AdminBoardPage() {
+export default async function AdminboardPage() {
   // 🍪 Token aus Cookie
   const token = cookies().get('discord_token')?.value;
   if (!token) redirect('/');
@@ -24,5 +24,5 @@ export default async function AdminBoardPage() {
   const applications: Application[] = appsData?.applications || [];
 
   // 🔹 Server Component gibt die Daten an Client Component weiter
-  return <AdminBoardClient applications={applications} />;
+  return <AdminboardClient applications={applications} />;
 }
