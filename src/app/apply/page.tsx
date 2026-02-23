@@ -1,6 +1,5 @@
 'use client';
 import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
 
 interface ApplicationType {
   id: string; // für URL
@@ -36,13 +35,9 @@ const applications: ApplicationType[] = [
 ];
 
 export default function ApplyPage() {
-  const router = useRouter();
-
   const handleApply = (appId: string) => {
-    // Leite zu Discord OAuth weiter
-    // redirect param = Seite, auf die der Nutzer nach Login kommt
-    const redirectUrl = encodeURIComponent(`/apply/${appId}`);
-    window.location.href = `/api/discord-auth?redirect=${redirectUrl}`;
+    // Nur die Rolle als redirect param übergeben
+    window.location.href = `/api/discord-auth?redirect=${appId}`;
   };
 
   return (
@@ -57,11 +52,7 @@ export default function ApplyPage() {
         animate="visible"
         variants={{
           hidden: {},
-          visible: {
-            transition: {
-              staggerChildren: 0.15,
-            },
-          },
+          visible: { transition: { staggerChildren: 0.15 } },
         }}
       >
         {applications.map((app) => (
