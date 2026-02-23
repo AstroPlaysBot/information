@@ -38,7 +38,9 @@ export default function ApplyFormPage() {
         const data = await res.json();
 
         // Discord Join-Date (Snowflake) berechnen
-        const created_at = new Date((BigInt(data.id) >> 22n) + 1420070400000n);
+        const created_at = new Date(
+          Number((BigInt(data.id) >> 22n) + 1420070400000n)
+        );
 
         setUser({ ...data, created_at: created_at.toISOString() });
         setLoading(false);
