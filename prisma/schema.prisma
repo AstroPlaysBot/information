@@ -13,11 +13,17 @@ generator client {
 
 // 3️⃣ Modell für Bewerbungen
 model Application {
-  id          String   @id @default(cuid())   // eindeutige ID
-  name        String
-  role        String                            // z.B. "Moderator", "Frontend Developer"
-  age         String
-  email       String
-  answers     Json                              // speichert deine Antworten als JSON
-  submittedAt DateTime @default(now())         // automatisch Timestamp
+  id             String   @id @default(cuid())   // eindeutige ID
+  name           String
+  role           String                            // z.B. "Moderator", "Frontend Developer"
+  age            String?
+  email          String?
+  answers        Json     @default("{}")          // speichert deine Antworten als JSON
+  submittedAt    DateTime @default(now())         // automatisch Timestamp
+
+  // 4️⃣ Discord-Daten
+  discord_id     String?                           // Discord User ID
+  discriminator  String?                           // z.B. "1234"
+  avatar         String?                           // Avatar Hash
+  account_created DateTime?                        // Discord Account erstellt
 }
