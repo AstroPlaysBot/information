@@ -14,20 +14,30 @@ interface DiscordUser {
 export default function ApplyFormPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+
   const [user, setUser] = useState<DiscordUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [formValue, setFormValue] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  // 🔹 Position aus URL (?application=moderator)
   const applicationId = searchParams.get('application');
 
+  // 🔹 Guard: Immer gültige Position checken
+  useEffect(() => {
+    if (!applicationId) {
+      router.replace('/apply'); // Keine Position -> zurück zur Auswahl
+    }
+  }, [applicationId, router]);
+
+  // 🔹 Discord-Login laden
   useEffect(() => {
     async function fetchUser() {
       const token = searchParams.get('token');
       if (!token) {
-        // Kein Token -> zurück zur Rollen-Seite
-        router.push(`/apply/${applicationId}`);
+        // Kein Token -> zurück zur Positionswahl
+        router.replace('/apply');
         return;
       }
 
@@ -46,16 +56,17 @@ export default function ApplyFormPage() {
         setLoading(false);
       } catch (err) {
         console.error('Discord fetch error', err);
-        router.push(`/apply/${applicationId}`);
+        router.replace('/apply');
       }
     }
 
     fetchUser();
-  }, [applicationId, router, searchParams]);
+  }, [router, searchParams]);
 
+  // 🔹 Formular absenden
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formValue || !user) return;
+    if (!formValue || !user || !applicationId) return;
     setSubmitting(true);
 
     try {
@@ -88,9 +99,10 @@ export default function ApplyFormPage() {
     }
   };
 
-  if (loading) 
-    return <div className="text-center text-white mt-20">Lade Discord-Daten…</div>;
+  // 🔹 Ladezustand
+  if (loading) return <div className="text-center text-white mt-20">Lade Discord-Daten…</div>;
 
+  // 🔹 Benutzer konnte nicht geladen werden
   if (!user) {
     return (
       <div className="text-center text-white mt-20">
@@ -99,8 +111,10 @@ export default function ApplyFormPage() {
     );
   }
 
-  if (success)
+  // 🔹 Erfolgreiches Absenden
+  if (success) {
     return <div className="text-center text-white mt-20 text-2xl">✅ Bewerbung erfolgreich abgeschickt!</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-950 text-white p-6">
@@ -116,6 +130,7 @@ export default function ApplyFormPage() {
           <p className="text-gray-400 text-sm">
             Account erstellt: {new Date(user.created_at).toLocaleDateString()}
           </p>
+          <p className="text-gray-300 text-sm mt-1">Bewerbung für: <span className="font-semibold">{applicationId}</span></p>
         </div>
       </div>
 
