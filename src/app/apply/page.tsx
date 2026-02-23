@@ -1,3 +1,4 @@
+
 'use client';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
@@ -39,22 +40,30 @@ export default function ApplyPage() {
   const router = useRouter();
 
   const handleApply = (appId: string) => {
-    // Leite zuerst zu Discord OAuth weiter und speichere den redirect
+    // Leite zu Discord OAuth weiter
+    // redirect param = Seite, auf die der Nutzer nach Login kommt
     const redirectUrl = encodeURIComponent(`/apply/${appId}`);
     window.location.href = `/api/discord-auth?redirect=${redirectUrl}`;
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-950 text-white px-6 py-16">
-      <h1 className="text-5xl font-extrabold text-center mb-12 animate-fadeIn">
+      <h1 className="text-5xl font-extrabold text-center mb-12 opacity-0 animate-fadeIn">
         Bewirb dich für eine Rolle
       </h1>
 
       <motion.div
         className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ staggerChildren: 0.1 }}
+        initial="hidden"
+        animate="visible"
+        variants={{
+          hidden: {},
+          visible: {
+            transition: {
+              staggerChildren: 0.15,
+            },
+          },
+        }}
       >
         {applications.map((app) => (
           <motion.div
@@ -62,6 +71,8 @@ export default function ApplyPage() {
             className="bg-gray-800/60 rounded-3xl p-8 shadow-2xl flex flex-col justify-between"
             whileHover={{ scale: 1.03 }}
             transition={{ type: 'spring', stiffness: 300 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
           >
             <div>
               <h2 className="text-2xl font-bold mb-3">{app.title}</h2>
@@ -85,6 +96,16 @@ export default function ApplyPage() {
           </motion.div>
         ))}
       </motion.div>
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 1s ease forwards;
+        }
+      `}</style>
     </div>
   );
 }
