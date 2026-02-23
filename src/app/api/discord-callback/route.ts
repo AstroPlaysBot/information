@@ -11,7 +11,13 @@ export async function GET(req: Request) {
     const code = url.searchParams.get('code');
     const state = url.searchParams.get('state') || 'dashboard';
 
+    console.log('[Discord Callback] Incoming GET request');
+    console.log('Code:', code);
+    console.log('State:', state);
+    console.log('Redirect URI used for token exchange:', `${APP_URL}/api/discord-callback`);
+
     if (!code) {
+      console.error('[Discord Callback] No code found in request');
       return NextResponse.redirect(`${APP_URL}/?error=oauth`);
     }
 
@@ -31,7 +37,10 @@ export async function GET(req: Request) {
     });
 
     const tokenData = await tokenRes.json();
+    console.log('[Discord Callback] Token response:', tokenData);
+
     if (!tokenData.access_token) {
+      console.error('[Discord Callback] No access_token in response');
       return NextResponse.redirect(`${APP_URL}/?error=oauth`);
     }
 
@@ -44,9 +53,11 @@ export async function GET(req: Request) {
       path: '/',
     });
 
+    console.log('[Discord Callback] Cookie set and redirecting to:', state);
+
     return res;
   } catch (err) {
-    console.error('Discord Callback Error:', err);
+    console.error('[Discord Callback] Error:', err);
     return NextResponse.redirect(`${APP_URL}/?error=oauth`);
   }
 }
