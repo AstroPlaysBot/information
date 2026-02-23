@@ -1,6 +1,7 @@
 // src/app/adminboard/page.tsx
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import AdminboardClient from './AdminboardClient';
 
 const GUILD_ID = '1462894776671277241';
 const ROLE_ID = '1474507057154756919';
