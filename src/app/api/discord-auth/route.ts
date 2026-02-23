@@ -7,7 +7,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL!;
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const code = url.searchParams.get('code');
-  const state = url.searchParams.get('state'); // z.B. "/apply/moderator", "dashboard" oder "adminboard"
+  const state = url.searchParams.get('state'); // "/apply/moderator", "dashboard", "adminboard"
 
   // 🔹 Schritt 1: Kein Code → OAuth starten
   if (!code) {
@@ -18,7 +18,7 @@ export async function GET(req: Request) {
       `&redirect_uri=${encodeURIComponent(redirectUri)}` +
       `&response_type=code` +
       `&scope=identify` +
-      `&state=${encodeURIComponent(state || '')}`; // state wird an Discord weitergegeben
+      `&state=${encodeURIComponent(state || '')}`;
 
     return NextResponse.redirect(discordAuthUrl);
   }
@@ -52,12 +52,11 @@ export async function GET(req: Request) {
   const userData = await userRes.json();
 
   // 🔹 Schritt 4: Zielseite bestimmen
-  let redirectTo = '/dashboard'; // Default
+  let redirectTo = '/dashboard';
 
   if (state) {
-    // state kann "/apply/moderator", "dashboard" oder "adminboard" sein
     if (state.startsWith('/apply/')) {
-      redirectTo = state;
+      redirectTo = state; // z.B. /apply/moderator
     } else if (state === 'dashboard') {
       redirectTo = '/dashboard';
     } else if (state === 'adminboard') {
@@ -65,6 +64,33 @@ export async function GET(req: Request) {
     }
   }
 
-  // 🔹 Schritt 5: Weiterleitung mit Token
+  // 🔹 Schritt 5: Adminboard-Check (falls adminboard)
+  if (redirectTo === '/adminboard') {
+    const hasAdminRole = await checkAdminRole(tokenData.access_token, userData.id);
+    if (!hasAdminRole) {
+      return NextResponse.redirect(`${APP_URL}/login?error=no_admin`);
+    }
+  }
+
+  // 🔹 Schritt 6: Weiterleitung mit Token
   return NextResponse.redirect(`${APP_URL}${redirectTo}?token=${tokenData.access_token}`);
+}
+
+// 🔹 Helper-Funktion: Prüft Admin-Rolle über Bot
+async function checkAdminRole(userId: string, accessToken: string) {
+  const GUILD_ID = '1462894776671277241';
+  const ROLE_ID = '1474507057154756919';
+  try {
+    const memberRes = await fetch(
+      `https://discord.com/api/guilds/${GUILD_ID}/members/${userId}`,
+      {
+        headers: { Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}` },
+      }
+    );
+    if (!memberRes.ok) return false;
+    const member = await memberRes.json();
+    return member.roles.includes(ROLE_ID);
+  } catch {
+    return false;
+  }
 }
