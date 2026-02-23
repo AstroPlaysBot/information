@@ -1,28 +1,45 @@
 // src/app/adminboard/page.tsx
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import AdminboardClient, { Application } from './AdminboardClient';
 
-export default async function AdminboardPage() {
-  // 🍪 Token aus Cookie
+const GUILD_ID = '1462894776671277241';
+const ROLE_ID = '1474507057154756919';
+
+export default async function AdminBoardPage() {
   const token = cookies().get('discord_token')?.value;
   if (!token) redirect('/');
 
-  // 🔹 Admin-Check via API
-  const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/admin-check`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: 'no-store',
-  });
-  const check = await res.json();
-  if (!check.allowed) redirect('/?error=no_admin');
+  try {
+    // 1️⃣ User holen
+    const userRes = await fetch('https://discord.com/api/users/@me', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!userRes.ok) throw new Error('User fetch failed');
+    const user = await userRes.json();
 
-  // 🔹 Bewerbungen laden
-  const appsRes = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/adminboard`, {
-    cache: 'no-store',
-  });
-  const appsData = await appsRes.json();
-  const applications: Application[] = appsData?.applications || [];
+    // 2️⃣ Member in Guild holen (Bot Token!)
+    const memberRes = await fetch(`https://discord.com/api/guilds/${GUILD_ID}/members/${user.id}`, {
+      headers: {
+        Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}`,
+      },
+    });
+    if (!memberRes.ok) throw new Error('Member fetch failed');
+    const member = await memberRes.json();
 
-  // 🔹 Server Component gibt die Daten an Client Component weiter
-  return <AdminboardClient applications={applications} />;
+    // 3️⃣ Role check
+    const hasRole = member.roles.includes(ROLE_ID);
+    if (!hasRole) redirect('/?error=no_admin');
+
+    // 4️⃣ Bewerbungen laden
+    const appsRes = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/adminboard`, {
+      cache: 'no-store',
+    });
+    const appsData = await appsRes.json();
+    const applications = appsData?.applications || [];
+
+    return <AdminBoardClient applications={applications} />;
+  } catch (err) {
+    console.error(err);
+    redirect('/?error=no_admin');
+  }
 }
