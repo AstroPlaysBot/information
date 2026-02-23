@@ -7,31 +7,26 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL!;
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const code = url.searchParams.get('code');
-  const redirectParam = url.searchParams.get('redirect'); // Bewerbungsrole
-  const state = url.searchParams.get('state'); // optional: dashboard/adminboard/apply
+  const redirectParam = url.searchParams.get('redirect'); // z.B. apply/moderator
 
   // Kein Code → OAuth starten
   if (!code) {
-    let oauthState = 'dashboard';
-    if (redirectParam) oauthState = `apply_${redirectParam}`;
-    else if (state) oauthState = state;
-
     const redirectUri = `${APP_URL}/api/discord-auth`;
     const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
       redirectUri
-    )}&response_type=code&scope=identify&state=${oauthState}`;
+    )}&response_type=code&scope=identify%20guilds&state=${redirectParam || ''}`;
 
     return NextResponse.redirect(discordAuthUrl);
   }
 
-  // Code vorhanden → Token holen
+  // Code da → Token holen
   const params = new URLSearchParams();
   params.append('client_id', CLIENT_ID);
   params.append('client_secret', CLIENT_SECRET);
   params.append('grant_type', 'authorization_code');
   params.append('code', code);
   params.append('redirect_uri', `${APP_URL}/api/discord-auth`);
-  params.append('scope', 'identify');
+  params.append('scope', 'identify guilds');
 
   const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
     method: 'POST',
@@ -51,25 +46,20 @@ export async function GET(req: Request) {
   });
   const userData = await userRes.json();
 
-  // Redirect je nach Flow
+  // Guilds optional holen, wenn state="dashboard"
+  const state = url.searchParams.get('state'); // z.B. "dashboard"
   let redirectTo = '/dashboard';
-  const currentState = url.searchParams.get('state');
-
-  if (currentState) {
-    if (currentState.startsWith('apply_')) {
-      const role = currentState.replace('apply_', '');
-      redirectTo = `/apply/${role}`;
-    } else if (currentState === 'adminboard') {
-      redirectTo = '/adminboard';
-    } else if (currentState === 'dashboard') {
-      redirectTo = '/dashboard';
-    }
+  if (state && state.startsWith('apply_')) {
+    redirectTo = `/apply/${state.replace('apply_', '')}`;
+  } else if (state === 'dashboard') {
+    // direkt zu Dashboard weiterleiten
+    redirectTo = `/dashboard?token=${tokenData.access_token}`;
   }
 
   return NextResponse.redirect(`${APP_URL}${redirectTo}?token=${tokenData.access_token}`);
 }
 
-// POST → Dashboard/Adminboard
+// POST für Dashboard-Client
 export async function POST(req: Request) {
   const body = await req.json();
   const code = body.code;
@@ -98,11 +88,11 @@ export async function POST(req: Request) {
   });
   const userData = await userRes.json();
 
-  // Guilds für Dashboard
+  // Guilds abrufen
   const guildsRes = await fetch('https://discord.com/api/users/@me/guilds', {
     headers: { Authorization: `Bearer ${tokenData.access_token}` },
   });
   const guilds = await guildsRes.json();
 
-  return NextResponse.json({ guilds, user: userData });
+  return NextResponse.json({ user: userData, guilds });
 }
