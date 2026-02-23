@@ -1,4 +1,3 @@
-
 'use client';
 import React from 'react';
 
@@ -14,13 +13,11 @@ function startDiscordAuth(target: 'dashboard' | 'adminboard') {
     return;
   }
 
-  // Redirect URI unterscheidet sich für Adminboard
-  const redirectUri =
-    target === 'dashboard'
-      ? encodeURIComponent(`${APP_URL}/dashboard`)       // normales Dashboard
-      : encodeURIComponent(`${APP_URL}/api/discord-auth`); // Adminboard
+  // 🔹 Wichtig: Immer dieselbe Redirect-URI verwenden
+  const redirectUri = encodeURIComponent(`${APP_URL}/api/discord-auth`);
 
-  const state = target;
+  // State sagt dem Server, wohin nach OAuth weitergeleitet werden soll
+  const state = target; // 'dashboard' oder 'adminboard'
 
   const discordAuthUrl =
     `https://discord.com/api/oauth2/authorize` +
