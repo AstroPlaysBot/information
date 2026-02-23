@@ -94,9 +94,7 @@ export default function AdminBoard() {
             >
               {/* Header */}
               <div
-                className={`flex justify-between items-center p-4 cursor-pointer ${
-                  roleColors[app.role]
-                } bg-opacity-80`}
+                className={`flex justify-between items-center p-4 cursor-pointer ${roleColors[app.role]} bg-opacity-80`}
                 onClick={() => setExpanded(expanded === app.id ? null : app.id)}
               >
                 <h2 className="text-xl font-bold">{app.role}</h2>
@@ -108,9 +106,9 @@ export default function AdminBoard() {
               {/* Collapsible Content */}
               {expanded === app.id && (
                 <div className="p-4 border-t border-gray-700 flex flex-col gap-4">
-                  {/* Discord Info */}
+                  {/* Oben: Discord Infos */}
                   {app.discordId && (
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-4 mb-4">
                       <img
                         src={
                           app.avatar
@@ -118,27 +116,31 @@ export default function AdminBoard() {
                             : '/default-avatar.png'
                         }
                         alt="Avatar"
-                        className="w-12 h-12 rounded-full"
+                        className="w-16 h-16 rounded-full"
                       />
-                      <p className="text-blue-400 font-bold hover:underline cursor-pointer">
+                      <div className="flex flex-col">
                         <a
                           href={`https://discord.com/users/${app.discordId}`}
                           target="_blank"
                           rel="noopener noreferrer"
+                          className="text-blue-400 font-bold hover:underline"
                         >
                           {app.name}#{app.discriminator}
                         </a>
-                      </p>
-                      <p className="text-gray-300 text-sm ml-auto">
-                        Account erstellt: {app.accountCreated ? new Date(app.accountCreated).toLocaleDateString() : '–'}
-                      </p>
+                        <span className="text-gray-300 text-sm">
+                          Account erstellt:{' '}
+                          {app.accountCreated ? new Date(app.accountCreated).toLocaleDateString() : '–'}
+                        </span>
+                      </div>
                     </div>
                   )}
 
+                  {/* Darunter: Bewerbungsinfos */}
                   <p className="text-gray-200 mb-2">
                     <strong>Alter:</strong> {app.age || '–'} | <strong>Email:</strong> {app.email || '–'}
                   </p>
 
+                  {/* Antworten */}
                   <div className="flex flex-col gap-2 text-gray-300">
                     {app.answers && Object.keys(app.answers).length > 0 ? (
                       Object.entries(app.answers).map(([q, a]) => (
@@ -151,6 +153,7 @@ export default function AdminBoard() {
                     )}
                   </div>
 
+                  {/* Action Buttons */}
                   <div className="mt-4 flex gap-2">
                     <button className="px-3 py-1 rounded bg-green-600 hover:bg-green-500 transition">
                       Akzeptieren
