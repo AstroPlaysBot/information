@@ -53,21 +53,17 @@ export async function GET(req: Request) {
 
   // 🔹 Schritt 4: Zielseite bestimmen
   let redirectTo = '/dashboard';
-
   if (state) {
-    if (state.startsWith('/apply/')) {
-      redirectTo = state; // z.B. /apply/moderator
-    } else if (state === 'dashboard') {
-      redirectTo = '/dashboard';
-    } else if (state === 'adminboard') {
-      redirectTo = '/adminboard';
-    }
+    if (state.startsWith('/apply/')) redirectTo = state;
+    else if (state === 'dashboard') redirectTo = '/dashboard';
+    else if (state === 'adminboard') redirectTo = '/adminboard';
   }
 
   // 🔹 Schritt 5: Adminboard-Check (falls adminboard)
   if (redirectTo === '/adminboard') {
-    const hasAdminRole = await checkAdminRole(tokenData.access_token, userData.id);
+    const hasAdminRole = await checkAdminRole(userData.id);
     if (!hasAdminRole) {
+      console.error('DEBUG: Admin check failed for user', userData.id);
       return NextResponse.redirect(`${APP_URL}/login?error=no_admin`);
     }
   }
@@ -76,8 +72,8 @@ export async function GET(req: Request) {
   return NextResponse.redirect(`${APP_URL}${redirectTo}?token=${tokenData.access_token}`);
 }
 
-// 🔹 Helper-Funktion: Prüft Admin-Rolle über Bot
-async function checkAdminRole(userId: string, accessToken: string) {
+// 🔹 Helper-Funktion: Prüft Admin-Rolle über Bot + Debug
+async function checkAdminRole(userId: string) {
   const GUILD_ID = '1462894776671277241';
   const ROLE_ID = '1474507057154756919';
   try {
@@ -87,10 +83,20 @@ async function checkAdminRole(userId: string, accessToken: string) {
         headers: { Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}` },
       }
     );
+
+    console.log('DEBUG: Member fetch status:', memberRes.status);
+    const text = await memberRes.text();
+    console.log('DEBUG: Member fetch response text:', text);
+
     if (!memberRes.ok) return false;
-    const member = await memberRes.json();
+
+    const member = JSON.parse(text);
+    console.log('DEBUG: Member fetched:', member);
+    console.log('DEBUG: Roles array:', member.roles);
+
     return member.roles.includes(ROLE_ID);
-  } catch {
+  } catch (err) {
+    console.error('DEBUG: Admin check error:', err);
     return false;
   }
 }
