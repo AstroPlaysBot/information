@@ -7,7 +7,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL!;
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const code = url.searchParams.get('code');
-  const state = url.searchParams.get('state'); // "/apply/moderator", "dashboard", "adminboard"
+  const state = url.searchParams.get('state'); // dashboard, adminboard, /apply/...
 
   // 🔹 Schritt 1: Kein Code → OAuth starten
   if (!code) {
@@ -17,7 +17,7 @@ export async function GET(req: Request) {
       `?client_id=${CLIENT_ID}` +
       `&redirect_uri=${encodeURIComponent(redirectUri)}` +
       `&response_type=code` +
-      `&scope=identify` +
+      `&scope=identify%20guilds` + // unbedingt guilds Scope
       `&state=${encodeURIComponent(state || '')}`;
 
     return NextResponse.redirect(discordAuthUrl);
@@ -30,7 +30,7 @@ export async function GET(req: Request) {
   params.append('grant_type', 'authorization_code');
   params.append('code', code);
   params.append('redirect_uri', `${APP_URL}/api/discord-auth`);
-  params.append('scope', 'identify');
+  params.append('scope', 'identify guilds');
 
   const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
     method: 'POST',
@@ -59,20 +59,31 @@ export async function GET(req: Request) {
     else if (state === 'adminboard') redirectTo = '/adminboard';
   }
 
-  // 🔹 Schritt 5: Adminboard-Check (falls adminboard)
+  const response = NextResponse.redirect(`${APP_URL}${redirectTo}`);
+
+  // 🔹 Token in Cookie setzen – für Dashboard und Adminboard
+  response.cookies.set({
+    name: 'discord_token',
+    value: tokenData.access_token,
+    path: '/',
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: true,
+    maxAge: 60 * 60 * 24, // 1 Tag
+  });
+
+  // 🔹 Schritt 5: Adminboard optional checken
   if (redirectTo === '/adminboard') {
     const hasAdminRole = await checkAdminRole(userData.id);
     if (!hasAdminRole) {
-      console.error('DEBUG: Admin check failed for user', userData.id);
       return NextResponse.redirect(`${APP_URL}/login?error=no_admin`);
     }
   }
 
-  // 🔹 Schritt 6: Weiterleitung mit Token
-  return NextResponse.redirect(`${APP_URL}${redirectTo}?token=${tokenData.access_token}`);
+  return response;
 }
 
-// 🔹 Helper-Funktion: Prüft Admin-Rolle über Bot + Debug
+// 🔹 Helper-Funktion bleibt unverändert
 async function checkAdminRole(userId: string) {
   const GUILD_ID = '1462894776671277241';
   const ROLE_ID = '1474507057154756919';
@@ -83,20 +94,10 @@ async function checkAdminRole(userId: string) {
         headers: { Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}` },
       }
     );
-
-    console.log('DEBUG: Member fetch status:', memberRes.status);
-    const text = await memberRes.text();
-    console.log('DEBUG: Member fetch response text:', text);
-
     if (!memberRes.ok) return false;
-
-    const member = JSON.parse(text);
-    console.log('DEBUG: Member fetched:', member);
-    console.log('DEBUG: Roles array:', member.roles);
-
+    const member = await memberRes.json();
     return member.roles.includes(ROLE_ID);
-  } catch (err) {
-    console.error('DEBUG: Admin check error:', err);
+  } catch {
     return false;
   }
 }
