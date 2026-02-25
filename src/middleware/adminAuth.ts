@@ -1,4 +1,4 @@
-// middleware/adminAuth.ts
+// src/middleware/adminAuth.ts
 import { NextResponse } from 'next/server';
 
 export async function adminAuth(req: Request) {
