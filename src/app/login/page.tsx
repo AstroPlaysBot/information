@@ -1,42 +1,60 @@
 // src/app/login/page.tsx
 'use client';
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-const DISCORD_CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
-
-const DISCORD_SCOPE = encodeURIComponent('identify guilds');
-const DISCORD_RESPONSE_TYPE = 'code';
-
-function startDiscordAuth(target: 'dashboard' | 'adminboard') {
-  if (!DISCORD_CLIENT_ID || !APP_URL) {
-    alert('Fehler: Discord Client ID oder App URL fehlt');
-    return;
-  }
-
-  const redirectUri = encodeURIComponent(`${APP_URL}/api/discord-auth`);
-
-  const discordAuthUrl =
-    `https://discord.com/api/oauth2/authorize` +
-    `?client_id=${DISCORD_CLIENT_ID}` +
-    `&redirect_uri=${redirectUri}` +
-    `&response_type=${DISCORD_RESPONSE_TYPE}` +
-    `&scope=${DISCORD_SCOPE}` +
-    `&state=${target}`;
-
-  window.location.href = discordAuthUrl;
-}
 
 export default function LoginPage() {
   const [adminAllowed, setAdminAllowed] = useState(false);
+  const [userAllowed, setUserAllowed] = useState(false);
+  const router = useRouter();
 
-  // Prüfen, ob personal_token gesetzt ist
+  // Prüfen, ob Tokens gesetzt sind
   useEffect(() => {
-    const cookie = document.cookie
-      .split('; ')
-      .find((row) => row.startsWith('personal_token='));
-    setAdminAllowed(!!cookie);
+    const cookies = document.cookie.split('; ');
+    const personalToken = cookies.find((c) => c.startsWith('personal_token='));
+    const userToken = cookies.find((c) => c.startsWith('user_token='));
+    setAdminAllowed(!!personalToken);
+    setUserAllowed(!!userToken || !!personalToken); // personal_token gilt auch für dashboard
   }, []);
+
+  // Discord OAuth starten
+  const startDiscordAuth = (target: 'dashboard' | 'adminboard') => {
+    if (target === 'dashboard' && userAllowed) {
+      router.push('/dashboard');
+      return;
+    }
+    if (target === 'adminboard' && adminAllowed) {
+      router.push('/adminboard');
+      return;
+    }
+
+    if (!APP_URL) {
+      alert('Fehler: App URL fehlt');
+      return;
+    }
+
+    const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
+    if (!clientId) {
+      alert('Fehler: Discord Client ID fehlt');
+      return;
+    }
+
+    const redirectUri = encodeURIComponent(`${APP_URL}/api/discord-auth`);
+    const scope = encodeURIComponent('identify guilds');
+    const state = target;
+
+    const discordAuthUrl =
+      `https://discord.com/api/oauth2/authorize` +
+      `?client_id=${clientId}` +
+      `&redirect_uri=${redirectUri}` +
+      `&response_type=code` +
+      `&scope=${scope}` +
+      `&state=${state}`;
+
+    window.location.href = discordAuthUrl;
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
@@ -45,9 +63,9 @@ export default function LoginPage() {
         {/* Dashboard */}
         <div
           onClick={() => startDiscordAuth('dashboard')}
-          className="relative cursor-pointer overflow-hidden rounded-2xl p-8 shadow-2xl
+          className={`relative cursor-pointer overflow-hidden rounded-2xl p-8 shadow-2xl
                      bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-600
-                     transition-transform hover:scale-105"
+                     transition-transform hover:scale-105`}
         >
           <h2 className="text-3xl font-extrabold text-white mb-4">Dashboard</h2>
           <p className="text-gray-200 text-lg">
@@ -57,7 +75,7 @@ export default function LoginPage() {
 
         {/* Adminboard */}
         <div
-          onClick={() => adminAllowed && startDiscordAuth('adminboard')}
+          onClick={() => startDiscordAuth('adminboard')}
           className={`relative overflow-hidden rounded-2xl p-8 shadow-2xl
                      transition-transform ${
                        adminAllowed
