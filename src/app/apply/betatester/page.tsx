@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-// import { cookies } from 'next/headers';
 
 export default function BetaTesterApplyPage() {
   const router = useRouter();
@@ -93,7 +92,7 @@ export default function BetaTesterApplyPage() {
     async function fetchDiscordUser() {
       const token = searchParams.get('token');
       if (!token) {
-        router.push('/apply/betatester');
+        setShowToast({ type: 'error', message: 'Token fehlt! Bitte über Discord autorisieren.' });
         return;
       }
 
@@ -120,7 +119,7 @@ export default function BetaTesterApplyPage() {
       }
     }
     fetchDiscordUser();
-  }, [router, searchParams]);
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-950 text-white px-6 py-16 relative">
