@@ -13,6 +13,10 @@ function startDiscordAuth(target: 'dashboard' | 'adminboard') {
     return;
   }
 
+  if (target === 'adminboard') {
+    sessionStorage.setItem('admin_attempt', '1');
+  }
+  
   // 🔹 Wichtig: Immer dieselbe Redirect-URI verwenden
   const redirectUri = encodeURIComponent(`${APP_URL}/api/discord-auth`);
 
