@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { cookies } from 'next/headers';
 
 export default function FrontendDevApplyPage() {
   const router = useRouter();
@@ -33,8 +34,12 @@ export default function FrontendDevApplyPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isFormValid || !user) {
-      setShowToast({ type: 'error', message: 'Bitte alle Felder ausfüllen und Discord-Daten laden!' });
+    if (!isFormValid) {
+      setShowToast({ type: 'error', message: 'Bitte alle Felder ausfüllen!' });
+      return;
+    }
+    if (!user) {
+      setShowToast({ type: 'error', message: 'Discord-Daten konnten nicht geladen werden.' });
       return;
     }
 
@@ -88,23 +93,34 @@ export default function FrontendDevApplyPage() {
 
   useEffect(() => {
     async function fetchDiscordUser() {
-      const token = searchParams.get('token');
+      // 🔹 Token zuerst aus Cookie
+      const cookieToken = cookies().get('discord_token')?.value;
+      const token = cookieToken || searchParams.get('token');
       if (!token) {
         router.push('/apply/frontend-developer');
         return;
       }
+
       try {
         const res = await fetch('https://discord.com/api/users/@me', {
           headers: { Authorization: `Bearer ${token}` },
         });
+        if (!res.ok) throw new Error('Discord API Fehler: ' + res.status);
         const data = await res.json();
         const created_at = new Date(
           Number((BigInt(data.id) >> 22n) + 1420070400000n)
         ).toISOString();
 
-        setUser({ ...data, created_at });
+        setUser({
+          id: data.id,
+          username: data.username,
+          discriminator: data.discriminator,
+          avatar: data.avatar,
+          created_at,
+        });
       } catch (err) {
         console.error('Discord User Fetch Error:', err);
+        setShowToast({ type: 'error', message: 'Discord-Daten konnten nicht geladen werden!' });
       }
     }
     fetchDiscordUser();
