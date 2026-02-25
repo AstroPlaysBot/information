@@ -5,21 +5,22 @@ const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET!;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL!;
 const GUILD_ID = process.env.DISCORD_GUILD_ID!;
 const ADMIN_ROLE_ID = process.env.DISCORD_ADMIN_ROLE_ID!;
+const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN!; // Für Role Check
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const code = url.searchParams.get('code');
-  const state = url.searchParams.get('state'); // 'dashboard' | 'adminboard'
 
+  // Schritt 1: Kein Code → Weiterleitung zu Discord OAuth
   if (!code) {
     const redirectUri = `${APP_URL}/api/discord-auth`;
     const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
       redirectUri
-    )}&response_type=code&scope=identify%20guilds%20guilds.members.read&state=${encodeURIComponent(state || 'dashboard')}`;
+    )}&response_type=code&scope=identify%20guilds%20guilds.members.read`;
     return NextResponse.redirect(discordAuthUrl);
   }
 
-  // Token holen
+  // Schritt 2: Token von Discord holen
   const params = new URLSearchParams();
   params.append('client_id', CLIENT_ID);
   params.append('client_secret', CLIENT_SECRET);
@@ -39,41 +40,36 @@ export async function GET(req: Request) {
     return NextResponse.redirect(`${APP_URL}/login?error=oauth_failed`);
   }
 
-  // User-Daten holen
+  // Schritt 3: User Daten holen
   const userRes = await fetch('https://discord.com/api/users/@me', {
     headers: { Authorization: `Bearer ${tokenData.access_token}` },
   });
   const userData = await userRes.json();
 
-  // Für Adminboard prüfen, ob User Rolle + Guild hat
-  let allowed = true;
-  if (state === 'adminboard') {
-    const guildRes = await fetch(`https://discord.com/api/users/@me/guilds`, {
+  // Schritt 4: Prüfen ob Adminrolle + im Guild
+  let isAdmin = false;
+  try {
+    const guildsRes = await fetch(`https://discord.com/api/users/@me/guilds`, {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
-    const guilds = await guildRes.json();
+    const guilds = await guildsRes.json();
     const guild = guilds.find((g: any) => g.id === GUILD_ID);
-    if (!guild) allowed = false;
 
-    // Rolle checken
-    if (allowed) {
+    if (guild) {
       const memberRes = await fetch(`https://discord.com/api/guilds/${GUILD_ID}/members/${userData.id}`, {
-        headers: { Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}` },
+        headers: { Authorization: `Bot ${BOT_TOKEN}` },
       });
       const member = await memberRes.json();
-      if (!member.roles.includes(ADMIN_ROLE_ID)) allowed = false;
+      if (member.roles.includes(ADMIN_ROLE_ID)) isAdmin = true;
     }
-
-    if (!allowed) {
-      return NextResponse.redirect(`${APP_URL}/?error=admin_no_access`);
-    }
+  } catch (err) {
+    console.error('Discord Admin Check Error:', err);
   }
 
-  // Cookie setzen
-  const cookieName = state === 'adminboard' ? 'admin_token' : 'dashboard_token';
-  const redirectTo = state === 'adminboard' ? '/adminboard' : '/dashboard';
+  // Schritt 5: Token setzen
+  const cookieName = isAdmin ? 'personal_token' : 'user_token';
 
-  const response = NextResponse.redirect(`${APP_URL}${redirectTo}`);
+  const response = NextResponse.redirect(`${APP_URL}/login`);
   response.cookies.set({
     name: cookieName,
     value: tokenData.access_token,
