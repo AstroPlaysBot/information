@@ -29,7 +29,7 @@ export default async function AdminboardPage() {
 
     // 3️⃣ Role check
     const hasRole = member.roles.includes(ROLE_ID);
-    if (!hasRole) redirect('/?error=no_admin');
+    if (!hasRole) redirect('/');
 
     // 4️⃣ Bewerbungen laden
     const appsRes = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/adminboard`, {
@@ -41,6 +41,6 @@ export default async function AdminboardPage() {
     return <AdminboardClient applications={applications} />;
   } catch (err) {
     console.error(err);
-    redirect('/?error=no_admin');
+    redirect('/');
   }
 }
