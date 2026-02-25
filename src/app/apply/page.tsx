@@ -1,10 +1,11 @@
 'use client';
+
 import { motion } from 'framer-motion';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 interface ApplicationType {
-  id: string; // für URL
+  id: string;
   title: string;
   description: string;
   perks?: string[];
@@ -15,7 +16,7 @@ interface DiscordUser {
   username: string;
   discriminator: string;
   avatar: string | null;
-  createdAt: string;
+  created_at: string;
 }
 
 const applications: ApplicationType[] = [
@@ -46,50 +47,51 @@ const applications: ApplicationType[] = [
 
 export default function ApplyPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [discordUser, setDiscordUser] = useState<DiscordUser | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const token = searchParams.get('token');
-
-  // 🔹 Discord-Daten holen
+  // 🔹 Discord-User über Cookie laden
   useEffect(() => {
-    if (!token) return;
-
-    const fetchUser = async () => {
+    const loadUser = async () => {
       try {
-        const res = await fetch('https://discord.com/api/users/@me', {
-          headers: { Authorization: `Bearer ${token}` },
+        const res = await fetch('/api/me', {
+          credentials: 'include',
         });
-        const data = await res.json();
-        const createdAt = new Date(
-          ((BigInt(data.id) >> BigInt(22)) + BigInt(1420070400000))
-            .toString()
-        ).toISOString();
 
-        setDiscordUser({
-          id: data.id,
-          username: data.username,
-          discriminator: data.discriminator,
-          avatar: data.avatar,
-          createdAt,
-        });
+        if (!res.ok) {
+          // nicht eingeloggt → Discord OAuth
+          window.location.href = '/api/discord-auth?state=/apply';
+          return;
+        }
+
+        const data = await res.json();
+        setDiscordUser(data.user);
       } catch (err) {
-        console.error('Discord API Error:', err);
+        console.error('Failed to load user:', err);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchUser();
-  }, [token]);
+    loadUser();
+  }, []);
 
   const handleApply = (appId: string) => {
-    // state enthält den Zielpfad direkt
-    const state = `/apply/${appId}`;
-    window.location.href = `/api/discord-auth?state=${encodeURIComponent(state)}`;
+    router.push(`/apply/${appId}`);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white">
+        Lädt...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-950 text-white px-6 py-16">
-      {/* 🔹 Discord Profil oben links */}
+
+      {/* 🔹 Discord Profil */}
       {discordUser && (
         <div className="flex items-center gap-4 mb-8">
           <img
@@ -102,15 +104,17 @@ export default function ApplyPage() {
             alt="Avatar"
           />
           <div>
-            <p className="font-bold">{discordUser.username}#{discordUser.discriminator}</p>
+            <p className="font-bold">
+              {discordUser.username}#{discordUser.discriminator}
+            </p>
             <p className="text-gray-400 text-sm">
-              Account erstellt: {new Date(discordUser.createdAt).toLocaleDateString()}
+              Account erstellt: {new Date(discordUser.created_at).toLocaleDateString()}
             </p>
           </div>
         </div>
       )}
 
-      <h1 className="text-5xl font-extrabold text-center mb-12 opacity-0 animate-fadeIn">
+      <h1 className="text-5xl font-extrabold text-center mb-12 animate-fadeIn">
         Bewirb dich für eine Rolle
       </h1>
 
@@ -156,8 +160,13 @@ export default function ApplyPage() {
       </motion.div>
 
       <style jsx>{`
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .animate-fadeIn { animation: fadeIn 1s ease forwards; }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 1s ease forwards;
+        }
       `}</style>
     </div>
   );
