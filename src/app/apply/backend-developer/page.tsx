@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-// import { cookies } from 'next/headers';
 
 export default function BackendDevApplyPage() {
   const router = useRouter();
@@ -26,6 +25,7 @@ export default function BackendDevApplyPage() {
   });
 
   const [showToast, setShowToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
   const isFormValid = Object.values(form).every((v) => v.trim() !== '');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -72,7 +72,15 @@ export default function BackendDevApplyPage() {
 
       if (data.success) {
         setShowToast({ type: 'success', message: 'Bewerbung gesendet!' });
-        setForm({ age: '', email: '', languageExperience: '', databaseExperience: '', apiExperience: '', problemSolving: '', phoneReachable: '' });
+        setForm({
+          age: '',
+          email: '',
+          languageExperience: '',
+          databaseExperience: '',
+          apiExperience: '',
+          problemSolving: '',
+          phoneReachable: '',
+        });
         setTimeout(() => router.push('/'), 500);
       } else {
         setShowToast({ type: 'error', message: 'Fehler beim Absenden: ' + data.error });
@@ -87,7 +95,7 @@ export default function BackendDevApplyPage() {
     async function fetchDiscordUser() {
       const token = searchParams.get('token');
       if (!token) {
-        router.push('/apply/backend-developer');
+        setShowToast({ type: 'error', message: 'Token fehlt! Bitte über Discord autorisieren.' });
         return;
       }
 
@@ -114,7 +122,7 @@ export default function BackendDevApplyPage() {
       }
     }
     fetchDiscordUser();
-  }, [router, searchParams]);
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-950 text-white px-6 py-16 relative">
