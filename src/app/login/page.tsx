@@ -1,6 +1,5 @@
-// src/app/login/page.tsx
 'use client';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 const DISCORD_CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
@@ -17,11 +16,8 @@ function startDiscordAuth(target: 'dashboard' | 'adminboard') {
   if (target === 'adminboard') {
     sessionStorage.setItem('admin_attempt', '1');
   }
-  
-  // 🔹 Wichtig: Immer dieselbe Redirect-URI verwenden
-  const redirectUri = encodeURIComponent(`${APP_URL}/api/discord-auth`);
 
-  // State sagt dem Server, wohin nach OAuth weitergeleitet werden soll
+  const redirectUri = encodeURIComponent(`${APP_URL}/api/discord-auth`);
   const state = target; // 'dashboard' oder 'adminboard'
 
   const discordAuthUrl =
@@ -36,6 +32,16 @@ function startDiscordAuth(target: 'dashboard' | 'adminboard') {
 }
 
 export default function LoginPage() {
+  const [adminAllowed, setAdminAllowed] = useState(false);
+
+  // Prüfen, ob der User berechtigt ist (nach OAuth)
+  useEffect(() => {
+    const token = document.cookie
+      .split('; ')
+      .find((row) => row.startsWith('admin_token='));
+    setAdminAllowed(!!token);
+  }, []);
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
       <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-12">
@@ -53,15 +59,14 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Admin Dashboard */}
+        {/* Adminboard */}
         <div
-          onClick={() => startDiscordAuth('adminboard')}
-          className="relative cursor-pointer overflow-hidden rounded-2xl p-8 shadow-2xl
-                     bg-gradient-to-r from-green-600 via-teal-600 to-cyan-500
-                     transition-transform hover:scale-105"
+          onClick={() => adminAllowed && startDiscordAuth('adminboard')}
+          className={`relative overflow-hidden rounded-2xl p-8 shadow-2xl
+                     transition-transform ${adminAllowed ? 'cursor-pointer hover:scale-105 bg-gradient-to-r from-green-600 via-teal-600 to-cyan-500' : 'cursor-not-allowed bg-gray-700 opacity-50'}`}
         >
-          <h2 className="text-3xl font-extrabold text-white mb-4">
-            Adminboard
+          <h2 className="text-3xl font-extrabold text-white mb-4 flex items-center gap-2">
+            Adminboard {!adminAllowed && <span className="text-lg">🔒</span>}
           </h2>
           <p className="text-gray-200 text-lg">
             Bewerbungen, Admin-Funktionen & Verwaltung.
