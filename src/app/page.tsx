@@ -2,18 +2,19 @@
 
 import React, { useState, useEffect } from 'react';
 import Background from '../components/Background';
-import { useSearchParams } from 'next/navigation';
 
 export default function HomePage() {
   const [showError, setShowError] = useState(false);
-  const searchParams = useSearchParams();
 
+  // 🔹 SCHRITT 4: Modal über sessionStorage steuern
   useEffect(() => {
-    const errorParam = searchParams.get('error');
-    if (errorParam === 'admin_forbidden') {
+    const attempted = sessionStorage.getItem('admin_attempt');
+
+    if (attempted === '1') {
       setShowError(true);
+      sessionStorage.removeItem('admin_attempt'); // einmalig
     }
-  }, [searchParams]);
+  }, []);
 
   const closeError = () => setShowError(false);
 
