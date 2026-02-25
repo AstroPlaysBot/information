@@ -1,7 +1,6 @@
-// src/app/login/page.tsx
 'use client';
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
 
@@ -9,24 +8,26 @@ export default function LoginPage() {
   const [adminAllowed, setAdminAllowed] = useState(false);
   const [userAllowed, setUserAllowed] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
 
-  // Prüfen, ob Tokens gesetzt sind
+  // 🔹 Nur Zugriff, wenn URL ein Token enthält: /login-TOKEN
   useEffect(() => {
+    if (!pathname?.startsWith('/login-')) {
+      router.replace('/'); // Kein Token → weiterleiten
+      return;
+    }
+
     const cookies = document.cookie.split('; ');
     const personalToken = cookies.find((c) => c.startsWith('personal_token='));
     const userToken = cookies.find((c) => c.startsWith('user_token='));
     setAdminAllowed(!!personalToken);
-    setUserAllowed(!!userToken || !!personalToken); // personal_token gilt auch für dashboard
-  }, []);
+    setUserAllowed(!!userToken || !!personalToken); // personal_token gilt auch für Dashboard
+  }, [pathname, router]);
 
-  // Discord OAuth starten
+  // Discord OAuth starten, nur wenn noch kein Token
   const startDiscordAuth = (target: 'dashboard' | 'adminboard') => {
-    if (target === 'dashboard' && userAllowed) {
-      router.push('/dashboard');
-      return;
-    }
-    if (target === 'adminboard' && adminAllowed) {
-      router.push('/adminboard');
+    if ((target === 'dashboard' && userAllowed) || (target === 'adminboard' && adminAllowed)) {
+      router.push(target === 'dashboard' ? '/dashboard' : '/adminboard');
       return;
     }
 
