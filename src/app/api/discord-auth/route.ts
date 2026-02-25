@@ -7,7 +7,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL!;
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const code = url.searchParams.get('code');
-  const state = url.searchParams.get('state'); // dashboard, adminboard, /apply/...
+  const state = url.searchParams.get('state'); // dashboard oder adminboard
 
   // 🔹 Schritt 1: Kein Code → OAuth starten
   if (!code) {
@@ -17,7 +17,7 @@ export async function GET(req: Request) {
       `?client_id=${CLIENT_ID}` +
       `&redirect_uri=${encodeURIComponent(redirectUri)}` +
       `&response_type=code` +
-      `&scope=identify%20guilds` + // unbedingt guilds Scope
+      `&scope=identify%20guilds` +
       `&state=${encodeURIComponent(state || '')}`;
 
     return NextResponse.redirect(discordAuthUrl);
@@ -30,7 +30,6 @@ export async function GET(req: Request) {
   params.append('grant_type', 'authorization_code');
   params.append('code', code);
   params.append('redirect_uri', `${APP_URL}/api/discord-auth`);
-  params.append('scope', 'identify guilds');
 
   const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
     method: 'POST',
@@ -45,30 +44,21 @@ export async function GET(req: Request) {
     return NextResponse.redirect(`${APP_URL}/login?error=oauth_failed`);
   }
 
-  // 🔹 Schritt 3: User Daten holen
-  const userRes = await fetch('https://discord.com/api/users/@me', {
-    headers: { Authorization: `Bearer ${tokenData.access_token}` },
-  });
-  const userData = await userRes.json();
-
-  // 🔹 Schritt 4: Zielseite bestimmen
+  // 🔹 Schritt 3: Zielseite bestimmen
   let redirectTo = '/dashboard';
-  if (state) {
-    if (state.startsWith('/apply/')) redirectTo = state;
-    else if (state === 'dashboard') redirectTo = '/dashboard';
-    else if (state === 'adminboard') redirectTo = '/adminboard';
-  }
+  if (state === 'adminboard') redirectTo = '/adminboard';
+  else if (state === 'dashboard') redirectTo = '/dashboard';
 
   const response = NextResponse.redirect(`${APP_URL}${redirectTo}`);
 
-  // 🔹 Token in Cookie setzen – für Dashboard und Adminboard
+  // 🔹 Token in HTTP-only Cookie setzen
   response.cookies.set({
     name: 'discord_token',
     value: tokenData.access_token,
     path: '/',
     httpOnly: true,
     sameSite: 'lax',
-    secure: true,
+    secure: true, // ✅ Produktion
     maxAge: 60 * 15, // 15 Minuten
   });
 
