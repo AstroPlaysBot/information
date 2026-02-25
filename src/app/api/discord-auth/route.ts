@@ -1,3 +1,4 @@
+// src/app/api/discord-auth
 import { NextResponse } from 'next/server';
 
 const CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!;
