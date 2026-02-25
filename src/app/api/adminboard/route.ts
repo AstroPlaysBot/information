@@ -1,45 +1,43 @@
-// app/api/adminboard/route.ts
+// app/api/admin-check/route.ts
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import { adminAuth } from '@/middleware/adminAuth';
+import { cookies } from 'next/headers';
 
-const prisma = new PrismaClient();
+const GUILD_ID = '1462894776671277241';
+const ROLE_ID = '1474507057154756919';
 
-export async function GET(req: Request) {
-  const authCheck = await adminAuth(req);
-  if (authCheck) return authCheck; // 403 wenn nicht Admin
+export async function GET() {
+  const token = cookies().get('discord_token')?.value;
 
-  try {
-    const applications = await prisma.application.findMany({
-      orderBy: { submittedAt: 'desc' },
-    });
-    return NextResponse.json({ applications });
-  } catch (error) {
-    console.error('ADMINBOARD GET ERROR:', error);
-    return NextResponse.json({ error: 'Bewerbungen konnten nicht geladen werden.' }, { status: 500 });
+  if (!token) {
+    return NextResponse.json({ allowed: false }, { status: 401 });
   }
-}
-
-export async function POST(req: Request) {
-  const authCheck = await adminAuth(req);
-  if (authCheck) return authCheck; // 403 wenn nicht Admin
 
   try {
-    const data = await req.json();
-    const created = await prisma.application.create({
-      data: {
-        id: crypto.randomUUID(),
-        name: data.name,
-        age: data.age || null,
-        email: data.email || null,
-        role: data.role,
-        answers: data.answers || {},
-        submittedAt: new Date(),
-      },
+    // 1️⃣ Discord User
+    const userRes = await fetch('https://discord.com/api/users/@me', {
+      headers: { Authorization: `Bearer ${token}` },
     });
-    return NextResponse.json({ success: true, application: created });
-  } catch (error) {
-    console.error('ADMINBOARD POST ERROR:', error);
-    return NextResponse.json({ success: false, error: (error as any).message || 'Speichern fehlgeschlagen' }, { status: 500 });
+
+    if (!userRes.ok) return NextResponse.json({ allowed: false }, { status: 401 });
+    const user = await userRes.json();
+
+    // 2️⃣ Guild Member (Bot Token)
+    const memberRes = await fetch(
+      `https://discord.com/api/guilds/${GUILD_ID}/members/${user.id}`,
+      {
+        headers: { Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}` },
+      }
+    );
+
+    if (!memberRes.ok) return NextResponse.json({ allowed: false });
+    const member = await memberRes.json();
+
+    // 3️⃣ Role Check
+    const hasRole = member.roles.includes(ROLE_ID);
+
+    return NextResponse.json({ allowed: hasRole });
+  } catch (err) {
+    console.error('ADMIN CHECK ERROR:', err);
+    return NextResponse.json({ allowed: false }, { status: 500 });
   }
 }
