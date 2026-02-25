@@ -33,15 +33,18 @@ export default function FrontendDevApplyPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isFormValid) {
-      setShowToast({ type: 'error', message: 'Bitte alle Felder ausfüllen!' });
-      return;
-    }
-    if (!user) {
-      setShowToast({ type: 'error', message: 'Discord-Daten konnten nicht geladen werden.' });
+
+    if (!isFormValid || !user) {
+      setShowToast({
+        type: 'error',
+        message: !isFormValid
+          ? 'Bitte alle Felder ausfüllen!'
+          : 'Discord-Daten konnten nicht geladen werden.',
+      });
       return;
     }
 
+    // 🔹 Antworten erst hier unten vor dem Fetch
     const answers = {
       'Frontend-Frameworks': form.frameworkExperience,
       'UI/UX Erfahrung': form.uiExperience,
@@ -90,45 +93,30 @@ export default function FrontendDevApplyPage() {
     }
   };
 
+  // 🔹 Discord-User über neues Cookie-System laden
   useEffect(() => {
-    async function fetchDiscordUser() {
+    async function loadUser() {
       try {
-        // Cookie auslesen
-        const cookieRes = await fetch('/api/get-discord-token');
-        const cookieData = await cookieRes.json();
+        const res = await fetch('/api/me', {
+          credentials: 'include',
+        });
 
-        if (!cookieData.token) {
-          // Kein Cookie → auf Discord OAuth weiterleiten
-          router.push(`/api/discord-auth?state=/apply/frontend-developer`);
+        if (!res.ok) {
+          // nicht eingeloggt → OAuth starten
+          window.location.href = '/api/discord-auth?state=/apply/frontend-developer';
           return;
         }
 
-        const res = await fetch('https://discord.com/api/users/@me', {
-          headers: { Authorization: `Bearer ${cookieData.token}` },
-        });
-
-        if (!res.ok) throw new Error('Discord API Fehler: ' + res.status);
         const data = await res.json();
-
-        const created_at = new Date(
-          Number((BigInt(data.id) >> 22n) + 1420070400000n)
-        ).toISOString();
-
-        setUser({
-          id: data.id,
-          username: data.username,
-          discriminator: data.discriminator,
-          avatar: data.avatar,
-          created_at,
-        });
+        setUser(data.user);
       } catch (err) {
-        console.error('Discord User Fetch Error:', err);
-        setShowToast({ type: 'error', message: 'Discord-Daten konnten nicht geladen werden!' });
+        console.error(err);
+        setShowToast({ type: 'error', message: 'Discord-Daten konnten nicht geladen werden.' });
       }
     }
 
-    fetchDiscordUser();
-  }, [router]);
+    loadUser();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-950 text-white px-6 py-16 relative">
