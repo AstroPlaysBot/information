@@ -1,3 +1,4 @@
+// src/app/dashboard/DashboardSidebar.tsx
 'use client';
 import React, { useState } from 'react';
 import { useParams, useRouter, usePathname } from 'next/navigation';
