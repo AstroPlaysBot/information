@@ -9,6 +9,8 @@ import { useRouter, usePathname } from 'next/navigation';
 const FixedHeader = () => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [hasAdminAccess, setHasAdminAccess] = useState(false);
+
   const router = useRouter();
   const pathname = usePathname();
 
@@ -28,6 +30,14 @@ const FixedHeader = () => {
     document.body.style.overflow = menuOpen ? 'hidden' : '';
   }, [menuOpen]);
 
+  // Admin Cookie Check
+  useEffect(() => {
+    const adminToken = document.cookie
+      .split('; ')
+      .find((row) => row.startsWith('admin_token='));
+    setHasAdminAccess(!!adminToken);
+  }, []);
+
   // ===== Navigation Helpers =====
   const goHome = () => {
     router.push('/');
@@ -36,6 +46,12 @@ const FixedHeader = () => {
 
   const goLogin = () => {
     router.push('/login');
+    setMenuOpen(false);
+  };
+
+  const goAdmin = () => {
+    if (!hasAdminAccess) return;
+    router.push('/adminboard');
     setMenuOpen(false);
   };
 
@@ -52,12 +68,9 @@ const FixedHeader = () => {
       window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
     };
 
-    // Prüfen, ob wir bereits auf Homepage sind
     if (pathname !== '/') {
-      // Navigiere erst auf Homepage, dann scrollen nach render
       router.push('/');
-      // Kleine Verzögerung, bis der DOM gerendert ist
-      setTimeout(scrollToSection, 100); 
+      setTimeout(scrollToSection, 100);
     } else {
       scrollToSection();
     }
@@ -106,6 +119,14 @@ const FixedHeader = () => {
             <button onClick={() => goSection('support')} className="hover:text-white transition">Support</button>
             <button onClick={() => goSection('apply')} className="hover:text-white transition">Bewerben</button>
             <button onClick={goLogin} className="hover:text-white transition">Einloggen</button>
+            <button
+              onClick={goAdmin}
+              className={`hover:text-white transition ${
+                !hasAdminAccess ? 'opacity-40 cursor-not-allowed' : ''
+              }`}
+            >
+              Adminboard
+            </button>
           </nav>
 
           {/* MOBILE BUTTON */}
@@ -135,6 +156,14 @@ const FixedHeader = () => {
               <li><button onClick={() => goSection('support')}>Support</button></li>
               <li><button onClick={() => goSection('apply')}>Bewerben</button></li>
               <li><button onClick={goLogin}>Einloggen</button></li>
+              <li>
+                <button
+                  onClick={goAdmin}
+                  className={`${!hasAdminAccess ? 'opacity-40 cursor-not-allowed' : ''}`}
+                >
+                  Adminboard
+                </button>
+              </li>
             </ul>
           </div>
         </div>
