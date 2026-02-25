@@ -76,6 +76,7 @@ export default function AdminBoardClient({ applications }: Props) {
 
               {expanded === app.id && (
                 <div className="p-4 border-t border-gray-700 flex flex-col gap-4">
+                  {/* 🔹 Discord-Daten anzeigen */}
                   {app.discordId && (
                     <div className="flex items-center gap-3">
                       <img
@@ -102,10 +103,12 @@ export default function AdminBoardClient({ applications }: Props) {
                     </div>
                   )}
 
+                  {/* 🔹 Alter und Email darunter */}
                   <p className="text-gray-200 mb-2">
                     <strong>Alter:</strong> {app.age || '–'} | <strong>Email:</strong> {app.email || '–'}
                   </p>
 
+                  {/* Antworten */}
                   <div className="flex flex-col gap-2 text-gray-300">
                     {app.answers && Object.keys(app.answers).length > 0 ? (
                       Object.entries(app.answers).map(([q, a]) => (
@@ -118,6 +121,7 @@ export default function AdminBoardClient({ applications }: Props) {
                     )}
                   </div>
 
+                  {/* Action Buttons */}
                   <div className="mt-4 flex gap-2">
                     <button className="px-3 py-1 rounded bg-green-600 hover:bg-green-500 transition">
                       Akzeptieren
