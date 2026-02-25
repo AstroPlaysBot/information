@@ -95,7 +95,7 @@ export default function BetaTesterApplyPage() {
         const cookieToken = cookies().get('discord_token')?.value;
         if (!cookieToken) {
           // Kein Token → Discord OAuth starten
-          router.push(`/api/discord-auth?state=/apply/beta-tester`);
+          router.push(`/api/discord-auth?state=/apply/betatester`);
           return;
         }
 
