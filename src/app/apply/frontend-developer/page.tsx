@@ -1,10 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 export default function FrontendDevApplyPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const [user, setUser] = useState<{
     id: string;
@@ -25,6 +24,7 @@ export default function FrontendDevApplyPage() {
   });
 
   const [showToast, setShowToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
   const isFormValid = Object.values(form).every((v) => v.trim() !== '');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -92,16 +92,21 @@ export default function FrontendDevApplyPage() {
 
   useEffect(() => {
     async function fetchDiscordUser() {
-      const token = searchParams.get('token');
-      if (!token) {
-        setShowToast({ type: 'error', message: 'Token fehlt! Bitte über Discord autorisieren.' });
-        return;
-      }
-
       try {
+        // Cookie auslesen
+        const cookieRes = await fetch('/api/get-discord-token');
+        const cookieData = await cookieRes.json();
+
+        if (!cookieData.token) {
+          // Kein Cookie → auf Discord OAuth weiterleiten
+          router.push(`/api/discord-auth?state=/apply/frontend-developer`);
+          return;
+        }
+
         const res = await fetch('https://discord.com/api/users/@me', {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${cookieData.token}` },
         });
+
         if (!res.ok) throw new Error('Discord API Fehler: ' + res.status);
         const data = await res.json();
 
@@ -123,7 +128,7 @@ export default function FrontendDevApplyPage() {
     }
 
     fetchDiscordUser();
-  }, [searchParams]);
+  }, [router]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-950 text-white px-6 py-16 relative">
