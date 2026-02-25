@@ -7,23 +7,14 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL!;
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const code = url.searchParams.get('code');
-  const state = url.searchParams.get('state'); // dashboard oder adminboard
+  const state = url.searchParams.get('state');
 
-  // 🔹 Schritt 1: Kein Code → OAuth starten
   if (!code) {
     const redirectUri = `${APP_URL}/api/discord-auth`;
-    const discordAuthUrl =
-      `https://discord.com/api/oauth2/authorize?` +
-      `client_id=${CLIENT_ID}` +
-      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-      `&response_type=code` +
-      `&scope=identify%20guilds` +
-      `&state=${encodeURIComponent(state || '')}`;
-
+    const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=identify%20guilds&state=${encodeURIComponent(state || '')}`;
     return NextResponse.redirect(discordAuthUrl);
   }
 
-  // 🔹 Schritt 2: Code vorhanden → Token holen
   const params = new URLSearchParams();
   params.append('client_id', CLIENT_ID);
   params.append('client_secret', CLIENT_SECRET);
@@ -44,25 +35,17 @@ export async function GET(req: Request) {
     return NextResponse.redirect(`${APP_URL}/login?error=oauth_failed`);
   }
 
-  // 🔹 Schritt 3: Zielseite bestimmen
   const redirectTo = state === 'adminboard' ? '/adminboard' : '/dashboard';
-  const redirectUrl = new URL(redirectTo, APP_URL).toString(); // 🔹 sichere Absolute URL
+  const response = NextResponse.redirect(`${APP_URL}${redirectTo}`);
 
-  console.log('State:', state);
-  console.log('Redirecting to:', redirectUrl);
-  console.log('Token Data:', tokenData);
-
-  const response = NextResponse.redirect(redirectUrl);
-
-  // 🔹 Token in HTTP-only Cookie setzen
   response.cookies.set({
     name: 'discord_token',
     value: tokenData.access_token,
     path: '/',
     httpOnly: true,
     sameSite: 'lax',
-    secure: true, // ✅ Produktion
-    maxAge: 60 * 15, // 15 Minuten
+    secure: true,
+    maxAge: 60 * 15,
   });
 
   return response;
