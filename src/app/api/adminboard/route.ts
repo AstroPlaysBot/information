@@ -1,10 +1,14 @@
-
+// app/api/adminboard/route.ts
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { adminAuth } from '@/middleware/adminAuth';
 
 const prisma = new PrismaClient();
 
-export async function GET() {
+export async function GET(req: Request) {
+  const authCheck = await adminAuth(req);
+  if (authCheck) return authCheck; // 403 wenn nicht Admin
+
   try {
     const applications = await prisma.application.findMany({
       orderBy: { submittedAt: 'desc' },
@@ -17,6 +21,9 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const authCheck = await adminAuth(req);
+  if (authCheck) return authCheck; // 403 wenn nicht Admin
+
   try {
     const data = await req.json();
     const created = await prisma.application.create({
