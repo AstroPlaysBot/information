@@ -1,23 +1,10 @@
+// src/app/page.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Background from '../components/Background';
 
 export default function HomePage() {
-  const [showError, setShowError] = useState(false);
-
-  // 🔹 SCHRITT 4: Modal über sessionStorage steuern
-  useEffect(() => {
-    const attempted = sessionStorage.getItem('admin_attempt');
-
-    if (attempted === '1') {
-      setShowError(true);
-      sessionStorage.removeItem('admin_attempt'); // einmalig
-    }
-  }, []);
-
-  const closeError = () => setShowError(false);
-
   // === MODULE DATA ===
   const modules = [
     {
@@ -64,28 +51,6 @@ export default function HomePage() {
   return (
     <div className="overflow-x-hidden relative">
       <Background />
-
-      {/* BLOCKER OVERLAY wenn Warnung aktiv ist */}
-      {showError && <div className="fixed inset-0 z-[49] bg-black/40 backdrop-blur-sm" />}
-
-      {/* ERROR MODAL */}
-      {showError && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div className="relative bg-neutral-900 text-white rounded-2xl shadow-xl max-w-md w-full p-6 md:p-8">
-            <button
-              onClick={closeError}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl md:text-3xl"
-            >
-              &times;
-            </button>
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">Warnung!</h2>
-            <p className="text-gray-300 text-sm md:text-base">
-              Du hast dich versucht in unser Adminboard einzuloggen. Wie es aussieht, fehlen dir
-              dafür die benötigten Berechtigungen!
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* HERO SECTION */}
       <section className="relative flex flex-col items-start justify-center min-h-screen px-8 max-w-7xl mx-auto">
@@ -157,7 +122,7 @@ export default function HomePage() {
         <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-6">Support</h2>
         <p className="text-gray-300 max-w-3xl mx-auto mb-6 text-lg">
           Du hast Fragen, Probleme oder brauchst Hilfe bei der Nutzung von AstroPlays? 
-          Kein Problem! Unser Support-Team steht dir jederzeit zur Verfügung.\n\n 
+          Kein Problem! Unser Support-Team steht dir jederzeit zur Verfügung. 
           Schreibe uns eine Mail an <a href="mailto:astroplays.help@gmail.com" className="underline text-indigo-400">astroplays.help@gmail.com</a> 
           oder trete unserem Discord-Server bei, um direkt mit uns zu chatten: 
           <a href="https://discord.gg/jtxQA7jnKa" target="_blank" rel="noopener noreferrer" className="underline text-indigo-400">AstroPlays</a>.
