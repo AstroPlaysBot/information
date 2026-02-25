@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { cookies } from 'next/headers';
 
 export default function BetaTesterApplyPage() {
   const router = useRouter();
@@ -90,7 +91,9 @@ export default function BetaTesterApplyPage() {
 
   useEffect(() => {
     async function fetchDiscordUser() {
-      const token = searchParams.get('token');
+      // 🔹 zuerst aus Cookie
+      const cookieToken = cookies().get('discord_token')?.value;
+      const token = cookieToken || searchParams.get('token');
       if (!token) {
         router.push('/apply/beta-tester');
         return;
@@ -100,14 +103,22 @@ export default function BetaTesterApplyPage() {
         const res = await fetch('https://discord.com/api/users/@me', {
           headers: { Authorization: `Bearer ${token}` },
         });
+        if (!res.ok) throw new Error('Discord API Fehler: ' + res.status);
         const data = await res.json();
         const created_at = new Date(
           Number((BigInt(data.id) >> 22n) + 1420070400000n)
         ).toISOString();
 
-        setUser({ ...data, created_at });
+        setUser({
+          id: data.id,
+          username: data.username,
+          discriminator: data.discriminator,
+          avatar: data.avatar,
+          created_at,
+        });
       } catch (err) {
         console.error('Discord User Fetch Error:', err);
+        setShowToast({ type: 'error', message: 'Discord-Daten konnten nicht geladen werden!' });
       }
     }
     fetchDiscordUser();
