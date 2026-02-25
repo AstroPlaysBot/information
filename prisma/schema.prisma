@@ -27,3 +27,9 @@ model Application {
   avatar         String?                           // Avatar Hash
   account_created DateTime?                        // Discord Account erstellt
 }
+
+model DashboardUser {
+  id        String   @id @default(cuid())
+  discordId String   @unique
+  username  String
+}
