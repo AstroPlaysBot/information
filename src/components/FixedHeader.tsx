@@ -1,4 +1,3 @@
-// src/components/FixedHeader.tsx
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -9,7 +8,6 @@ import { useRouter, usePathname } from 'next/navigation';
 const FixedHeader = () => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [hasAdminAccess, setHasAdminAccess] = useState(false);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -30,28 +28,15 @@ const FixedHeader = () => {
     document.body.style.overflow = menuOpen ? 'hidden' : '';
   }, [menuOpen]);
 
-  // Admin Cookie Check
-  useEffect(() => {
-    const adminToken = document.cookie
-      .split('; ')
-      .find((row) => row.startsWith('admin_token='));
-    setHasAdminAccess(!!adminToken);
-  }, []);
-
   // ===== Navigation Helpers =====
   const goHome = () => {
     router.push('/');
     setMenuOpen(false);
   };
 
-  const goLogin = () => {
-    router.push('/login');
-    setMenuOpen(false);
-  };
-
-  const goAdmin = () => {
-    if (!hasAdminAccess) return;
-    router.push('/adminboard');
+  const startDiscordAuth = () => {
+    // Direkt zum Discord OAuth Endpunkt weiterleiten
+    router.push('/api/discord-auth?state=dashboard'); // state kann später angepasst werden
     setMenuOpen(false);
   };
 
@@ -62,7 +47,7 @@ const FixedHeader = () => {
     const scrollToSection = () => {
       const element = document.getElementById(id);
       if (!element) return;
-      const headerHeight = 80; // Höhe deines Headers
+      const headerHeight = 80; // Höhe des Headers
       const elementPosition = element.getBoundingClientRect().top + window.scrollY;
       const offsetPosition = elementPosition - headerHeight - 8;
       window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
@@ -118,15 +103,7 @@ const FixedHeader = () => {
             <button onClick={() => goSection('astro-moderation')} className="hover:text-white transition">Module</button>
             <button onClick={() => goSection('support')} className="hover:text-white transition">Support</button>
             <button onClick={() => goSection('apply')} className="hover:text-white transition">Bewerben</button>
-            <button onClick={goLogin} className="hover:text-white transition">Einloggen</button>
-            <button
-              onClick={goAdmin}
-              className={`hover:text-white transition ${
-                !hasAdminAccess ? 'opacity-40 cursor-not-allowed' : ''
-              }`}
-            >
-              Adminboard
-            </button>
+            <button onClick={startDiscordAuth} className="hover:text-white transition">Einloggen</button>
           </nav>
 
           {/* MOBILE BUTTON */}
@@ -155,15 +132,7 @@ const FixedHeader = () => {
               <li><button onClick={() => goSection('astro-moderation')}>Module</button></li>
               <li><button onClick={() => goSection('support')}>Support</button></li>
               <li><button onClick={() => goSection('apply')}>Bewerben</button></li>
-              <li><button onClick={goLogin}>Einloggen</button></li>
-              <li>
-                <button
-                  onClick={goAdmin}
-                  className={`${!hasAdminAccess ? 'opacity-40 cursor-not-allowed' : ''}`}
-                >
-                  Adminboard
-                </button>
-              </li>
+              <li><button onClick={startDiscordAuth}>Einloggen</button></li>
             </ul>
           </div>
         </div>
