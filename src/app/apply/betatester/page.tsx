@@ -1,10 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import { cookies } from 'next/headers';
 
 export default function BetaTesterApplyPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const [user, setUser] = useState<{
     id: string;
@@ -90,15 +90,17 @@ export default function BetaTesterApplyPage() {
 
   useEffect(() => {
     async function fetchDiscordUser() {
-      const token = searchParams.get('token');
-      if (!token) {
-        setShowToast({ type: 'error', message: 'Token fehlt! Bitte über Discord autorisieren.' });
+      // 🔹 Token aus Cookie holen
+      const cookieToken = cookies().get('discord_token')?.value;
+      if (!cookieToken) {
+        setShowToast({ type: 'error', message: 'Fehlender Discord-Token. Bitte erneut anmelden.' });
+        router.push('/login');
         return;
       }
 
       try {
         const res = await fetch('https://discord.com/api/users/@me', {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${cookieToken}` },
         });
         if (!res.ok) throw new Error('Discord API Fehler: ' + res.status);
         const data = await res.json();
@@ -118,8 +120,9 @@ export default function BetaTesterApplyPage() {
         setShowToast({ type: 'error', message: 'Discord-Daten konnten nicht geladen werden!' });
       }
     }
+
     fetchDiscordUser();
-  }, [searchParams]);
+  }, [router]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-950 text-white px-6 py-16 relative">
