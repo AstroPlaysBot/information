@@ -91,9 +91,7 @@ export default function BetaTesterApplyPage() {
 
   useEffect(() => {
     async function fetchDiscordUser() {
-      // 🔹 zuerst aus Cookie
-      const cookieToken = cookies().get('discord_token')?.value;
-      const token = cookieToken || searchParams.get('token');
+      const token = searchParams.get('token');
       if (!token) {
         router.push('/apply/beta-tester');
         return;
