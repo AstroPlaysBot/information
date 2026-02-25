@@ -7,11 +7,14 @@ interface Guild {
   name: string;
   icon?: string;
   owner: boolean;
+  roleLabel?: 'Eigentümer' | 'Anteilhaber';
+  roleColor?: 'green' | 'orange';
 }
 
 interface DashboardClientProps {
   guilds: Guild[];
   user: { username: string; discriminator: string; id: string; avatar?: string };
+  showBotNotice?: boolean;
 }
 
 interface ManagedUser {
@@ -20,7 +23,7 @@ interface ManagedUser {
   username: string;
 }
 
-export default function DashboardClient({ guilds, user }: DashboardClientProps) {
+export default function DashboardClient({ guilds, user, showBotNotice }: DashboardClientProps) {
   const [managementOpen, setManagementOpen] = useState(false);
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [newId, setNewId] = useState('');
@@ -84,15 +87,30 @@ export default function DashboardClient({ guilds, user }: DashboardClientProps) 
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
         {guilds.map(g => (
-          <motion.button key={g.id} onClick={() => setManagementOpen(g.id === 'management' ? !managementOpen : false)}
-            className="group relative overflow-hidden rounded-3xl shadow-2xl bg-gradient-to-br from-gray-800 to-gray-900 hover:from-purple-700 hover:to-pink-600 transition transform hover:scale-105">
-            <div className="p-6">
-              <h3 className="text-xl font-bold mb-2">{g.name}</h3>
-              {g.owner && <span className="inline-block px-2 py-1 text-xs font-semibold bg-purple-600 rounded-full shadow-lg">Eigentümer</span>}
+          <motion.button
+            key={g.id}
+            onClick={() => setManagementOpen(g.id === 'management' ? !managementOpen : false)}
+            className="group relative overflow-hidden rounded-3xl shadow-2xl bg-gradient-to-br from-gray-800 to-gray-900 hover:from-purple-700 hover:to-pink-600 transition transform hover:scale-105"
+          >
+            <div className="p-6 flex justify-between items-center">
+              <h3 className="text-xl font-bold">{g.name}</h3>
+              {g.roleLabel && (
+                <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full shadow-lg ${
+                  g.roleColor === 'green' ? 'bg-green-600' : 'bg-orange-500'
+                }`}>
+                  {g.roleLabel}
+                </span>
+              )}
             </div>
           </motion.button>
         ))}
       </div>
+
+      {showBotNotice && (
+        <div className="text-center mt-6 text-sm text-gray-400">
+          Sollte dein Server hier nicht angezeigt werden, liegt dies daran, dass der Bot nicht auf dem Server aktiv ist. Du kannst ihn <a href="[LINK]" className="underline text-blue-400">hier hinzufügen</a>.
+        </div>
+      )}
 
       <AnimatePresence>
         {managementOpen && (
