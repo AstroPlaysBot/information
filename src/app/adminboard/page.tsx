@@ -11,14 +11,14 @@ export default async function AdminboardPage() {
   if (!token) redirect('/');
 
   try {
-    // 1️⃣ User holen
+    // 🔹 1️⃣ User holen
     const userRes = await fetch('https://discord.com/api/users/@me', {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!userRes.ok) throw new Error('User fetch failed');
     const user = await userRes.json();
 
-    // 2️⃣ Member in Guild holen (Bot Token!)
+    // 🔹 2️⃣ Member in Guild holen (Bot Token)
     const memberRes = await fetch(`https://discord.com/api/guilds/${GUILD_ID}/members/${user.id}`, {
       headers: {
         Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}`,
@@ -27,11 +27,11 @@ export default async function AdminboardPage() {
     if (!memberRes.ok) throw new Error('Member fetch failed');
     const member = await memberRes.json();
 
-    // 3️⃣ Role check
+    // 🔹 3️⃣ Role check
     const hasRole = member.roles.includes(ROLE_ID);
     if (!hasRole) redirect('/');
 
-    // 4️⃣ Bewerbungen laden
+    // 🔹 4️⃣ Bewerbungen laden (inklusive Discord-Daten aus DB)
     const appsRes = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/adminboard`, {
       cache: 'no-store',
     });
