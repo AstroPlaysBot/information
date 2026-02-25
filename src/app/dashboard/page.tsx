@@ -1,4 +1,3 @@
-// dashboard/page.tsx
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import DashboardClient from './DashboardClient';
@@ -13,11 +12,9 @@ interface Guild {
 }
 
 export default async function DashboardPage({ searchParams }: { searchParams?: { token?: string } }) {
+  const BOT_ID = process.env.DISCORD_BOT_ID!; // <-- hier deine Bot-ID eintragen
   let token = cookies().get('discord_token')?.value;
-  if (!token && searchParams?.token) {
-    token = searchParams.token;
-  }
-
+  if (!token && searchParams?.token) token = searchParams.token;
   if (!token) redirect('/api/discord-auth?state=dashboard');
 
   let guilds: Guild[] = [];
@@ -31,7 +28,7 @@ export default async function DashboardPage({ searchParams }: { searchParams?: {
     const [guildsRes, userRes, dbUsersRes] = await Promise.all([
       fetch('https://discord.com/api/users/@me/guilds', { headers: { Authorization: `Bearer ${token}` } }),
       fetch('https://discord.com/api/users/@me', { headers: { Authorization: `Bearer ${token}` } }),
-      fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/dashboard-users`), // DB-Einträge
+      fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/dashboard-users`),
     ]);
 
     if (!guildsRes.ok) throw new Error(await guildsRes.text());
@@ -42,7 +39,7 @@ export default async function DashboardPage({ searchParams }: { searchParams?: {
     user = await userRes.json();
     const dbUsers: { discordId: string }[] = await dbUsersRes.json();
 
-    // 🔹 Filter & Markierungen
+    // 🔹 Filter: nur Eigentümer oder DB-Anteilhaber
     guilds = guilds
       .filter((g: any) => g.owner || dbUsers.some(u => u.discordId === g.id))
       .map((g: any) => {
@@ -50,10 +47,11 @@ export default async function DashboardPage({ searchParams }: { searchParams?: {
         if (dbUsers.some(u => u.discordId === g.id)) return { ...g, roleLabel: 'Anteilhaber', roleColor: 'orange' };
         return g;
       });
+
   } catch (err) {
     console.error('DashboardPage error:', err);
     redirect('/?error=oauth');
   }
 
-  return <DashboardClient guilds={guilds} user={user} />;
+  return <DashboardClient guilds={guilds} user={user} showBotNotice={true} />;
 }
