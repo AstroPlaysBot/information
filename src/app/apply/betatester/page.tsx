@@ -93,7 +93,7 @@ export default function BetaTesterApplyPage() {
     async function fetchDiscordUser() {
       const token = searchParams.get('token');
       if (!token) {
-        router.push('/apply/beta-tester');
+        router.push('/apply/betatester');
         return;
       }
 
