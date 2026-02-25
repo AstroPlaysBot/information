@@ -11,12 +11,10 @@ interface Guild {
   roleColor?: 'green' | 'orange';
 }
 
-export default async function DashboardPage({ searchParams }: { searchParams?: { token?: string } }) {
+export default async function DashboardPage() {
   const BOT_ID = '1462897111166095412'; // deine Bot-ID
 
-  let token = cookies().get('discord_token')?.value;
-  if (!token && searchParams?.token) token = searchParams.token;
-
+  const token = cookies().get('discord_token')?.value;
   if (!token) redirect('/api/discord-auth?state=dashboard');
 
   let guilds: Guild[] = [];
@@ -41,9 +39,9 @@ export default async function DashboardPage({ searchParams }: { searchParams?: {
     user = await userRes.json();
     const dbUsers: { discordId: string }[] = await dbUsersRes.json();
 
-    // 🔹 Filter: nur Server mit Bot
+    // 🔹 Filter: nur Server, die du verwaltest oder Besitzer bist
     guilds = allGuilds
-      .filter((g: any) => g.members?.some((m: any) => m.id === BOT_ID) || g.owner || dbUsers.some(u => u.discordId === g.id))
+      .filter((g: any) => g.owner || dbUsers.some(u => u.discordId === g.id))
       .map((g: any) => {
         if (g.owner) return { ...g, roleLabel: 'Eigentümer', roleColor: 'green' };
         if (dbUsers.some(u => u.discordId === g.id)) return { ...g, roleLabel: 'Anteilhaber', roleColor: 'orange' };
