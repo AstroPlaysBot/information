@@ -14,7 +14,6 @@ interface Guild {
 interface DashboardClientProps {
   guilds: Guild[];
   user: { username: string; discriminator: string; id: string; avatar?: string };
-  showBotNotice?: boolean;
 }
 
 interface ManagedUser {
@@ -23,7 +22,7 @@ interface ManagedUser {
   username: string;
 }
 
-export default function DashboardClient({ guilds, user, showBotNotice }: DashboardClientProps) {
+export default function DashboardClient({ guilds, user }: DashboardClientProps) {
   const [managementOpen, setManagementOpen] = useState(false);
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [newId, setNewId] = useState('');
@@ -106,11 +105,9 @@ export default function DashboardClient({ guilds, user, showBotNotice }: Dashboa
         ))}
       </div>
 
-      {showBotNotice && (
-        <div className="text-center mt-6 text-sm text-gray-400">
-          Sollte dein Server hier nicht angezeigt werden, liegt dies daran, dass der Bot nicht auf dem Server aktiv ist. Du kannst ihn <a href="[LINK]" className="underline text-blue-400">hier hinzufügen</a>.
-        </div>
-      )}
+      <p className="mt-6 text-center text-gray-400">
+        Wird dein Server hier nicht angezeigt? Das liegt daran, dass der Bot noch nicht auf deinem Server installiert ist. Du kannst ihn über <a href="[Link]" className="text-purple-500 underline">diesen Link</a> hinzufügen.
+      </p>
 
       <AnimatePresence>
         {managementOpen && (
