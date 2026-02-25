@@ -13,8 +13,8 @@ export async function GET(req: Request) {
   if (!code) {
     const redirectUri = `${APP_URL}/api/discord-auth`;
     const discordAuthUrl =
-      `https://discord.com/api/oauth2/authorize` +
-      `?client_id=${CLIENT_ID}` +
+      `https://discord.com/api/oauth2/authorize?` +
+      `client_id=${CLIENT_ID}` +
       `&redirect_uri=${encodeURIComponent(redirectUri)}` +
       `&response_type=code` +
       `&scope=identify%20guilds` +
@@ -45,11 +45,14 @@ export async function GET(req: Request) {
   }
 
   // 🔹 Schritt 3: Zielseite bestimmen
-  let redirectTo = '/dashboard';
-  if (state === 'adminboard') redirectTo = '/adminboard';
-  else if (state === 'dashboard') redirectTo = '/dashboard';
+  const redirectTo = state === 'adminboard' ? '/adminboard' : '/dashboard';
+  const redirectUrl = new URL(redirectTo, APP_URL).toString(); // 🔹 sichere Absolute URL
 
-  const response = NextResponse.redirect(`${APP_URL}${redirectTo}`);
+  console.log('State:', state);
+  console.log('Redirecting to:', redirectUrl);
+  console.log('Token Data:', tokenData);
+
+  const response = NextResponse.redirect(redirectUrl);
 
   // 🔹 Token in HTTP-only Cookie setzen
   response.cookies.set({
