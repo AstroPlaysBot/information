@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { cookies } from 'next/headers';
 
 export default function BackendDevApplyPage() {
   const router = useRouter();
@@ -34,15 +33,18 @@ export default function BackendDevApplyPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isFormValid) {
-      setShowToast({ type: 'error', message: 'Bitte alle Felder ausfüllen!' });
-      return;
-    }
-    if (!user) {
-      setShowToast({ type: 'error', message: 'Discord-Daten konnten nicht geladen werden.' });
+
+    if (!isFormValid || !user) {
+      setShowToast({
+        type: 'error',
+        message: !isFormValid
+          ? 'Bitte alle Felder ausfüllen!'
+          : 'Discord-Daten konnten nicht geladen werden.',
+      });
       return;
     }
 
+    // 🔹 Antworten erst hier unten, direkt vor dem Fetch, wie bei Beta-Tester
     const answers = {
       'Programmiersprachen': form.languageExperience,
       'Datenbank Erfahrung': form.databaseExperience,
@@ -91,43 +93,30 @@ export default function BackendDevApplyPage() {
     }
   };
 
+  // 🔹 Discord-User über neues Cookie-System laden
   useEffect(() => {
-    async function fetchDiscordUser() {
-      // 🔹 Token aus Cookie holen
-      const cookieToken = cookies().get('discord_token')?.value;
-
-      if (!cookieToken) {
-        // Kein Cookie → direkt Discord OAuth starten und Token setzen
-        router.push(`/api/discord-auth?state=/apply/backend-developer`);
-        return;
-      }
-
+    async function loadUser() {
       try {
-        const res = await fetch('https://discord.com/api/users/@me', {
-          headers: { Authorization: `Bearer ${cookieToken}` },
+        const res = await fetch('/api/me', {
+          credentials: 'include',
         });
-        if (!res.ok) throw new Error('Discord API Fehler: ' + res.status);
+
+        if (!res.ok) {
+          // nicht eingeloggt → OAuth starten
+          window.location.href = '/api/discord-auth?state=/apply/backend-developer';
+          return;
+        }
+
         const data = await res.json();
-
-        const created_at = new Date(
-          Number((BigInt(data.id) >> 22n) + 1420070400000n)
-        ).toISOString();
-
-        setUser({
-          id: data.id,
-          username: data.username,
-          discriminator: data.discriminator,
-          avatar: data.avatar,
-          created_at,
-        });
+        setUser(data.user);
       } catch (err) {
-        console.error('Discord User Fetch Error:', err);
-        setShowToast({ type: 'error', message: 'Discord-Daten konnten nicht geladen werden!' });
+        console.error(err);
+        setShowToast({ type: 'error', message: 'Discord-Daten konnten nicht geladen werden.' });
       }
     }
 
-    fetchDiscordUser();
-  }, [router]);
+    loadUser();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-950 text-white px-6 py-16 relative">
