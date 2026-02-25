@@ -8,10 +8,11 @@ interface Guild {
   name: string;
   icon?: string;
   owner: boolean;
+  roleLabel?: 'Eigentümer' | 'Anteilhaber';
+  roleColor?: 'green' | 'orange';
 }
 
 export default async function DashboardPage({ searchParams }: { searchParams?: { token?: string } }) {
-  // 🔹 Token aus Cookie oder Queryparam
   let token = cookies().get('discord_token')?.value;
   if (!token && searchParams?.token) {
     token = searchParams.token;
@@ -27,23 +28,28 @@ export default async function DashboardPage({ searchParams }: { searchParams?: {
   };
 
   try {
-    const [guildsRes, userRes] = await Promise.all([
+    const [guildsRes, userRes, dbUsersRes] = await Promise.all([
       fetch('https://discord.com/api/users/@me/guilds', { headers: { Authorization: `Bearer ${token}` } }),
       fetch('https://discord.com/api/users/@me', { headers: { Authorization: `Bearer ${token}` } }),
+      fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/dashboard-users`), // DB-Einträge
     ]);
 
-    // 🔹 Falls Fetch fehlschlägt, Fehler loggen
-    if (!guildsRes.ok) {
-      console.error('Guilds fetch failed:', await guildsRes.text());
-      throw new Error('Guilds fetch failed');
-    }
-    if (!userRes.ok) {
-      console.error('User fetch failed:', await userRes.text());
-      throw new Error('User fetch failed');
-    }
+    if (!guildsRes.ok) throw new Error(await guildsRes.text());
+    if (!userRes.ok) throw new Error(await userRes.text());
+    if (!dbUsersRes.ok) throw new Error('DB Users fetch failed');
 
     guilds = await guildsRes.json();
     user = await userRes.json();
+    const dbUsers: { discordId: string }[] = await dbUsersRes.json();
+
+    // 🔹 Filter & Markierungen
+    guilds = guilds
+      .filter((g: any) => g.owner || dbUsers.some(u => u.discordId === g.id))
+      .map((g: any) => {
+        if (g.owner) return { ...g, roleLabel: 'Eigentümer', roleColor: 'green' };
+        if (dbUsers.some(u => u.discordId === g.id)) return { ...g, roleLabel: 'Anteilhaber', roleColor: 'orange' };
+        return g;
+      });
   } catch (err) {
     console.error('DashboardPage error:', err);
     redirect('/?error=oauth');
