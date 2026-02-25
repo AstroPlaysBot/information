@@ -14,6 +14,7 @@ interface Guild {
 export default async function DashboardPage() {
   const BOT_ID = '1462897111166095412'; // deine Bot-ID
 
+  // 🔹 Token aus HTTP-only Cookie serverseitig lesen
   const token = cookies().get('discord_token')?.value;
   if (!token) redirect('/api/discord-auth?state=dashboard');
 
@@ -25,15 +26,38 @@ export default async function DashboardPage() {
   };
 
   try {
+    // 🔹 Discord API & Dashboard Users parallel abrufen
     const [guildsRes, userRes, dbUsersRes] = await Promise.all([
-      fetch('https://discord.com/api/users/@me/guilds', { headers: { Authorization: `Bearer ${token}` } }),
-      fetch('https://discord.com/api/users/@me', { headers: { Authorization: `Bearer ${token}` } }),
-      fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/dashboard-users`),
+      fetch('https://discord.com/api/users/@me/guilds', {
+        headers: { Authorization: `Bearer ${token}` },
+        next: { revalidate: 0 },
+      }),
+      fetch('https://discord.com/api/users/@me', {
+        headers: { Authorization: `Bearer ${token}` },
+        next: { revalidate: 0 },
+      }),
+      fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/dashboard-users`, {
+        headers: { Cookie: `discord_token=${token}` },
+        next: { revalidate: 0 },
+      }),
     ]);
 
-    if (!guildsRes.ok) throw new Error(await guildsRes.text());
-    if (!userRes.ok) throw new Error(await userRes.text());
-    if (!dbUsersRes.ok) throw new Error('DB Users fetch failed');
+    if (!guildsRes.ok) {
+      const text = await guildsRes.text();
+      console.error('Discord Guilds fetch failed:', text);
+      redirect('/api/discord-auth?state=dashboard'); // Token evtl. abgelaufen
+    }
+
+    if (!userRes.ok) {
+      const text = await userRes.text();
+      console.error('Discord User fetch failed:', text);
+      redirect('/api/discord-auth?state=dashboard'); // Token evtl. abgelaufen
+    }
+
+    if (!dbUsersRes.ok) {
+      console.error('Dashboard Users fetch failed');
+      throw new Error('DB Users fetch failed');
+    }
 
     const allGuilds = await guildsRes.json();
     user = await userRes.json();
@@ -48,7 +72,7 @@ export default async function DashboardPage() {
         return g;
       });
   } catch (err) {
-    console.error('DashboardPage error:', err);
+    console.error('DashboardPage unexpected error:', err);
     redirect('/?error=oauth');
   }
 
