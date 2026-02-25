@@ -1,59 +1,43 @@
+// app/api/admin-check/route.ts
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
 const GUILD_ID = '1462894776671277241';
 const ROLE_ID = '1474507057154756919';
 
-export async function GET(req: Request) {
-  const authHeader = req.headers.get('authorization');
-  if (!authHeader) {
-    console.log('DEBUG: Kein Authorization Header vorhanden');
+export async function GET() {
+  const token = cookies().get('discord_token')?.value;
+
+  if (!token) {
     return NextResponse.json({ allowed: false }, { status: 401 });
   }
 
-  const accessToken = authHeader.replace('Bearer ', '');
-
   try {
-    // 🔹 1️⃣ User holen
+    // 1️⃣ Discord User
     const userRes = await fetch('https://discord.com/api/users/@me', {
-      headers: { Authorization: `Bearer ${accessToken}` },
+      headers: { Authorization: `Bearer ${token}` },
     });
 
-    if (!userRes.ok) {
-      console.error('DEBUG: User fetch failed', userRes.status, await userRes.text());
-      throw new Error('User fetch failed');
-    }
-
+    if (!userRes.ok) return NextResponse.json({ allowed: false }, { status: 401 });
     const user = await userRes.json();
-    console.log('DEBUG: User fetched:', user);
 
-    // 🔹 2️⃣ Member in Guild holen (Bot Token!)
+    // 2️⃣ Guild Member (Bot Token)
     const memberRes = await fetch(
       `https://discord.com/api/guilds/${GUILD_ID}/members/${user.id}`,
       {
-        headers: {
-          Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}`,
-        },
+        headers: { Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}` },
       }
     );
 
-    if (!memberRes.ok) {
-      console.error('DEBUG: Member fetch failed', memberRes.status, await memberRes.text());
-      return NextResponse.json({ allowed: false });
-    }
-
+    if (!memberRes.ok) return NextResponse.json({ allowed: false });
     const member = await memberRes.json();
 
-    // 🔹 3️⃣ Debug Rollen
-    console.log('DEBUG: Member fetched:', member);
-    console.log('DEBUG: Roles array:', member.roles);
-
-    // 🔹 4️⃣ Role check
+    // 3️⃣ Role Check
     const hasRole = member.roles.includes(ROLE_ID);
-    console.log('DEBUG: Has admin role?', hasRole);
 
     return NextResponse.json({ allowed: hasRole });
   } catch (err) {
-    console.error('DEBUG: Admin check error', err);
+    console.error('ADMIN CHECK ERROR:', err);
     return NextResponse.json({ allowed: false }, { status: 500 });
   }
 }
