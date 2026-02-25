@@ -13,53 +13,45 @@ interface Guild {
 
 export default async function DashboardPage() {
   const BOT_ID = '1462897111166095412';
-
-  // 🔹 Server-seitiger Zugriff auf HTTP-only Cookie
   const token = cookies().get('discord_token')?.value;
+
+  // 🔹 Kein Token → OAuth starten
   if (!token) {
-    // Kein Token → OAuth starten
     redirect('/api/discord-auth?state=dashboard');
   }
 
   let guilds: Guild[] = [];
-  let user: { username: string; discriminator: string; id: string; avatar?: string } = {
-    username: '',
-    discriminator: '',
-    id: '',
-  };
+  let user = { username: '', discriminator: '', id: '', avatar: undefined };
 
   try {
-    // 🔹 Alle Daten parallel holen
     const [guildsRes, userRes, dbUsersRes] = await Promise.all([
       fetch('https://discord.com/api/users/@me/guilds', {
         headers: { Authorization: `Bearer ${token}` },
-        next: { revalidate: 0 }, // immer frische Daten
+        next: { revalidate: 0 },
       }),
       fetch('https://discord.com/api/users/@me', {
         headers: { Authorization: `Bearer ${token}` },
         next: { revalidate: 0 },
       }),
       fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/dashboard-users`, {
-        headers: { Authorization: `Bearer ${token}` }, // Token direkt weitergeben
+        headers: { Authorization: `Bearer ${token}` },
         next: { revalidate: 0 },
       }),
     ]);
 
-    if (!guildsRes.ok || !userRes.ok || !dbUsersRes.ok) {
-      console.error(
-        'Fetch error:',
-        await guildsRes.text(),
-        await userRes.text(),
-        dbUsersRes.status
-      );
-      redirect('/api/discord-auth?state=dashboard'); // Token evtl. abgelaufen
+    // 🔹 Wenn Token invalid (401) → OAuth erneut
+    if (guildsRes.status === 401 || userRes.status === 401) {
+      redirect('/api/discord-auth?state=dashboard');
     }
+
+    if (!guildsRes.ok) console.error('Guilds fetch failed', await guildsRes.text());
+    if (!userRes.ok) console.error('User fetch failed', await userRes.text());
+    if (!dbUsersRes.ok) console.error('DB fetch failed', dbUsersRes.status);
 
     const allGuilds = await guildsRes.json();
     user = await userRes.json();
     const dbUsers: { discordId: string }[] = await dbUsersRes.json();
 
-    // 🔹 Filter: nur Server, die du verwaltest oder Besitzer bist
     guilds = allGuilds
       .filter((g: any) => g.owner || dbUsers.some(u => u.discordId === g.id))
       .map((g: any) => {
@@ -68,8 +60,8 @@ export default async function DashboardPage() {
         return g;
       });
   } catch (err) {
-    console.error('DashboardPage unexpected error:', err);
-    redirect('/api/discord-auth?state=dashboard'); // Fallback OAuth
+    console.error('DashboardPage unexpected error', err);
+    // 🔹 Bei Fehler: kein Redirect, sonst Loop
   }
 
   return <DashboardClient guilds={guilds} user={user} />;
