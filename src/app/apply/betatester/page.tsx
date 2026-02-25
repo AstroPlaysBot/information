@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { cookies } from 'next/headers';
+// import { cookies } from 'next/headers';
 
 export default function BetaTesterApplyPage() {
   const router = useRouter();
