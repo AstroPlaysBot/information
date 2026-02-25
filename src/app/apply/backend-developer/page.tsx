@@ -95,9 +95,10 @@ export default function BackendDevApplyPage() {
     async function fetchDiscordUser() {
       // 🔹 Token aus Cookie holen
       const cookieToken = cookies().get('discord_token')?.value;
+
       if (!cookieToken) {
-        setShowToast({ type: 'error', message: 'Fehlender Discord-Token. Bitte erneut anmelden.' });
-        router.push('/login');
+        // Kein Cookie → direkt Discord OAuth starten und Token setzen
+        router.push(`/api/discord-auth?state=/apply/backend-developer`);
         return;
       }
 
@@ -107,6 +108,7 @@ export default function BackendDevApplyPage() {
         });
         if (!res.ok) throw new Error('Discord API Fehler: ' + res.status);
         const data = await res.json();
+
         const created_at = new Date(
           Number((BigInt(data.id) >> 22n) + 1420070400000n)
         ).toISOString();
