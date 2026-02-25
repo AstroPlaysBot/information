@@ -85,9 +85,7 @@ export default function BackendDevApplyPage() {
 
   useEffect(() => {
     async function fetchDiscordUser() {
-      // 🔹 Token zuerst aus Cookie
-      const cookieToken = cookies().get('discord_token')?.value;
-      const token = cookieToken || searchParams.get('token');
+      const token = searchParams.get('token');
       if (!token) {
         router.push('/apply/backend-developer');
         return;
