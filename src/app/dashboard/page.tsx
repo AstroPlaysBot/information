@@ -17,7 +17,7 @@ export default async function DashboardPage({ searchParams }: { searchParams?: {
     token = searchParams.token;
   }
 
-  if (!token) redirect('/');
+  if (!token) redirect('/api/discord-auth?state=dashboard');
 
   let guilds: Guild[] = [];
   let user: { username: string; discriminator: string; id: string; avatar?: string } = {
