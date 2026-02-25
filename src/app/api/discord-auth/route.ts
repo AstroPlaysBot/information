@@ -72,32 +72,5 @@ export async function GET(req: Request) {
     maxAge: 60 * 60 * 24, // 1 Tag
   });
 
-  // 🔹 Schritt 5: Adminboard optional checken
-  if (redirectTo === '/adminboard') {
-    const hasAdminRole = await checkAdminRole(userData.id);
-    if (!hasAdminRole) {
-      return NextResponse.redirect(`${APP_URL}/login?error=no_admin`);
-    }
-  }
-
   return response;
-}
-
-// 🔹 Helper-Funktion bleibt unverändert
-async function checkAdminRole(userId: string) {
-  const GUILD_ID = '1462894776671277241';
-  const ROLE_ID = '1474507057154756919';
-  try {
-    const memberRes = await fetch(
-      `https://discord.com/api/guilds/${GUILD_ID}/members/${userId}`,
-      {
-        headers: { Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}` },
-      }
-    );
-    if (!memberRes.ok) return false;
-    const member = await memberRes.json();
-    return member.roles.includes(ROLE_ID);
-  } catch {
-    return false;
-  }
 }
