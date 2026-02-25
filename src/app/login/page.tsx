@@ -1,3 +1,4 @@
+// src/app/login/page.tsx
 'use client';
 import React, { useEffect, useState } from 'react';
 
@@ -13,12 +14,7 @@ function startDiscordAuth(target: 'dashboard' | 'adminboard') {
     return;
   }
 
-  if (target === 'adminboard') {
-    sessionStorage.setItem('admin_attempt', '1');
-  }
-
   const redirectUri = encodeURIComponent(`${APP_URL}/api/discord-auth`);
-  const state = target; // 'dashboard' oder 'adminboard'
 
   const discordAuthUrl =
     `https://discord.com/api/oauth2/authorize` +
@@ -26,7 +22,7 @@ function startDiscordAuth(target: 'dashboard' | 'adminboard') {
     `&redirect_uri=${redirectUri}` +
     `&response_type=${DISCORD_RESPONSE_TYPE}` +
     `&scope=${DISCORD_SCOPE}` +
-    `&state=${state}`;
+    `&state=${target}`;
 
   window.location.href = discordAuthUrl;
 }
@@ -34,12 +30,12 @@ function startDiscordAuth(target: 'dashboard' | 'adminboard') {
 export default function LoginPage() {
   const [adminAllowed, setAdminAllowed] = useState(false);
 
-  // Prüfen, ob der User berechtigt ist (nach OAuth)
+  // Prüfen, ob personal_token gesetzt ist
   useEffect(() => {
-    const token = document.cookie
+    const cookie = document.cookie
       .split('; ')
-      .find((row) => row.startsWith('admin_token='));
-    setAdminAllowed(!!token);
+      .find((row) => row.startsWith('personal_token='));
+    setAdminAllowed(!!cookie);
   }, []);
 
   return (
@@ -63,7 +59,11 @@ export default function LoginPage() {
         <div
           onClick={() => adminAllowed && startDiscordAuth('adminboard')}
           className={`relative overflow-hidden rounded-2xl p-8 shadow-2xl
-                     transition-transform ${adminAllowed ? 'cursor-pointer hover:scale-105 bg-gradient-to-r from-green-600 via-teal-600 to-cyan-500' : 'cursor-not-allowed bg-gray-700 opacity-50'}`}
+                     transition-transform ${
+                       adminAllowed
+                         ? 'cursor-pointer hover:scale-105 bg-gradient-to-r from-green-600 via-teal-600 to-cyan-500'
+                         : 'cursor-not-allowed bg-gray-700 opacity-50'
+                     }`}
         >
           <h2 className="text-3xl font-extrabold text-white mb-4 flex items-center gap-2">
             Adminboard {!adminAllowed && <span className="text-lg">🔒</span>}
