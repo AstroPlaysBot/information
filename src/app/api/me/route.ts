@@ -10,7 +10,9 @@ export async function GET() {
   }
 
   const userRes = await fetch('https://discord.com/api/users/@me', {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
 
   if (!userRes.ok) {
