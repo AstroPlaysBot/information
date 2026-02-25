@@ -90,20 +90,22 @@ export default function BetaTesterApplyPage() {
 
   useEffect(() => {
     async function fetchDiscordUser() {
-      // 🔹 Token aus Cookie holen
-      const cookieToken = cookies().get('discord_token')?.value;
-      if (!cookieToken) {
-        setShowToast({ type: 'error', message: 'Fehlender Discord-Token. Bitte erneut anmelden.' });
-        router.push('/login');
-        return;
-      }
-
       try {
+        // 🔹 Token aus Cookie abrufen
+        const cookieToken = cookies().get('discord_token')?.value;
+        if (!cookieToken) {
+          // Kein Token → Discord OAuth starten
+          router.push(`/api/discord-auth?state=/apply/beta-tester`);
+          return;
+        }
+
         const res = await fetch('https://discord.com/api/users/@me', {
           headers: { Authorization: `Bearer ${cookieToken}` },
         });
+
         if (!res.ok) throw new Error('Discord API Fehler: ' + res.status);
         const data = await res.json();
+
         const created_at = new Date(
           Number((BigInt(data.id) >> 22n) + 1420070400000n)
         ).toISOString();
@@ -137,9 +139,7 @@ export default function BetaTesterApplyPage() {
           />
           <div>
             <p className="font-bold text-xl">{user.username}#{user.discriminator}</p>
-            <p className="text-gray-400 text-sm">
-              Account erstellt: {new Date(user.created_at).toLocaleDateString()}
-            </p>
+            <p className="text-gray-400 text-sm">Account erstellt: {new Date(user.created_at).toLocaleDateString()}</p>
           </div>
         </div>
       )}
