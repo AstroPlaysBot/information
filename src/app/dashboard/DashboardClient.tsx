@@ -1,4 +1,6 @@
 // src/app/dashboard/DashboardClient.tsx
+
+// src/app/dashboard/DashboardClient.tsx
 'use client';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
