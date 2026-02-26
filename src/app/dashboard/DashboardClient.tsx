@@ -25,39 +25,35 @@ interface ManagedUser {
 
 export default function DashboardClient({ guilds, user }: DashboardClientProps) {
 
-  // kleiner Fix gegen crash
-  if (!guilds || !Array.isArray(guilds)) guilds = [];
-  if (!user) user = { username: 'unbekannt', discriminator: '0000', id: '', avatar: undefined };
-  
+  // 🔹 Default Props
+  const safeGuilds = Array.isArray(guilds) ? guilds : [];
+  const safeUser = user || { username: 'unbekannt', discriminator: '0000', id: '', avatar: undefined };
+
   const [managementOpen, setManagementOpen] = useState(false);
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [newId, setNewId] = useState('');
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [clientError, setClientError] = useState<string | null>(null);
 
-  // 🔹 Fehler-Fänger für Render
-  const renderWithErrorBoundary = (fn: () => JSX.Element) => {
-    try {
-      return fn();
-    } catch (err: any) {
-      console.error('DashboardClient render error:', err);
-      setClientError(err.message || String(err));
-      return null;
-    }
-  };
+  // 🔹 Fetch Users mit Cleanup
+  useEffect(() => {
+    let mounted = true;
+    const fetchUsers = async () => {
+      try {
+        const res = await fetch('/api/dashboard-users');
+        const data = await res.json();
+        if (!mounted) return;
+        setUsers(Array.isArray(data) ? data : []);
+      } catch (err: any) {
+        if (!mounted) return;
+        setToast({ type: 'error', message: 'Fehler beim Laden der User: ' + (err.message || String(err)) });
+      }
+    };
+    fetchUsers();
+    return () => { mounted = false; };
+  }, []);
 
-  const fetchUsers = async () => {
-    try {
-      const res = await fetch('/api/dashboard-users');
-      const data = await res.json();
-      setUsers(Array.isArray(data) ? data : []);
-    } catch (err: any) {
-      setToast({ type: 'error', message: 'Fehler beim Laden der User: ' + (err.message || String(err)) });
-    }
-  };
-
-  useEffect(() => { fetchUsers(); }, []);
-
+  // 🔹 User hinzufügen
   const addUser = async () => {
     if (!newId.trim()) return;
     try {
@@ -68,7 +64,7 @@ export default function DashboardClient({ guilds, user }: DashboardClientProps) 
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      setUsers([...users, data]);
+      setUsers(prev => [...prev, data]);
       setNewId('');
       setToast({ type: 'success', message: 'User hinzugefügt!' });
     } catch (err: any) {
@@ -76,6 +72,7 @@ export default function DashboardClient({ guilds, user }: DashboardClientProps) 
     }
   };
 
+  // 🔹 User entfernen
   const removeUser = async (id: string) => {
     try {
       await fetch('/api/dashboard-users', {
@@ -83,18 +80,19 @@ export default function DashboardClient({ guilds, user }: DashboardClientProps) 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id }),
       });
-      setUsers(users.filter(u => u.id !== id));
+      setUsers(prev => prev.filter(u => u.id !== id));
       setToast({ type: 'success', message: 'User entfernt!' });
     } catch (err: any) {
       setToast({ type: 'error', message: 'Fehler beim Entfernen: ' + (err.message || String(err)) });
     }
   };
 
+  // 🔹 Save / Cancel
   const handleSave = () => setToast({ type: 'success', message: 'Änderungen gespeichert!' });
   const handleCancel = () => setToast({ type: 'error', message: 'Änderungen verworfen!' });
 
-  // 🔹 Render-Fallback bei Props-Fehlern
-  if (!user || !guilds) {
+  // 🔹 Render-Fallback
+  if (!safeUser || !safeGuilds) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white bg-black p-6">
         <p>Fehler: Ungültige Props. user oder guilds fehlen.</p>
@@ -102,7 +100,11 @@ export default function DashboardClient({ guilds, user }: DashboardClientProps) 
     );
   }
 
-  return renderWithErrorBoundary(() => (
+  const avatarUrl = safeUser.id && safeUser.avatar
+    ? `https://cdn.discordapp.com/avatars/${safeUser.id}/${safeUser.avatar}.png`
+    : '/default-avatar.png';
+
+  return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black px-6 py-16 text-white">
       {clientError && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 p-4">
@@ -114,34 +116,26 @@ export default function DashboardClient({ guilds, user }: DashboardClientProps) 
         </div>
       )}
 
+      {/* User Info */}
       <div className="flex items-center gap-4 mb-12">
-        <img
-          src={user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : '/default-avatar.png'}
-          alt="Avatar"
-          className="w-12 h-12 rounded-full"
-        />
-        <div>
-          <p className="font-bold text-lg">{user.username ?? '–'}#{user.discriminator ?? '–'}</p>
-        </div>
+        <img src={avatarUrl} alt="Avatar" className="w-12 h-12 rounded-full" />
+        <div><p className="font-bold text-lg">{safeUser.username}#{safeUser.discriminator}</p></div>
       </div>
 
       <h1 className="text-5xl font-extrabold text-center mb-8">Wähle einen Server</h1>
 
+      {/* Guilds */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-        {(guilds ?? []).map((g, i) => (
+        {safeGuilds.map((g, i) => (
           <motion.button
-            key={g.id ?? i}
+            key={g.id ?? g.name ?? i}
             onClick={() => setManagementOpen(g.id === 'management' ? !managementOpen : false)}
             className="group relative overflow-hidden rounded-3xl shadow-2xl bg-gradient-to-br from-gray-800 to-gray-900 hover:from-purple-700 hover:to-pink-600 transition transform hover:scale-105"
           >
             <div className="p-6 flex justify-between items-center">
               <h3 className="text-xl font-bold">{g.name ?? '–'}</h3>
               {g.roleLabel && (
-                <span
-                  className={`inline-block px-2 py-1 text-xs font-semibold rounded-full shadow-lg ${
-                    g.roleColor === 'green' ? 'bg-green-600' : 'bg-orange-500'
-                  }`}
-                >
+                <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full shadow-lg ${g.roleColor === 'green' ? 'bg-green-600' : 'bg-orange-500'}`}>
                   {g.roleLabel}
                 </span>
               )}
@@ -152,12 +146,10 @@ export default function DashboardClient({ guilds, user }: DashboardClientProps) 
 
       <p className="mt-6 text-center text-gray-400">
         Wird dein Server hier nicht angezeigt? Das liegt daran, dass der Bot noch nicht auf deinem Server installiert ist. Du kannst ihn über{' '}
-        <a href="[Link]" className="text-purple-500 underline">
-          diesen Link
-        </a>{' '}
-        hinzufügen.
+        <a href="[Link]" className="text-purple-500 underline">diesen Link</a> hinzufügen.
       </p>
 
+      {/* Management Panel */}
       <AnimatePresence>
         {managementOpen && (
           <motion.div
@@ -169,7 +161,7 @@ export default function DashboardClient({ guilds, user }: DashboardClientProps) 
             <h2 className="text-2xl font-bold mb-4">Dashboard Management</h2>
 
             <div className="flex flex-col gap-2 mb-4 overflow-y-auto max-h-96">
-              {(users ?? []).map(u => (
+              {users.map(u => (
                 <div key={u.id ?? u.discordId} className="flex items-center justify-between bg-gray-800 p-2 rounded">
                   <span>{u.username ?? '–'} ({u.discordId ?? '–'})</span>
                   <button className="text-red-500 font-bold" onClick={() => removeUser(u.id)}>×</button>
@@ -191,29 +183,24 @@ export default function DashboardClient({ guilds, user }: DashboardClientProps) 
             </div>
 
             <div className="mt-auto flex justify-end gap-4">
-              <button onClick={handleCancel} className="px-4 py-2 rounded bg-red-600 hover:bg-red-700">
-                Abbrechen
-              </button>
-              <button onClick={handleSave} className="px-4 py-2 rounded bg-green-600 hover:bg-green-700">
-                Speichern
-              </button>
+              <button onClick={handleCancel} className="px-4 py-2 rounded bg-red-600 hover:bg-red-700">Abbrechen</button>
+              <button onClick={handleSave} className="px-4 py-2 rounded bg-green-600 hover:bg-green-700">Speichern</button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* Toast */}
       {toast && (
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 50 }}
-          className={`fixed bottom-6 right-6 px-4 py-2 rounded shadow-lg ${
-            toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'
-          } text-white`}
+          className={`fixed bottom-6 right-6 px-4 py-2 rounded shadow-lg ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white`}
         >
           {toast.message}
         </motion.div>
       )}
     </div>
-  ));
+  );
 }
