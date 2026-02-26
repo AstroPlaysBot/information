@@ -24,6 +24,11 @@ interface ManagedUser {
 }
 
 export default function DashboardClient({ guilds, user }: DashboardClientProps) {
+
+  // kleiner Fix gegen crash
+  if (!guilds || !Array.isArray(guilds)) guilds = [];
+  if (!user) user = { username: 'unbekannt', discriminator: '0000', id: '', avatar: undefined };
+  
   const [managementOpen, setManagementOpen] = useState(false);
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [newId, setNewId] = useState('');
