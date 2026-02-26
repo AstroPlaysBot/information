@@ -71,7 +71,7 @@ export async function GET(req: Request) {
   const tokenValue = tokenData.access_token;
 
   // Schritt 6: Cookie setzen
-  const response = NextResponse.redirect(`${APP_URL}/login-${tokenValue}`);
+  const response = NextResponse.redirect(`${APP_URL}/login/${tokenValue}`);
   response.cookies.set({
     name: cookieName,
     value: tokenValue,
