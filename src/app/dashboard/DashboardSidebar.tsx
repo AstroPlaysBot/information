@@ -18,12 +18,19 @@ const sections = [
 ];
 
 export default function DashboardSidebar({ closeSidebar }: DashboardSidebarProps) {
-  const { guildId } = useParams<{ guildId: string }>();
+  const { guildId } = useParams<{ guildId?: string }>(); // optional
   const router = useRouter();
   const pathname = usePathname();
   const [openSection, setOpenSection] = useState<string | null>(null);
 
-  if (!guildId) return null;
+  // Fallback, falls kein guildId existiert
+  if (!guildId) {
+    return (
+      <aside className="w-80 h-screen fixed left-0 top-0 flex items-center justify-center p-6 bg-gray-900 text-gray-400">
+        Bitte wähle zuerst einen Server aus.
+      </aside>
+    );
+  }
 
   const handleSectionClick = (label: string) => {
     setOpenSection(prev => (prev === label ? null : label));
@@ -41,7 +48,7 @@ export default function DashboardSidebar({ closeSidebar }: DashboardSidebarProps
 
         <nav className="space-y-3">
           {sections.map((s) => {
-            const active = pathname.includes(s.label.toLowerCase().replace(' ', ''));
+            const active = pathname?.includes(s.label.toLowerCase().replace(' ', '')) ?? false;
             return (
               <div key={s.label}>
                 <button
