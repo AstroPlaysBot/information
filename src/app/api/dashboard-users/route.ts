@@ -1,6 +1,6 @@
 // src/app/api/dashboard-users/route.ts
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma'; // dein Prisma-Client
+import { prisma } from '@/lib/prisma'; // dein Prisma-Client
 
 export async function GET() {
   const users = await prisma.user.findMany();
