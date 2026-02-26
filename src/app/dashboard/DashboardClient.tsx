@@ -1,6 +1,4 @@
 // src/app/dashboard/DashboardClient.tsx
-
-// src/app/dashboard/DashboardClient.tsx
 'use client';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -26,11 +24,11 @@ interface ManagedUser {
 }
 
 export default function DashboardClient({ guilds, user }: DashboardClientProps) {
-
   // 🔹 Default Props
   const safeGuilds = Array.isArray(guilds) ? guilds : [];
   const safeUser = user || { username: 'unbekannt', discriminator: '0000', id: '', avatar: undefined };
 
+  // 🔹 State Hooks
   const [managementOpen, setManagementOpen] = useState(false);
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [newId, setNewId] = useState('');
@@ -93,21 +91,21 @@ export default function DashboardClient({ guilds, user }: DashboardClientProps) 
   const handleSave = () => setToast({ type: 'success', message: 'Änderungen gespeichert!' });
   const handleCancel = () => setToast({ type: 'error', message: 'Änderungen verworfen!' });
 
-  // 🔹 Render-Fallback
-  if (!safeUser || !safeGuilds) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-white bg-black p-6">
-        <p>Fehler: Ungültige Props. user oder guilds fehlen.</p>
-      </div>
-    );
-  }
-
-  const avatarUrl = safeUser.id && safeUser.avatar
+  // 🔹 Avatar URL
+  const avatarUrl = safeUser.avatar
     ? `https://cdn.discordapp.com/avatars/${safeUser.id}/${safeUser.avatar}.png`
     : '/default-avatar.png';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black px-6 py-16 text-white">
+      {/* 🔹 Props Fallback */}
+      {(!safeUser || safeGuilds.length === 0) && (
+        <div className="min-h-screen flex items-center justify-center text-white bg-black p-6">
+          <p>Fehler: Ungültige Props. user oder guilds fehlen.</p>
+        </div>
+      )}
+
+      {/* 🔹 Client Error Modal */}
       {clientError && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 p-4">
           <div className="bg-red-700 p-6 rounded shadow-lg max-w-md w-full text-white">
@@ -118,7 +116,7 @@ export default function DashboardClient({ guilds, user }: DashboardClientProps) 
         </div>
       )}
 
-      {/* User Info */}
+      {/* 🔹 User Info */}
       <div className="flex items-center gap-4 mb-12">
         <img src={avatarUrl} alt="Avatar" className="w-12 h-12 rounded-full" />
         <div><p className="font-bold text-lg">{safeUser.username}#{safeUser.discriminator}</p></div>
@@ -126,7 +124,7 @@ export default function DashboardClient({ guilds, user }: DashboardClientProps) 
 
       <h1 className="text-5xl font-extrabold text-center mb-8">Wähle einen Server</h1>
 
-      {/* Guilds */}
+      {/* 🔹 Guilds */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
         {safeGuilds.map((g, i) => (
           <motion.button
@@ -151,7 +149,7 @@ export default function DashboardClient({ guilds, user }: DashboardClientProps) 
         <a href="[Link]" className="text-purple-500 underline">diesen Link</a> hinzufügen.
       </p>
 
-      {/* Management Panel */}
+      {/* 🔹 Management Panel */}
       <AnimatePresence>
         {managementOpen && (
           <motion.div
@@ -192,7 +190,7 @@ export default function DashboardClient({ guilds, user }: DashboardClientProps) 
         )}
       </AnimatePresence>
 
-      {/* Toast */}
+      {/* 🔹 Toast */}
       {toast && (
         <motion.div
           initial={{ opacity: 0, y: 50 }}
