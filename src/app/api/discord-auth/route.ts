@@ -11,58 +11,53 @@ const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN!;
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const code = url.searchParams.get('code');
-  const state = url.searchParams.get('state') || 'dashboard';
 
-  // 1️⃣ Kein Code → Discord OAuth
   if (!code) {
     const redirectUri = `${APP_URL}/api/discord-auth`;
     const discordAuthUrl =
       `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}` +
       `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-      `&response_type=code&scope=identify%20guilds%20guilds.members.read` +
-      `&state=${state}`;
+      `&response_type=code&scope=identify%20guilds%20guilds.members.read`;
     return NextResponse.redirect(discordAuthUrl);
   }
 
-  // 2️⃣ Token von Discord holen
-  const params = new URLSearchParams();
-  params.append('client_id', CLIENT_ID);
-  params.append('client_secret', CLIENT_SECRET);
-  params.append('grant_type', 'authorization_code');
-  params.append('code', code);
-  params.append('redirect_uri', `${APP_URL}/api/discord-auth`);
+  // Token holen
+  const params = new URLSearchParams({
+    client_id: CLIENT_ID,
+    client_secret: CLIENT_SECRET,
+    grant_type: 'authorization_code',
+    code,
+    redirect_uri: `${APP_URL}/api/discord-auth`,
+  });
 
   const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: params.toString(),
   });
-
   const tokenData = await tokenRes.json();
-  if (!tokenData.access_token) {
-    console.error('Discord Token Error:', tokenData);
-    return NextResponse.redirect(`${APP_URL}/`);
-  }
+  if (!tokenData.access_token) return NextResponse.redirect(APP_URL);
 
-  // 3️⃣ Userdaten
+  // Userdaten
   const userRes = await fetch('https://discord.com/api/users/@me', {
     headers: { Authorization: `Bearer ${tokenData.access_token}` },
   });
   const userData = await userRes.json();
 
-  // 4️⃣ Admin Check
+  // Admincheck
   let isAdmin = false;
   try {
-    const guildsRes = await fetch(`https://discord.com/api/users/@me/guilds`, {
+    const guildRes = await fetch(`https://discord.com/api/users/@me/guilds`, {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
-    const guilds = await guildsRes.json();
+    const guilds = await guildRes.json();
     const guild = guilds.find((g: any) => g.id === GUILD_ID);
 
     if (guild) {
-      const memberRes = await fetch(`https://discord.com/api/guilds/${GUILD_ID}/members/${userData.id}`, {
-        headers: { Authorization: `Bot ${BOT_TOKEN}` },
-      });
+      const memberRes = await fetch(
+        `https://discord.com/api/guilds/${GUILD_ID}/members/${userData.id}`,
+        { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
+      );
       const member = await memberRes.json();
       if (member?.roles?.includes(ADMIN_ROLE_ID)) isAdmin = true;
     }
@@ -70,19 +65,17 @@ export async function GET(req: Request) {
     console.error('Admin Check Error:', err);
   }
 
-  // 5️⃣ Token und Cookie setzen
+  // Cookie setzen
   const cookieName = isAdmin ? 'personal_token' : 'user_token';
-  const tokenValue = tokenData.access_token;
-
-  const response = NextResponse.redirect(`${APP_URL}/login/${tokenValue}`);
+  const response = NextResponse.redirect(`${APP_URL}/login`);
   response.cookies.set({
     name: cookieName,
-    value: tokenValue,
+    value: tokenData.access_token,
     path: '/',
     httpOnly: true,
     sameSite: 'lax',
     secure: true,
-    maxAge: 60 * 15,
+    maxAge: 60 * 60,
   });
 
   return response;
