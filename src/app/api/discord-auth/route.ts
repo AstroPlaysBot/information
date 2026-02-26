@@ -1,4 +1,4 @@
-// src/app/api/discord-auth
+// src/app/api/discord-auth/route.ts
 import { NextResponse } from 'next/server';
 
 const CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!;
@@ -11,17 +11,20 @@ const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN!;
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const code = url.searchParams.get('code');
+  const state = url.searchParams.get('state') || 'dashboard';
 
-  // Schritt 1: Kein Code → Discord OAuth
+  // 1️⃣ Kein Code → Discord OAuth
   if (!code) {
     const redirectUri = `${APP_URL}/api/discord-auth`;
-    const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
-      redirectUri
-    )}&response_type=code&scope=identify%20guilds%20guilds.members.read`;
+    const discordAuthUrl =
+      `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}` +
+      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+      `&response_type=code&scope=identify%20guilds%20guilds.members.read` +
+      `&state=${state}`;
     return NextResponse.redirect(discordAuthUrl);
   }
 
-  // Schritt 2: Token holen
+  // 2️⃣ Token von Discord holen
   const params = new URLSearchParams();
   params.append('client_id', CLIENT_ID);
   params.append('client_secret', CLIENT_SECRET);
@@ -34,19 +37,20 @@ export async function GET(req: Request) {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: params.toString(),
   });
+
   const tokenData = await tokenRes.json();
   if (!tokenData.access_token) {
     console.error('Discord Token Error:', tokenData);
-    return NextResponse.redirect(`${APP_URL}/login?error=oauth_failed`);
+    return NextResponse.redirect(`${APP_URL}/`);
   }
 
-  // Schritt 3: Userdaten
+  // 3️⃣ Userdaten
   const userRes = await fetch('https://discord.com/api/users/@me', {
     headers: { Authorization: `Bearer ${tokenData.access_token}` },
   });
   const userData = await userRes.json();
 
-  // Schritt 4: Admin Check
+  // 4️⃣ Admin Check
   let isAdmin = false;
   try {
     const guildsRes = await fetch(`https://discord.com/api/users/@me/guilds`, {
@@ -66,14 +70,11 @@ export async function GET(req: Request) {
     console.error('Admin Check Error:', err);
   }
 
-  // Schritt 5: Token Name
+  // 5️⃣ Token und Cookie setzen
   const cookieName = isAdmin ? 'personal_token' : 'user_token';
   const tokenValue = tokenData.access_token;
 
-  // Schritt 6: Cookie setzen
-  const response = NextResponse.redirect(
-    new URL(`/login/${tokenValue}`, req.url)
-  );
+  const response = NextResponse.redirect(`${APP_URL}/login-${tokenValue}`);
   response.cookies.set({
     name: cookieName,
     value: tokenValue,
@@ -81,7 +82,7 @@ export async function GET(req: Request) {
     httpOnly: true,
     sameSite: 'lax',
     secure: true,
-    maxAge: 60 * 15, // 15 Minuten
+    maxAge: 60 * 15,
   });
 
   return response;
