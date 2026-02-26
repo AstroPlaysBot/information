@@ -14,6 +14,7 @@ interface Guild {
 
 export default async function DashboardPage() {
   const BOT_ID = '1462897111166095412';
+  // ✅ Serverseitig Token holen
   const token = cookies().get('discord_token')?.value;
 
   // 🔹 Kein Token → OAuth starten
@@ -28,19 +29,19 @@ export default async function DashboardPage() {
     const [guildsRes, userRes, dbUsersRes] = await Promise.all([
       fetch('https://discord.com/api/users/@me/guilds', {
         headers: { Authorization: `Bearer ${token}` },
-        next: { revalidate: 0 },
+        cache: 'no-store', // Server-side caching ausschalten
       }),
       fetch('https://discord.com/api/users/@me', {
         headers: { Authorization: `Bearer ${token}` },
-        next: { revalidate: 0 },
+        cache: 'no-store',
       }),
       fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/dashboard-users`, {
         headers: { Authorization: `Bearer ${token}` },
-        next: { revalidate: 0 },
+        cache: 'no-store',
       }),
     ]);
 
-    // 🔹 Wenn Token invalid (401) → OAuth erneut
+    // 🔹 Token invalid → OAuth erneut
     if (guildsRes.status === 401 || userRes.status === 401) {
       redirect('/api/discord-auth?state=dashboard');
     }
@@ -62,7 +63,7 @@ export default async function DashboardPage() {
       });
   } catch (err) {
     console.error('DashboardPage unexpected error', err);
-    // 🔹 Bei Fehler: kein Redirect, sonst Loop
+    // 🔹 Bei Fehler kein Redirect, sonst Loop
   }
 
   return <DashboardClient guilds={guilds} user={user} />;
