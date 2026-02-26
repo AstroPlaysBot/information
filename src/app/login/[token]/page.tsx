@@ -1,6 +1,5 @@
 // src/app/login/[token]/page.tsx
 'use client';
-
 import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 
@@ -8,17 +7,17 @@ export default function LoginPage() {
   const [adminAllowed, setAdminAllowed] = useState(false);
   const [userAllowed, setUserAllowed] = useState(false);
   const router = useRouter();
-  const params = useParams(); // Holt [token]
-
+  const params = useParams();
   const token = params?.token;
 
-  // Nur Zugriff, wenn URL ein Token enthält
   useEffect(() => {
+    // Nur Zugriff, wenn Token in URL vorhanden
     if (!token) {
-      router.replace('/'); // Kein Token → weiterleiten
+      router.replace('/');
       return;
     }
 
+    // Prüfen, welche Cookies gesetzt sind
     const cookies = document.cookie.split('; ');
     const personalToken = cookies.find((c) => c.startsWith('personal_token='));
     const userToken = cookies.find((c) => c.startsWith('user_token='));
@@ -26,38 +25,22 @@ export default function LoginPage() {
     setUserAllowed(!!userToken || !!personalToken);
   }, [token, router]);
 
-  const startDiscordAuth = (target: 'dashboard' | 'adminboard') => {
+  const navigate = (target: 'dashboard' | 'adminboard') => {
+    // Wenn bereits Token vorhanden → direkt weiter
     if ((target === 'dashboard' && userAllowed) || (target === 'adminboard' && adminAllowed)) {
       router.push(target === 'dashboard' ? '/dashboard' : '/adminboard');
       return;
     }
-
-    // Discord OAuth nur, wenn noch kein Token vorhanden
-    const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
-    const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
-    if (!APP_URL || !clientId) return alert('App URL oder Client ID fehlt');
-
-    const redirectUri = encodeURIComponent(`${APP_URL}/api/discord-auth`);
-    const scope = encodeURIComponent('identify guilds');
-    const state = target;
-
-    const discordAuthUrl =
-      `https://discord.com/api/oauth2/authorize` +
-      `?client_id=${clientId}` +
-      `&redirect_uri=${redirectUri}` +
-      `&response_type=code` +
-      `&scope=${scope}` +
-      `&state=${state}`;
-
-    window.location.href = discordAuthUrl;
+    alert('Kein Token vorhanden. Discord Auth notwendig.');
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
       <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-12">
+
         {/* Dashboard */}
         <div
-          onClick={() => startDiscordAuth('dashboard')}
+          onClick={() => navigate('dashboard')}
           className="relative cursor-pointer overflow-hidden rounded-2xl p-8 shadow-2xl
                      bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-600
                      transition-transform hover:scale-105"
@@ -68,7 +51,7 @@ export default function LoginPage() {
 
         {/* Adminboard */}
         <div
-          onClick={() => startDiscordAuth('adminboard')}
+          onClick={() => navigate('adminboard')}
           className={`relative overflow-hidden rounded-2xl p-8 shadow-2xl
                      transition-transform ${
                        adminAllowed
@@ -81,6 +64,7 @@ export default function LoginPage() {
           </h2>
           <p className="text-gray-200 text-lg">Bewerbungen, Admin-Funktionen & Verwaltung.</p>
         </div>
+
       </div>
     </div>
   );
