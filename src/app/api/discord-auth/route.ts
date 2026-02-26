@@ -74,7 +74,7 @@ export async function GET(req: Request) {
   const cookieName = isAdmin ? 'personal_token' : 'user_token';
   const tokenValue = tokenData.access_token;
 
-  const response = NextResponse.redirect(`${APP_URL}/login-${tokenValue}`);
+  const response = NextResponse.redirect(`${APP_URL}/login/${tokenValue}`);
   response.cookies.set({
     name: cookieName,
     value: tokenValue,
