@@ -6,10 +6,8 @@ export async function GET(req: Request, { params }: { params: { guildId: string 
   const { guildId } = params;
   if (!guildId) return NextResponse.json({ error: 'guildId fehlt' }, { status: 400 });
 
-  // Hier kannst du filtern, falls du ein Feld für guildId hast
-  const users = await prisma.dashboardUser.findMany({
-    where: { discordId: { not: null } } // Beispielfilter, anpassen falls du guildId speicherst
-  });
+  // Alle DashboardUser zurückgeben, optional später nach guildId filtern
+  const users = await prisma.dashboardUser.findMany();
 
   return NextResponse.json(users);
 }
