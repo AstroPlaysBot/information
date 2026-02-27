@@ -1,19 +1,39 @@
 // src/app/adminboard/page.tsx
-import { getTokenCookie } from '@/secure/session';
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import AdminboardClient from './AdminboardClient';
+
+const ADMIN_GUILD_ID = process.env.ADMIN_GUILD_ID!;
+const ADMIN_ROLE_ID = process.env.ADMIN_ROLE_ID!;
+const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN!;
 
 export default async function AdminboardPage() {
-  const token = getTokenCookie('personal_token');
-  if (!token) redirect('/login');
+  const token = cookies().get('discord_token')?.value;
+  if (!token) redirect('/');
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/adminboard`, {
-    headers: { cookie: `personal_token=${token}` },
+  const userRes = await fetch('https://discord.com/api/users/@me', {
+    headers: { Authorization: `Bearer ${token}` },
     cache: 'no-store',
   });
 
-  if (!res.ok) redirect('/login');
+  if (!userRes.ok) redirect('/');
 
-  const data = await res.json();
-  return <AdminboardClient applications={data.applications || []} />;
+  const user = await userRes.json();
+
+  const memberRes = await fetch(
+    `https://discord.com/api/guilds/${ADMIN_GUILD_ID}/members/${user.id}`,
+    {
+      headers: { Authorization: `Bot ${BOT_TOKEN}` },
+      cache: 'no-store',
+    }
+  );
+
+  if (!memberRes.ok) redirect('/');
+
+  const member = await memberRes.json();
+
+  if (!member.roles.includes(ADMIN_ROLE_ID)) {
+    redirect('/');
+  }
+
+  return <div>Adminboard Inhalt</div>;
 }
