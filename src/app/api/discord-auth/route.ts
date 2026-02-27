@@ -5,33 +5,29 @@ const CLIENT_ID = process.env.DISCORD_CLIENT_ID!;
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET!;
 const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI!;
 
-// Schon hier sicherstellen, dass sie existieren
 if (!CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI) {
   throw new Error('Discord environment variables not set');
 }
 
 export async function GET(req: NextRequest) {
   try {
-    const url = new URL(req.url);
-    const code = url.searchParams.get('code');
-
+    const code = req.nextUrl.searchParams.get('code');
     if (!code) {
       return NextResponse.json({ error: 'Missing code parameter' }, { status: 400 });
     }
 
     // Token anfordern
-    const params = new URLSearchParams({
-      client_id: CLIENT_ID,
-      client_secret: CLIENT_SECRET,
-      grant_type: 'authorization_code',
-      code,
-      redirect_uri: REDIRECT_URI,
-    } as Record<string, string>); // <-- hier erzwingt TypeScript String
+    const params = new URLSearchParams();
+    params.append('client_id', CLIENT_ID);
+    params.append('client_secret', CLIENT_SECRET);
+    params.append('grant_type', 'authorization_code');
+    params.append('code', code);
+    params.append('redirect_uri', REDIRECT_URI);
 
     const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params,
+      body: params.toString(), // ⚡ Wichtig: body muss String sein
     });
 
     if (!tokenRes.ok) {
@@ -42,7 +38,7 @@ export async function GET(req: NextRequest) {
 
     const tokenData = await tokenRes.json();
 
-    // Optional: Userdaten abrufen
+    // Userdaten abrufen
     const userRes = await fetch('https://discord.com/api/users/@me', {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
@@ -55,7 +51,17 @@ export async function GET(req: NextRequest) {
 
     const userData = await userRes.json();
 
-    return NextResponse.json({ token: tokenData, user: userData });
+    // ⚡ Optional: HttpOnly Cookie setzen
+    const response = NextResponse.json({ token: tokenData, user: userData });
+    response.cookies.set('discord_token', tokenData.access_token, {
+      httpOnly: true,
+      path: '/',
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: tokenData.expires_in,
+    });
+
+    return response;
   } catch (err) {
     console.error('Discord Auth error:', err);
     return NextResponse.json({ error: 'Internal server error', details: (err as any).message }, { status: 500 });
