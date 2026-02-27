@@ -36,12 +36,12 @@ export async function GET(req: Request) {
   });
 
   const tokenData = await tokenRes.json();
-  if (!tokenData.access_token) return NextResponse.redirect('/');
+  if (!tokenData.access_token) return NextResponse.redirect('/login');
 
-  // 🔐 HttpOnly Cookie setzen
+  // 🔐 HttpOnly Cookie setzen (secure nur in Prod)
   cookies().set('discord_token', tokenData.access_token, {
     httpOnly: true,
-    secure: true,
+    secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
   });
