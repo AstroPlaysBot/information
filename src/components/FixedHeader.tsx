@@ -36,7 +36,7 @@ const FixedHeader = () => {
 
   // ===== Discord OAuth =====
   const startDiscordAuth = () => {
-    const CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
+    const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
     const REDIRECT_URI = encodeURIComponent(
       `${process.env.NEXT_PUBLIC_APP_URL}/api/discord-auth`
     );
