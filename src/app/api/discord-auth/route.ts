@@ -9,9 +9,8 @@ const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI!;
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const code = searchParams.get('code');
-  const state = searchParams.get('state');
 
-  // 🔹 1. Noch kein Code → Weiter zu Discord
+  // 🔹 1. Kein Code → zu Discord weiterleiten
   if (!code) {
     const discordAuthUrl =
       `https://discord.com/api/oauth2/authorize` +
@@ -37,9 +36,7 @@ export async function GET(req: Request) {
   });
 
   const tokenData = await tokenRes.json();
-  if (!tokenData.access_token) {
-    return NextResponse.redirect('/');
-  }
+  if (!tokenData.access_token) return NextResponse.redirect('/');
 
   // 🔐 HttpOnly Cookie setzen
   cookies().set('discord_token', tokenData.access_token, {
@@ -49,10 +46,6 @@ export async function GET(req: Request) {
     path: '/',
   });
 
-  // Nach Login weiter
-  if (state === 'admin') {
-    return NextResponse.redirect(new URL('/adminboard', req.url));
-  }
-
-  return NextResponse.redirect(new URL('/dashboard', req.url));
+  // ⚡ Immer auf /login weiterleiten
+  return NextResponse.redirect(new URL('/login', req.url));
 }
