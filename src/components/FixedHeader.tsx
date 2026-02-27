@@ -34,10 +34,24 @@ const FixedHeader = () => {
     setMenuOpen(false);
   };
 
+  // ===== Discord OAuth =====
   const startDiscordAuth = () => {
-    // Direkt zum Discord OAuth Endpunkt weiterleiten
-    const discordAuthUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/discord-auth`;
-    window.location.href = discordAuthUrl;
+    const CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
+    const REDIRECT_URI = encodeURIComponent(
+      `${process.env.NEXT_PUBLIC_APP_URL}/api/discord-auth`
+    );
+    const SCOPE = encodeURIComponent('identify');
+    const RESPONSE_TYPE = 'code';
+
+    if (!CLIENT_ID || !REDIRECT_URI) {
+      alert('Discord Client ID oder App URL fehlt!');
+      return;
+    }
+
+    const discordOAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=${RESPONSE_TYPE}&scope=${SCOPE}`;
+
+    // Browser redirect
+    window.location.href = discordOAuthUrl;
     setMenuOpen(false);
   };
 
@@ -48,7 +62,7 @@ const FixedHeader = () => {
     const scrollToSection = () => {
       const element = document.getElementById(id);
       if (!element) return;
-      const headerHeight = 80; // Höhe des Headers
+      const headerHeight = 80;
       const elementPosition = element.getBoundingClientRect().top + window.scrollY;
       const offsetPosition = elementPosition - headerHeight - 8;
       window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
