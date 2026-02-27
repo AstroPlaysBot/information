@@ -8,10 +8,11 @@ const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN!;
 
 export async function GET() {
   try {
+    // 🔹 Token vom HttpOnly Cookie lesen
     const token = cookies().get('discord_token')?.value;
     if (!token) return NextResponse.json({ isUser: false, isAdmin: false });
 
-    // 🔹 User Daten
+    // 🔹 User Daten abrufen
     const userRes = await fetch('https://discord.com/api/users/@me', {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -19,7 +20,7 @@ export async function GET() {
 
     const user = await userRes.json();
 
-    // 🔹 Admin Check über Bot
+    // 🔹 Admin Check via Bot
     const memberRes = await fetch(
       `https://discord.com/api/guilds/${ADMIN_GUILD_ID}/members/${user.id}`,
       { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
