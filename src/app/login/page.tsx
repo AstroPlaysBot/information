@@ -1,50 +1,71 @@
-import LoginButtons from './LoginButtons';
-import { cookies } from 'next/headers';
+'use client';
+import React from 'react';
 
-// 🔹 Dynamic rendering erzwingen
-export const dynamic = 'force-dynamic';
+const DISCORD_CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
 
-export default async function LoginPage() {
-  const ADMIN_GUILD_ID = process.env.ADMIN_GUILD_ID;
-  const ADMIN_ROLE_ID = process.env.ADMIN_ROLE_ID;
-  const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
+const DISCORD_SCOPE = encodeURIComponent('identify guilds');
+const DISCORD_RESPONSE_TYPE = 'code';
 
-  if (!ADMIN_GUILD_ID || !ADMIN_ROLE_ID || !BOT_TOKEN) {
-    throw new Error('Admin environment variables not set');
+function startDiscordAuth(target: 'dashboard' | 'adminboard') {
+  if (!DISCORD_CLIENT_ID || !APP_URL) {
+    alert('Fehler: Discord Client ID oder App URL fehlt');
+    return;
   }
 
-  const cookieStore = cookies();
-  const token = cookieStore.get('discord_token')?.value;
+  // Redirect URI unterscheidet sich für Adminboard
+  const redirectUri =
+    target === 'dashboard'
+      ? encodeURIComponent(`${APP_URL}/dashboard`)       // normales Dashboard
+      : encodeURIComponent(`${APP_URL}/api/discord-auth`); // Adminboard
 
-  let isUser = false;
-  let isAdmin = false;
-  let username = '';
+  const state = target;
 
-  if (token) {
-    try {
-      const userRes = await fetch('https://discord.com/api/users/@me', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+  const discordAuthUrl =
+    `https://discord.com/api/oauth2/authorize` +
+    `?client_id=${DISCORD_CLIENT_ID}` +
+    `&redirect_uri=${redirectUri}` +
+    `&response_type=${DISCORD_RESPONSE_TYPE}` +
+    `&scope=${DISCORD_SCOPE}` +
+    `&state=${state}`;
 
-      if (userRes.ok) {
-        const user = await userRes.json();
-        username = user.username;
-        isUser = true;
+  window.location.href = discordAuthUrl;
+}
 
-        const memberRes = await fetch(
-          `https://discord.com/api/guilds/${ADMIN_GUILD_ID}/members/${user.id}`,
-          { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
-        );
+export default function LoginPage() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
+      <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-12">
 
-        if (memberRes.ok) {
-          const member = await memberRes.json();
-          isAdmin = Array.isArray(member.roles) && member.roles.includes(ADMIN_ROLE_ID);
-        }
-      }
-    } catch (err) {
-      console.error('LoginPage server error:', err);
-    }
-  }
+        {/* Dashboard */}
+        <div
+          onClick={() => startDiscordAuth('dashboard')}
+          className="relative cursor-pointer overflow-hidden rounded-2xl p-8 shadow-2xl
+                     bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-600
+                     transition-transform hover:scale-105"
+        >
+          <h2 className="text-3xl font-extrabold text-white mb-4">Dashboard</h2>
+          <p className="text-gray-200 text-lg">
+            Konfiguriere deinen Bot für deinen Discord-Server.
+          </p>
+        </div>
 
-  return <LoginButtons isUser={isUser} isAdmin={isAdmin} username={username} />;
+        {/* Admin Dashboard */}
+        <div
+          onClick={() => startDiscordAuth('adminboard')}
+          className="relative cursor-pointer overflow-hidden rounded-2xl p-8 shadow-2xl
+                     bg-gradient-to-r from-green-600 via-teal-600 to-cyan-500
+                     transition-transform hover:scale-105"
+        >
+          <h2 className="text-3xl font-extrabold text-white mb-4">
+            Admin Dashboard
+          </h2>
+          <p className="text-gray-200 text-lg">
+            Bewerbungen, Admin-Funktionen & Verwaltung.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  );
 }
