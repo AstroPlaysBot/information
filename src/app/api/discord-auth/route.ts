@@ -1,10 +1,11 @@
 // src/app/api/discord-auth/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 
-const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
-const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
-const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
+const CLIENT_ID = process.env.DISCORD_CLIENT_ID!;
+const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET!;
+const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI!;
 
+// Schon hier sicherstellen, dass sie existieren
 if (!CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI) {
   throw new Error('Discord environment variables not set');
 }
@@ -25,7 +26,7 @@ export async function GET(req: NextRequest) {
       grant_type: 'authorization_code',
       code,
       redirect_uri: REDIRECT_URI,
-    });
+    } as Record<string, string>); // <-- hier erzwingt TypeScript String
 
     const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
       method: 'POST',
@@ -54,7 +55,6 @@ export async function GET(req: NextRequest) {
 
     const userData = await userRes.json();
 
-    // Alles zurückgeben
     return NextResponse.json({ token: tokenData, user: userData });
   } catch (err) {
     console.error('Discord Auth error:', err);
