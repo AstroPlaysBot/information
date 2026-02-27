@@ -14,7 +14,8 @@ export default function LoginPage() {
   const [maintenanceMessage, setMaintenanceMessage] = useState(false);
 
   useEffect(() => {
-    fetch('/api/check-session')
+    // 🔹 Fetch Session mit Credentials, damit HttpOnly Cookie gesendet wird
+    fetch('/api/check-session', { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
         setIsAdmin(data.isAdmin);
@@ -31,26 +32,17 @@ export default function LoginPage() {
 
   const navigate = (target: 'dashboard' | 'adminboard') => {
     if (target === 'dashboard') {
-      if (!isUser) {
-        alert('Kein Zugriff. Discord Auth notwendig.');
-        return;
-      }
-
+      if (!isUser) return alert('Kein Zugriff. Discord Auth notwendig.');
       if (MAINTENANCE_MODE) {
         setMaintenanceMessage(true);
         return;
       }
-
       router.push('/dashboard');
       return;
     }
 
     if (target === 'adminboard') {
-      if (!isAdmin) {
-        alert('Kein Zugriff.');
-        return;
-      }
-
+      if (!isAdmin) return alert('Kein Zugriff.');
       router.push('/adminboard');
     }
   };
@@ -83,9 +75,7 @@ export default function LoginPage() {
           <h2 className="font-bold text-xl mb-2">
             Dashboard Wartungsmodus
           </h2>
-          <p>
-            Die Dashboard Funktionen sind aktuell nicht erreichbar.
-          </p>
+          <p>Die Dashboard Funktionen sind aktuell nicht erreichbar.</p>
           <p className="mt-2">
             Mehr Infos auf Discord:{' '}
             <a
@@ -99,6 +89,7 @@ export default function LoginPage() {
         </div>
       )}
 
+      {/* 🔹 Bereich Buttons */}
       <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-12">
 
         {/* Dashboard */}
@@ -118,11 +109,10 @@ export default function LoginPage() {
         {/* Adminboard */}
         <div
           onClick={() => navigate('adminboard')}
-          className={`relative overflow-hidden rounded-2xl p-8 shadow-2xl transition-transform ${
-            isAdmin
+          className={`relative overflow-hidden rounded-2xl p-8 shadow-2xl transition-transform
+            ${isAdmin
               ? 'cursor-pointer hover:scale-105 bg-gradient-to-r from-green-600 via-teal-600 to-cyan-500'
-              : 'cursor-not-allowed bg-gray-700 opacity-50'
-          }`}
+              : 'cursor-not-allowed bg-gray-700 opacity-50'}`}
         >
           <h2 className="text-3xl font-extrabold mb-4 flex items-center gap-2">
             Adminboard {!isAdmin && <span className="text-lg">🔒</span>}
