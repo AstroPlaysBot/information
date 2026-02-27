@@ -1,65 +1,43 @@
-// src/app/login/LoginButtons.tsx (Client Component)
 'use client';
-import { useState } from 'react';
-import Link from 'next/link';
-import { MAINTENANCE_MODE } from '@/config/maintenance';
+import React from 'react';
 
 interface LoginButtonsProps {
   isUser: boolean;
   isAdmin: boolean;
-  username?: string;
+  username: string;
 }
 
-export default function LoginButtons({ isUser = false, isAdmin = false, username = '' }: LoginButtonsProps) {
-  const [maintenanceMessage, setMaintenanceMessage] = useState(false);
+export default function LoginButtons({ isUser, isAdmin, username }: LoginButtonsProps) {
+  const CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!;
+  const REDIRECT_URI = process.env.NEXT_PUBLIC_DISCORD_REDIRECT_URI!;
+  const OAUTH_URL = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
+    REDIRECT_URI
+  )}&response_type=code&scope=identify%20guilds`;
+
+  if (!CLIENT_ID || !REDIRECT_URI) {
+    return <p>Discord OAuth nicht konfiguriert</p>;
+  }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 px-4 text-white">
-      {isUser && username && (
-        <div className="mb-10 text-center">
-          <h1 className="text-4xl font-extrabold mb-2">Willkommen {username}</h1>
-          <p className="text-gray-400">Wähle einen Bereich</p>
+    <div>
+      {isUser ? (
+        <div>
+          <p>Willkommen, {username}!</p>
+          {isAdmin && <p>Du bist Admin.</p>}
+          <button
+            onClick={() => {
+              document.cookie = 'discord_token=; max-age=0; path=/';
+              window.location.reload();
+            }}
+          >
+            Logout
+          </button>
         </div>
+      ) : (
+        <a href={OAUTH_URL}>
+          <button>Login mit Discord</button>
+        </a>
       )}
-
-      {maintenanceMessage && (
-        <div className="mb-8 bg-yellow-600 text-black px-6 py-4 rounded-xl text-center max-w-xl">
-          <h2 className="font-bold text-xl mb-2">Dashboard Wartungsmodus</h2>
-          <p>Die Dashboard Funktionen sind aktuell nicht erreichbar.</p>
-          <p className="mt-2">
-            Mehr Infos auf Discord:{' '}
-            <a href="https://discord.gg/3cvhBBm87G" target="_blank" className="underline font-semibold">
-              Hier klicken
-            </a>
-          </p>
-        </div>
-      )}
-
-      <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-12">
-        {isUser ? (
-          <Link href="/dashboard" className="relative overflow-hidden rounded-2xl p-8 shadow-2xl bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-600 cursor-pointer hover:scale-105 transition-transform">
-            <h2 className="text-3xl font-extrabold mb-4">Dashboard</h2>
-            <p className="text-gray-200 text-lg">Konfiguriere deinen Bot für deinen Discord-Server.</p>
-          </Link>
-        ) : (
-          <div className="relative overflow-hidden rounded-2xl p-8 shadow-2xl bg-gray-700 opacity-50 cursor-not-allowed">
-            <h2 className="text-3xl font-extrabold mb-4">Dashboard</h2>
-            <p className="text-gray-200 text-lg">Kein Zugriff. Discord Auth notwendig.</p>
-          </div>
-        )}
-
-        {isAdmin ? (
-          <Link href="/adminboard" className="relative overflow-hidden rounded-2xl p-8 shadow-2xl bg-gradient-to-r from-green-600 via-teal-600 to-cyan-500 cursor-pointer hover:scale-105 transition-transform">
-            <h2 className="text-3xl font-extrabold mb-4 flex items-center gap-2">Adminboard</h2>
-            <p className="text-gray-200 text-lg">Bewerbungen, Admin-Funktionen & Verwaltung.</p>
-          </Link>
-        ) : (
-          <div className="relative overflow-hidden rounded-2xl p-8 shadow-2xl bg-gray-700 opacity-50 cursor-not-allowed">
-            <h2 className="text-3xl font-extrabold mb-4 flex items-center gap-2">Adminboard 🔒</h2>
-            <p className="text-gray-200 text-lg">Kein Zugriff.</p>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
