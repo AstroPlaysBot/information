@@ -6,46 +6,41 @@ import DashboardClient from './DashboardClient';
 export default async function DashboardPage() {
   const token = cookies().get('discord_token')?.value;
 
-  // 🔹 Kein Token → sofort redirect (Server Component, okay)
-  if (!token) {
-    redirect('/api/discord-auth?state=dashboard');
-  }
+  // 🔹 Kein Token → OAuth starten
+  if (!token) redirect('/api/discord-auth?state=dashboard');
 
+  // Default Props
   let guilds: any[] = [];
   let user = { username: '', discriminator: '', id: '', avatar: undefined };
 
   try {
-    const [userRes, guildsRes] = await Promise.all([
-      fetch('https://discord.com/api/users/@me', {
-        headers: { Authorization: `Bearer ${token}` },
-        cache: 'no-store',
-      }),
-      fetch('https://discord.com/api/users/@me/guilds', {
-        headers: { Authorization: `Bearer ${token}` },
-        cache: 'no-store',
-      }),
-    ]);
-
-    // 🔹 Token ungültig → redirect
-    if (!userRes.ok || !guildsRes.ok) {
-      redirect('/api/discord-auth?state=dashboard');
-    }
-
+    // 🔹 User
+    const userRes = await fetch('https://discord.com/api/users/@me', {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store',
+    });
+    if (!userRes.ok) redirect('/api/discord-auth?state=dashboard');
     user = await userRes.json();
-    const allGuilds = await guildsRes.json();
 
-    guilds = allGuilds.map((g: any) => ({
-      id: g.id,
-      name: g.name,
-      icon: g.icon,
-      owner: g.owner,
-    }));
-
+    // 🔹 Guilds
+    const guildsRes = await fetch('https://discord.com/api/users/@me/guilds', {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store',
+    });
+    if (guildsRes.ok) {
+      const allGuilds = await guildsRes.json();
+      guilds = allGuilds.map((g: any) => ({
+        id: g.id,
+        name: g.name,
+        icon: g.icon,
+        owner: g.owner,
+      }));
+    }
   } catch (err) {
-    console.error('DashboardPage fetch error', err);
-    // Optional: hier Redirect oder Fehlerseite anzeigen
+    console.error('DashboardPage error:', err);
+    // ⚠ Props immer noch gültig zurückgeben
   }
 
-  // ⚡ Props an Client Component weitergeben
+  // 🔹 Immer Client Component rendern
   return <DashboardClient guilds={guilds} user={user} />;
 }
