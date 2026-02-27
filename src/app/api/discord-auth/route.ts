@@ -6,11 +6,14 @@ const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
 
+// 🔹 Env Check
 if (!CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI) {
   throw new Error('Discord OAuth environment variables not set');
 }
 
-// Safe string für TypeScript
+// 🔹 Safe strings für TypeScript
+const clientIdSafe: string = CLIENT_ID;
+const clientSecretSafe: string = CLIENT_SECRET;
 const redirectUriSafe: string = REDIRECT_URI;
 
 export async function GET(req: Request) {
@@ -22,7 +25,7 @@ export async function GET(req: Request) {
   if (!code) {
     const discordAuthUrl =
       `https://discord.com/api/oauth2/authorize` +
-      `?client_id=${CLIENT_ID}` +
+      `?client_id=${clientIdSafe}` +
       `&redirect_uri=${encodeURIComponent(redirectUriSafe)}` +
       `&response_type=code` +
       `&scope=identify%20guilds`;
@@ -35,8 +38,8 @@ export async function GET(req: Request) {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
-      client_id: CLIENT_ID,
-      client_secret: CLIENT_SECRET,
+      client_id: clientIdSafe,
+      client_secret: clientSecretSafe,
       grant_type: 'authorization_code',
       code,
       redirect_uri: redirectUriSafe,
