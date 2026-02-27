@@ -2,12 +2,17 @@
 import LoginButtons from './LoginButtons';
 import { cookies } from 'next/headers';
 
-const ADMIN_GUILD_ID = process.env.ADMIN_GUILD_ID!;
-const ADMIN_ROLE_ID = process.env.ADMIN_ROLE_ID!;
-const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN!;
+const ADMIN_GUILD_ID = process.env.ADMIN_GUILD_ID;
+const ADMIN_ROLE_ID = process.env.ADMIN_ROLE_ID;
+const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
+
+if (!ADMIN_GUILD_ID || !ADMIN_ROLE_ID || !BOT_TOKEN) {
+  throw new Error('Admin environment variables not set');
+}
 
 export default async function LoginPage() {
-  const token = cookies().get('discord_token')?.value;
+  const cookieStore = cookies();
+  const token = cookieStore.get('discord_token')?.value;
 
   let isUser = false;
   let isAdmin = false;
@@ -40,6 +45,5 @@ export default async function LoginPage() {
     }
   }
 
-  // 🔹 Immer LoginButtons rendern – Props entscheiden nur, was sichtbar ist
   return <LoginButtons isUser={isUser} isAdmin={isAdmin} username={username} />;
 }
