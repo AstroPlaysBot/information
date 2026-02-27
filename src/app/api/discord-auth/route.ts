@@ -8,9 +8,10 @@ const DISCORD_USER_URL = 'https://discord.com/api/users/@me';
 
 export async function GET(req: Request) {
   try {
-    // ❌ Problem: new URL(req.url) kann beim Build Fehler werfen
-    // Lösung: req.nextUrl verwenden, nur in App-Routes verfügbar
-    const code = req.nextUrl.searchParams.get('code');
+    // URL aus Request
+    const reqUrl = new URL(req.url);
+    const code = reqUrl.searchParams.get('code');
+
     if (!code) {
       console.warn('Kein Discord Code erhalten.');
       return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
