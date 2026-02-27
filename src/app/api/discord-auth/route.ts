@@ -1,17 +1,15 @@
 import { NextResponse } from 'next/server';
 import { ADMIN_USER_IDS } from '@/data/admins';
 
-export const dynamic = 'force-dynamic'; // zwingt Next.js zum dynamischen Server-Rendering
+export const dynamic = 'force-dynamic'; // Wichtig für dynamische Server-API
 
 const DISCORD_TOKEN_URL = 'https://discord.com/api/oauth2/token';
 const DISCORD_USER_URL = 'https://discord.com/api/users/@me';
 
 export async function GET(req: Request) {
   try {
-    // URL aus Request
-    const reqUrl = new URL(req.url);
-    const code = reqUrl.searchParams.get('code');
-
+    // nur serverseitig: URL aus req.nextUrl
+    const code = new URL(req.url).searchParams.get('code');
     if (!code) {
       console.warn('Kein Discord Code erhalten.');
       return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
@@ -20,6 +18,11 @@ export async function GET(req: Request) {
     const CLIENT_ID = process.env.DISCORD_CLIENT_ID!;
     const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET!;
     const REDIRECT_URI = `${process.env.NEXT_PUBLIC_APP_URL}/api/discord-auth`;
+
+    if (!CLIENT_ID || !CLIENT_SECRET || !process.env.NEXT_PUBLIC_APP_URL) {
+      console.error('Env-Variablen fehlen!');
+      return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
+    }
 
     // Token abrufen
     const tokenRes = await fetch(DISCORD_TOKEN_URL, {
@@ -33,7 +36,6 @@ export async function GET(req: Request) {
         redirect_uri: REDIRECT_URI,
       }),
     });
-
     const tokenData = await tokenRes.json();
     if (!tokenData.access_token) {
       console.warn('Discord Access Token fehlt:', tokenData);
