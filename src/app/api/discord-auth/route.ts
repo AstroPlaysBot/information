@@ -10,6 +10,9 @@ if (!CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI) {
   throw new Error('Discord OAuth environment variables not set');
 }
 
+// Safe string für TypeScript
+const redirectUriSafe: string = REDIRECT_URI;
+
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const code = url.searchParams.get('code');
@@ -20,7 +23,7 @@ export async function GET(req: Request) {
     const discordAuthUrl =
       `https://discord.com/api/oauth2/authorize` +
       `?client_id=${CLIENT_ID}` +
-      `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
+      `&redirect_uri=${encodeURIComponent(redirectUriSafe)}` +
       `&response_type=code` +
       `&scope=identify%20guilds`;
 
@@ -36,14 +39,15 @@ export async function GET(req: Request) {
       client_secret: CLIENT_SECRET,
       grant_type: 'authorization_code',
       code,
-      redirect_uri: REDIRECT_URI,
+      redirect_uri: redirectUriSafe,
     }),
   });
 
   const tokenData = await tokenRes.json();
+
   if (!tokenData.access_token) return NextResponse.redirect('/login');
 
-  // 🔐 HttpOnly Cookie setzen
+  // 🔐 HttpOnly Cookie setzen (secure nur in Prod)
   cookies().set('discord_token', tokenData.access_token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -51,6 +55,6 @@ export async function GET(req: Request) {
     path: '/',
   });
 
-  // 🔹 Auf state weiterleiten (z.B. Dashboard)
+  // 🔹 Auf state weiterleiten (z.B. /dashboard)
   return NextResponse.redirect(state);
 }
