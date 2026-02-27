@@ -1,70 +1,32 @@
 'use client';
 import React from 'react';
-
-const DISCORD_CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
-
-const DISCORD_SCOPE = encodeURIComponent('identify guilds');
-const DISCORD_RESPONSE_TYPE = 'code';
-
-function startDiscordAuth(target: 'dashboard' | 'adminboard') {
-  if (!DISCORD_CLIENT_ID || !APP_URL) {
-    alert('Fehler: Discord Client ID oder App URL fehlt');
-    return;
-  }
-
-  // Redirect URI unterscheidet sich für Adminboard
-  const redirectUri =
-    target === 'dashboard'
-      ? encodeURIComponent(`${APP_URL}/dashboard`)       // normales Dashboard
-      : encodeURIComponent(`${APP_URL}/api/discord-auth`); // Adminboard
-
-  const state = target;
-
-  const discordAuthUrl =
-    `https://discord.com/api/oauth2/authorize` +
-    `?client_id=${DISCORD_CLIENT_ID}` +
-    `&redirect_uri=${redirectUri}` +
-    `&response_type=${DISCORD_RESPONSE_TYPE}` +
-    `&scope=${DISCORD_SCOPE}` +
-    `&state=${state}`;
-
-  window.location.href = discordAuthUrl;
-}
+import { useSearchParams } from 'next/navigation';
 
 export default function LoginPage() {
+  const searchParams = useSearchParams();
+  const discordId = searchParams.get('discord_id');
+
+  if (!discordId) return <p>Fehler: Kein Discord User</p>;
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
-      <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-12">
-
-        {/* Dashboard */}
-        <div
-          onClick={() => startDiscordAuth('dashboard')}
-          className="relative cursor-pointer overflow-hidden rounded-2xl p-8 shadow-2xl
-                     bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-600
-                     transition-transform hover:scale-105"
-        >
-          <h2 className="text-3xl font-extrabold text-white mb-4">Dashboard</h2>
-          <p className="text-gray-200 text-lg">
-            Konfiguriere deinen Bot für deinen Discord-Server.
-          </p>
+      <div className="max-w-2xl w-full p-8 bg-neutral-800 rounded-2xl shadow-lg text-white">
+        <h1 className="text-3xl font-bold mb-4">Willkommen Admin</h1>
+        <p className="mb-6">Bitte wähle, wohin du möchtest:</p>
+        <div className="flex gap-4">
+          <a
+            href="/dashboard"
+            className="px-4 py-2 bg-indigo-600 rounded hover:bg-indigo-700 transition"
+          >
+            Dashboard
+          </a>
+          <a
+            href="/adminboard"
+            className="px-4 py-2 bg-green-600 rounded hover:bg-green-700 transition"
+          >
+            Adminboard
+          </a>
         </div>
-
-        {/* Admin Dashboard */}
-        <div
-          onClick={() => startDiscordAuth('adminboard')}
-          className="relative cursor-pointer overflow-hidden rounded-2xl p-8 shadow-2xl
-                     bg-gradient-to-r from-green-600 via-teal-600 to-cyan-500
-                     transition-transform hover:scale-105"
-        >
-          <h2 className="text-3xl font-extrabold text-white mb-4">
-            Admin Dashboard
-          </h2>
-          <p className="text-gray-200 text-lg">
-            Bewerbungen, Admin-Funktionen & Verwaltung.
-          </p>
-        </div>
-
       </div>
     </div>
   );
