@@ -4,29 +4,27 @@ import { redirect } from 'next/navigation';
 import DashboardClient from './DashboardClient';
 
 export default async function DashboardPage() {
-  const token = cookies().get('discord_token')?.value;
+  const cookieStore = cookies();
+  const token = cookieStore.get('discord_token')?.value;
 
-  // 🔹 Kein Token → OAuth starten
-  if (!token) redirect('/api/discord-auth?state=dashboard');
+  if (!token) return redirect('/api/discord-auth?state=/dashboard');
 
-  // Default Props
   let guilds: any[] = [];
   let user = { username: '', discriminator: '', id: '', avatar: undefined };
 
   try {
-    // 🔹 User
     const userRes = await fetch('https://discord.com/api/users/@me', {
       headers: { Authorization: `Bearer ${token}` },
       cache: 'no-store',
     });
-    if (!userRes.ok) redirect('/api/discord-auth?state=dashboard');
+    if (!userRes.ok) return redirect('/api/discord-auth?state=/dashboard');
     user = await userRes.json();
 
-    // 🔹 Guilds
     const guildsRes = await fetch('https://discord.com/api/users/@me/guilds', {
       headers: { Authorization: `Bearer ${token}` },
       cache: 'no-store',
     });
+
     if (guildsRes.ok) {
       const allGuilds = await guildsRes.json();
       guilds = allGuilds.map((g: any) => ({
@@ -38,9 +36,7 @@ export default async function DashboardPage() {
     }
   } catch (err) {
     console.error('DashboardPage error:', err);
-    // ⚠ Props immer noch gültig zurückgeben
   }
 
-  // 🔹 Immer Client Component rendern
   return <DashboardClient guilds={guilds} user={user} />;
 }
