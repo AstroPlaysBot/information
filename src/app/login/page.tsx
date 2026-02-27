@@ -2,8 +2,10 @@
 import LoginButtons from './LoginButtons';
 import { cookies } from 'next/headers';
 
+// 🔹 Dynamic rendering erzwingen
+export const dynamic = 'force-dynamic';
+
 export default async function LoginPage() {
-  // 🔹 Env innerhalb der Funktion laden (Build-safe)
   const ADMIN_GUILD_ID = process.env.ADMIN_GUILD_ID;
   const ADMIN_ROLE_ID = process.env.ADMIN_ROLE_ID;
   const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
