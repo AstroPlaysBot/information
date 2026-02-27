@@ -2,15 +2,16 @@
 import LoginButtons from './LoginButtons';
 import { cookies } from 'next/headers';
 
-const ADMIN_GUILD_ID = process.env.ADMIN_GUILD_ID;
-const ADMIN_ROLE_ID = process.env.ADMIN_ROLE_ID;
-const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
-
-if (!ADMIN_GUILD_ID || !ADMIN_ROLE_ID || !BOT_TOKEN) {
-  throw new Error('Admin environment variables not set');
-}
-
 export default async function LoginPage() {
+  // 🔹 Env innerhalb der Funktion laden (Build-safe)
+  const ADMIN_GUILD_ID = process.env.ADMIN_GUILD_ID;
+  const ADMIN_ROLE_ID = process.env.ADMIN_ROLE_ID;
+  const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
+
+  if (!ADMIN_GUILD_ID || !ADMIN_ROLE_ID || !BOT_TOKEN) {
+    throw new Error('Admin environment variables not set');
+  }
+
   const cookieStore = cookies();
   const token = cookieStore.get('discord_token')?.value;
 
