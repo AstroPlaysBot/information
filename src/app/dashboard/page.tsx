@@ -2,6 +2,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import DashboardClient from './DashboardClient';
+import { MAINTENANCE_MODE } from '@/config/maintenance';
 
 interface Guild {
   id: string;
@@ -50,6 +51,21 @@ export default async function DashboardPage() {
     if (!userRes.ok) console.error('User fetch failed', await userRes.text());
     if (!dbUsersRes.ok) console.error('DB fetch failed', dbUsersRes.status);
 
+    if (MAINTENANCE_MODE) {
+      return (
+        <div className="min-h-screen flex items-center justify-center text-white bg-black">
+          <div className="bg-yellow-600 p-8 rounded-xl text-center">
+            <h2 className="text-2xl font-bold mb-2">Dashboard Wartungsmodus</h2>
+            <p>Dashboard Funktionen aktuell nicht erreichbar.</p>
+            <p className="mt-2">
+              Mehr Infos auf Discord: 
+              <a href="https://discord.gg/3cvhBBm87G" className="underline ml-1">Hier klicken</a>
+            </p>
+          </div>
+        </div>
+      );
+    }
+    
     const allGuilds = await guildsRes.json();
     user = await userRes.json();
     const dbUsers: { discordId: string }[] = await dbUsersRes.json();
@@ -68,3 +84,5 @@ export default async function DashboardPage() {
 
   return <DashboardClient guilds={guilds} user={user} />;
 }
+
+
