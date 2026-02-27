@@ -1,30 +1,31 @@
 import { NextResponse } from 'next/server';
 import { ADMIN_USER_IDS } from '@/data/admins';
 
+export const dynamic = 'force-dynamic'; // wichtig für Next.js 13 Build
+
 const DISCORD_TOKEN_URL = 'https://discord.com/api/oauth2/token';
 const DISCORD_USER_URL = 'https://discord.com/api/users/@me';
 
 export async function GET(req: Request) {
   try {
     const code = new URL(req.url).searchParams.get('code');
-
-    // 1️⃣ Prüfen ob Code vorhanden
     if (!code) {
-      console.warn('Discord OAuth hat keinen Code zurückgegeben.');
-      return NextResponse.redirect('/'); // normale Weiterleitung
+      console.warn('Kein Discord Code erhalten.');
+      const redirectUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      return NextResponse.redirect(redirectUrl);
     }
 
-    // 2️⃣ Env-Variablen prüfen
     const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
     const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
     const REDIRECT_URI = `${process.env.NEXT_PUBLIC_APP_URL}/api/discord-auth`;
 
     if (!CLIENT_ID || !CLIENT_SECRET || !process.env.NEXT_PUBLIC_APP_URL) {
-      console.error('Env-Variablen fehlen für Discord OAuth.');
-      return NextResponse.redirect('/'); // keine sensiblen Infos ausgeben
+      console.error('Env-Variablen fehlen!');
+      const redirectUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      return NextResponse.redirect(redirectUrl);
     }
 
-    // 3️⃣ Token von Discord abrufen
+    // Token abrufen
     const tokenRes = await fetch(DISCORD_TOKEN_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -36,38 +37,36 @@ export async function GET(req: Request) {
         redirect_uri: REDIRECT_URI,
       }),
     });
-
     const tokenData = await tokenRes.json();
-
     if (!tokenData.access_token) {
-      console.warn('Discord hat kein Access Token zurückgegeben:', tokenData);
-      return NextResponse.redirect('/');
+      console.warn('Discord Access Token fehlt:', tokenData);
+      const redirectUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      return NextResponse.redirect(redirectUrl);
     }
 
-    // 4️⃣ Discord User abrufen
+    // User abrufen
     const userRes = await fetch(DISCORD_USER_URL, {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
-
     const user = await userRes.json();
-
     if (!user?.id) {
       console.warn('Discord User konnte nicht abgerufen werden:', user);
-      return NextResponse.redirect('/');
+      const redirectUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      return NextResponse.redirect(redirectUrl);
     }
 
-    // 5️⃣ Admin prüfen und Weiterleitung
+    // Admin prüfen
     const isAdmin = ADMIN_USER_IDS.includes(user.id);
-    const redirectUrl = isAdmin ? `/login?discord_id=${user.id}` : `/dashboard?discord_id=${user.id}`;
+    const redirectUrl = isAdmin
+      ? `${process.env.NEXT_PUBLIC_APP_URL}/login?discord_id=${user.id}`
+      : `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?discord_id=${user.id}`;
 
     const response = NextResponse.redirect(redirectUrl);
-
-    // 6️⃣ Cookie setzen
     response.cookies.set('discord_id', user.id, { path: '/' });
-
     return response;
   } catch (err) {
     console.error('Fehler in /api/discord-auth:', err);
-    return NextResponse.redirect('/'); // niemals 500 rausgeben
+    const redirectUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    return NextResponse.redirect(redirectUrl);
   }
 }
