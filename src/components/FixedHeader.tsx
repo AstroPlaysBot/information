@@ -36,7 +36,8 @@ const FixedHeader = () => {
 
   const startDiscordAuth = () => {
     // Direkt zum Discord OAuth Endpunkt weiterleiten
-    router.push('/api/discord-auth?state=dashboard'); // state kann später angepasst werden
+    const discordAuthUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/discord-auth`;
+    window.location.href = discordAuthUrl;
     setMenuOpen(false);
   };
 
