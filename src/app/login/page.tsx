@@ -1,4 +1,3 @@
-// src/app/login/page.tsx
 import LoginButtons from './LoginButtons';
 import { cookies } from 'next/headers';
 
@@ -32,7 +31,6 @@ export default async function LoginPage() {
         username = user.username;
         isUser = true;
 
-        // Admin Check
         const memberRes = await fetch(
           `https://discord.com/api/guilds/${ADMIN_GUILD_ID}/members/${user.id}`,
           { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
