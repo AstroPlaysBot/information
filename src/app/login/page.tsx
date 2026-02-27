@@ -1,4 +1,4 @@
-// src/app/login/page.tsx (Server Component)
+// src/app/login/page.tsx
 import LoginButtons from './LoginButtons';
 import { cookies } from 'next/headers';
 
@@ -9,23 +9,37 @@ const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN!;
 export default async function LoginPage() {
   const token = cookies().get('discord_token')?.value;
 
-  if (!token) return <LoginButtons isUser={false} isAdmin={false} username={undefined} />;
+  let isUser = false;
+  let isAdmin = false;
+  let username = '';
 
-  const userRes = await fetch('https://discord.com/api/users/@me', {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  if (token) {
+    try {
+      const userRes = await fetch('https://discord.com/api/users/@me', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-  if (!userRes.ok) return <LoginButtons isUser={false} isAdmin={false} username={undefined} />;
+      if (userRes.ok) {
+        const user = await userRes.json();
+        username = user.username;
+        isUser = true;
 
-  const user = await userRes.json();
+        // Admin Check
+        const memberRes = await fetch(
+          `https://discord.com/api/guilds/${ADMIN_GUILD_ID}/members/${user.id}`,
+          { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
+        );
 
-  const memberRes = await fetch(
-    `https://discord.com/api/guilds/${ADMIN_GUILD_ID}/members/${user.id}`,
-    { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
-  );
+        if (memberRes.ok) {
+          const member = await memberRes.json();
+          isAdmin = Array.isArray(member.roles) && member.roles.includes(ADMIN_ROLE_ID);
+        }
+      }
+    } catch (err) {
+      console.error('LoginPage server error:', err);
+    }
+  }
 
-  const member = memberRes.ok ? await memberRes.json() : { roles: [] };
-  const isAdmin = Array.isArray(member.roles) && member.roles.includes(ADMIN_ROLE_ID);
-
-  return <LoginButtons isUser={true} isAdmin={isAdmin} username={user.username} />;
+  // 🔹 Immer LoginButtons rendern – Props entscheiden nur, was sichtbar ist
+  return <LoginButtons isUser={isUser} isAdmin={isAdmin} username={username} />;
 }
