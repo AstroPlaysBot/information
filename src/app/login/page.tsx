@@ -1,110 +1,50 @@
 // src/app/login/page.tsx
-'use client';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { MAINTENANCE_MODE } from '@/config/maintenance';
+import LoginButtons from './LoginButtons';
+import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
 
-export default function LoginPage() {
-  const router = useRouter();
+const ADMIN_GUILD_ID = process.env.ADMIN_GUILD_ID!;
+const ADMIN_ROLE_ID = process.env.ADMIN_ROLE_ID!;
+const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN!;
 
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isUser, setIsUser] = useState(false);
-  const [username, setUsername] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [maintenanceMessage, setMaintenanceMessage] = useState(false);
+export default async function LoginPage() {
+  try {
+    // 🔹 Server-side: Cookie auslesen
+    const token = cookies().get('discord_token')?.value;
 
-  useEffect(() => {
-    // 🔹 fetch mit credentials, damit HttpOnly Cookie gesendet wird
-    fetch('/api/check-session', { credentials: 'include' })
-      .then(res => res.json())
-      .then(data => {
-        setIsAdmin(data.isAdmin);
-        setIsUser(data.isUser);
-        setUsername(data.username || null);
-      })
-      .catch(() => {
-        setIsAdmin(false);
-        setIsUser(false);
-        setUsername(null);
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
-  const navigate = (target: 'dashboard' | 'adminboard') => {
-    if (target === 'dashboard') {
-      if (!isUser) return alert('Kein Zugriff. Discord Auth notwendig.');
-      if (MAINTENANCE_MODE) {
-        setMaintenanceMessage(true);
-        return;
-      }
-      router.push('/dashboard');
-      return;
+    if (!token) {
+      return <LoginButtons isUser={false} isAdmin={false} username={null} />;
     }
 
-    if (target === 'adminboard') {
-      if (!isAdmin) return alert('Kein Zugriff.');
-      router.push('/adminboard');
-    }
-  };
+    // 🔹 User-Daten von Discord
+    const userRes = await fetch('https://discord.com/api/users/@me', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-  if (loading)
-    return (
-      <div className="min-h-screen flex items-center justify-center text-white">
-        Lade...
-      </div>
+    if (!userRes.ok) {
+      return <LoginButtons isUser={false} isAdmin={false} username={null} />;
+    }
+
+    const user = await userRes.json();
+
+    // 🔹 Admin Check
+    const memberRes = await fetch(
+      `https://discord.com/api/guilds/${ADMIN_GUILD_ID}/members/${user.id}`,
+      { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
     );
 
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 px-4 text-white">
-      {isUser && username && (
-        <div className="mb-10 text-center">
-          <h1 className="text-4xl font-extrabold mb-2">Willkommen {username}</h1>
-          <p className="text-gray-400">Wähle einen Bereich</p>
-        </div>
-      )}
+    const member = memberRes.ok ? await memberRes.json() : { roles: [] };
+    const isAdmin = Array.isArray(member.roles) && member.roles.includes(ADMIN_ROLE_ID);
 
-      {maintenanceMessage && (
-        <div className="mb-8 bg-yellow-600 text-black px-6 py-4 rounded-xl text-center max-w-xl">
-          <h2 className="font-bold text-xl mb-2">Dashboard Wartungsmodus</h2>
-          <p>Die Dashboard Funktionen sind aktuell nicht erreichbar.</p>
-          <p className="mt-2">
-            Mehr Infos auf Discord:{' '}
-            <a
-              href="DEIN_DISCORD_LINK"
-              target="_blank"
-              className="underline font-semibold"
-            >
-              Hier klicken
-            </a>
-          </p>
-        </div>
-      )}
-
-      <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-12">
-        <div
-          onClick={() => navigate('dashboard')}
-          className={`relative overflow-hidden rounded-2xl p-8 shadow-2xl
-            bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-600
-            transition-transform
-            ${!isUser ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105'}`}
-        >
-          <h2 className="text-3xl font-extrabold mb-4">Dashboard</h2>
-          <p className="text-gray-200 text-lg">Konfiguriere deinen Bot für deinen Discord-Server.</p>
-        </div>
-
-        <div
-          onClick={() => navigate('adminboard')}
-          className={`relative overflow-hidden rounded-2xl p-8 shadow-2xl transition-transform
-            ${isAdmin
-              ? 'cursor-pointer hover:scale-105 bg-gradient-to-r from-green-600 via-teal-600 to-cyan-500'
-              : 'cursor-not-allowed bg-gray-700 opacity-50'}`}
-        >
-          <h2 className="text-3xl font-extrabold mb-4 flex items-center gap-2">
-            Adminboard {!isAdmin && <span className="text-lg">🔒</span>}
-          </h2>
-          <p className="text-gray-200 text-lg">Bewerbungen, Admin-Funktionen & Verwaltung.</p>
-        </div>
-      </div>
-    </div>
-  );
+    return (
+      <LoginButtons
+        isUser={true}
+        isAdmin={isAdmin}
+        username={user.username}
+      />
+    );
+  } catch (err) {
+    console.error('LoginPage server error:', err);
+    return <LoginButtons isUser={false} isAdmin={false} username={null} />;
+  }
 }
