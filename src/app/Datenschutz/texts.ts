@@ -1,3 +1,4 @@
+// src/app/Datenschutz/texts.ts
 export const datenschutz = {
   de: `
 # Datenschutz – AstroPlaysBot
