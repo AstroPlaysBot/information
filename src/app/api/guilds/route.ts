@@ -1,5 +1,4 @@
 // src/app/api/guilds/route.ts
-
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
@@ -8,16 +7,19 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const cookieStore = cookies();
-    const accessToken = cookieStore.get('discord_token')?.value;
+    const userToken = cookieStore.get('user_token')?.value;
+    const adminToken = cookieStore.get('admin_token')?.value;
 
-    if (!accessToken) {
+    if (!userToken && !adminToken) {
       return NextResponse.json({ error: 'Nicht eingeloggt' }, { status: 401 });
     }
+
+    const accessToken = userToken || adminToken; // Zugriff auf Discord-API
 
     // 🔹 User Guilds holen
     const guildsRes = await fetch('https://discord.com/api/users/@me/guilds', {
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`, // muss ein gültiger OAuth-Token sein
       },
     });
 
@@ -27,17 +29,9 @@ export async function GET() {
 
     const guilds = await guildsRes.json();
 
-    const BOT_ID = process.env.DISCORD_CLIENT_ID;
-
-    // 🔹 Nur Server wo User Owner ist ODER Bot drin ist
+    // Filter für Owner oder Bot drin
     const filteredGuilds = guilds
-      .filter((guild: any) => {
-        const isOwner = guild.owner;
-        const hasBot = (BigInt(guild.permissions) & BigInt(0x20)) === BigInt(0x20); 
-        // 0x20 = MANAGE_GUILD Permission
-
-        return isOwner || hasBot;
-      })
+      .filter((guild: any) => guild.owner) // hier kannst du Bot-Permission-Check ergänzen
       .map((guild: any) => ({
         id: guild.id,
         name: guild.name,
@@ -45,7 +39,7 @@ export async function GET() {
         owner: guild.owner,
       }));
 
-    return NextResponse.json(filteredGuilds);
+    return NextResponse.json({ guilds: filteredGuilds });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: 'Serverfehler' }, { status: 500 });
