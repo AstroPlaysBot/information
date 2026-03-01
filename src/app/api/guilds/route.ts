@@ -1,10 +1,21 @@
 // src/app/api/guilds/route.ts
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma'; // Dein Prisma Client
-import fetch from 'node-fetch'; // Falls nötig
+import prisma from '@/lib/prisma';
+import fetch from 'node-fetch';
 
 export const dynamic = 'force-dynamic';
+
+// Discord Guild Typ
+interface DiscordGuild {
+  id: string;
+  name: string;
+  icon?: string;
+  owner: boolean;
+}
+
+// Prisma Role Typ
+type RoleType = 'OWNER' | 'COOWNER' | 'TEILHABER';
 
 export async function GET() {
   try {
@@ -26,18 +37,31 @@ export async function GET() {
       return NextResponse.json({ error: `Discord API Fehler: ${text}` }, { status: 500 });
     }
 
-    const discordGuilds = await guildsRes.json();
+    const discordGuildsRaw = await guildsRes.json();
+    if (!Array.isArray(discordGuildsRaw))
+      throw new Error('Discord API liefert kein Array');
+
+    const discordGuilds: DiscordGuild[] = discordGuildsRaw.map((g: any) => ({
+      id: g.id,
+      name: g.name,
+      icon: g.icon,
+      owner: g.owner,
+    }));
 
     // 🔹 Prüfen welche Server Bot drauf ist
-    // Hier z.B. botMemberEndpoint: /guilds/:id/member/:botId
-    // Angenommen du hast BOT_ID als env
     const BOT_ID = process.env.BOT_ID;
-    const guildsWithBot = [];
+    if (!BOT_ID) throw new Error('BOT_ID fehlt in .env');
+    if (!process.env.DISCORD_BOT_TOKEN) throw new Error('DISCORD_BOT_TOKEN fehlt in .env');
+
+    const guildsWithBot: DiscordGuild[] = [];
     for (const g of discordGuilds) {
       try {
-        const res = await fetch(`https://discord.com/api/guilds/${g.id}/members/${BOT_ID}`, {
-          headers: { Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}` },
-        });
+        const res = await fetch(
+          `https://discord.com/api/guilds/${g.id}/members/${BOT_ID}`,
+          {
+            headers: { Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}` },
+          }
+        );
         if (res.ok) guildsWithBot.push(g);
       } catch {
         // Bot nicht da → skip
@@ -48,32 +72,33 @@ export async function GET() {
     const userIdRes = await fetch('https://discord.com/api/users/@me', {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
-    const userData = await userIdRes.json();
-    const userId = userData.id;
+    const userDataRaw = await userIdRes.json();
+    const userId: string = userDataRaw?.id;
+    if (!userId) throw new Error('Discord User ID konnte nicht abgerufen werden');
 
     const guildRoles = await prisma.guildUser.findMany({
       where: {
         userId: userId,
-        guildId: { in: guildsWithBot.map(g => g.id) },
+        guildId: { in: guildsWithBot.map((g) => g.id) },
       },
     });
 
     const filteredGuilds = guildsWithBot
-      .map(g => {
-        const roleEntry = guildRoles.find(r => r.guildId === g.id);
+      .map((g) => {
+        const roleEntry = guildRoles.find((r) => r.guildId === g.id);
         if (!roleEntry) return null; // Keine Rolle → nicht anzeigen
         return {
           id: g.id,
           name: g.name,
           icon: g.icon,
-          role: roleEntry.role, // OWNER | COOWNER | TEILHABER
+          role: roleEntry.role as RoleType, // OWNER | COOWNER | TEILHABER
         };
       })
       .filter(Boolean); // null raus
 
     return NextResponse.json({ guilds: filteredGuilds });
-  } catch (err) {
+  } catch (err: any) {
     console.error(err);
-    return NextResponse.json({ error: 'Serverfehler' }, { status: 500 });
+    return NextResponse.json({ error: err.message || 'Serverfehler' }, { status: 500 });
   }
 }
