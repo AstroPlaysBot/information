@@ -3,31 +3,37 @@ export const impressum = {
   de: `
 # Impressum – AstroPlaysBot
 
-**Betreiber / Verantwortlich:**  
+**Betreiber:**  
 AstroPlaysBot  
-Email: astroplays.help@gmail.com
+Email: astroplays.help@gmail.com  
+Discord: 3cvhBBm87G
 
-**Hosting & Infrastruktur:**  
-- Bot: Hetzner Online GmbH, Deutschland  
-- Website: Vercel Inc., USA  
-- Datenbank: Neon.tech, USA
+**Haftungsausschluss:**  
+Trotz sorgfältiger inhaltlicher Kontrolle übernehmen wir keine Haftung für Inhalte externer Links.  
+Für den Inhalt verlinkter Seiten sind ausschließlich deren Betreiber verantwortlich.
 
-**Haftung:**  
-Alle Inhalte erfolgen nach bestem Wissen. Für Schäden oder Verluste wird keine Haftung übernommen.
+**Website Hosting:**  
+Vercel Inc., USA
+
+**Quellcode & Entwicklung:**  
+GitHub Repository: https://github.com/AstroPlaysBot/information
 `,
   en: `
 # Imprint – AstroPlaysBot
 
-**Operator / Responsible:**  
+**Operator:**  
 AstroPlaysBot  
-Email: astroplays.help@gmail.com
+Email: astroplays.help@gmail.com  
+Discord: 3cvhBBm87G
 
-**Hosting & Infrastructure:**  
-- Bot: Hetzner Online GmbH, Germany  
-- Website: Vercel Inc., USA  
-- Database: Neon.tech, USA
+**Disclaimer:**  
+Despite careful content control, we accept no liability for external links.  
+The content of linked sites is the responsibility of their operators.
 
-**Liability:**  
-All content is provided to the best of our knowledge. No liability is assumed for damages or losses.
+**Website Hosting:**  
+Vercel Inc., USA
+
+**Source Code & Development:**  
+GitHub Repository: https://github.com/AstroPlaysBot/information
 `,
 };
