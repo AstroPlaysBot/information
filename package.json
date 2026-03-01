@@ -20,7 +20,7 @@
     "react-icons": "^4.11.0",
     "framer-motion": "^10.12.16",
     "@prisma/client": "^5.1.0",
-    "node-fetch": "^3.4.0"
+    "node-fetch": "^3.3.2"
   },
   "devDependencies": {
     "typescript": "^5.1.6",
