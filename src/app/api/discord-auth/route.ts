@@ -1,3 +1,4 @@
+// src/app/api/discord-auth/route.ts
 import { NextResponse } from 'next/server';
 import { ADMIN_USER_IDS } from '@/data/admins';
 
