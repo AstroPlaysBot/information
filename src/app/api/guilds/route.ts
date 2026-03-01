@@ -29,12 +29,7 @@ type RoleType = 'OWNER' | 'CO_OWNER' | 'PARTNER';
 // Type Guards
 // ---------------------
 function isDiscordGuild(obj: any): obj is DiscordGuild {
-  return (
-    obj &&
-    typeof obj.id === 'string' &&
-    typeof obj.name === 'string' &&
-    typeof obj.owner === 'boolean'
-  );
+  return obj && typeof obj.id === 'string' && typeof obj.name === 'string' && typeof obj.owner === 'boolean';
 }
 
 function isDiscordUser(obj: any): obj is DiscordUser {
@@ -51,8 +46,7 @@ export async function GET() {
     const userToken = cookieStore.get('user_token')?.value;
     const accessToken = adminToken || userToken;
 
-    if (!accessToken)
-      return NextResponse.json({ error: 'Nicht eingeloggt' }, { status: 401 });
+    if (!accessToken) return NextResponse.json({ error: 'Nicht eingeloggt' }, { status: 401 });
 
     // 🔹 User Guilds von Discord holen
     const guildsRes = await fetch('https://discord.com/api/users/@me/guilds', {
@@ -65,10 +59,8 @@ export async function GET() {
     }
 
     const discordGuildsRaw: unknown = await guildsRes.json();
-    if (!Array.isArray(discordGuildsRaw))
-      throw new Error('Discord API liefert kein Array');
+    if (!Array.isArray(discordGuildsRaw)) throw new Error('Discord API liefert kein Array');
 
-    // Type Guard: nur gültige Guilds übernehmen
     const discordGuilds: DiscordGuild[] = discordGuildsRaw.filter(isDiscordGuild);
 
     // ---------------------
@@ -82,11 +74,19 @@ export async function GET() {
     const guildsWithBot: DiscordGuild[] = [];
     for (const g of discordGuilds) {
       try {
-        const res = await fetch(
-          `https://discord.com/api/guilds/${g.id}/members/${BOT_ID}`,
-          { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
-        );
+        const res = await fetch(`https://discord.com/api/guilds/${g.id}/members/${BOT_ID}`, {
+          headers: { Authorization: `Bot ${BOT_TOKEN}` },
+        });
         if (res.ok) guildsWithBot.push(g);
+
+        // ---------------------
+        // Server & ServerUser upsert
+        // ---------------------
+        await prisma.server.upsert({
+          where: { id: g.id },
+          update: { name: g.name, icon: g.icon, botJoined: true },
+          create: { id: g.id, name: g.name, icon: g.icon, botJoined: true, ownerId: g.owner ? BOT_ID : BOT_ID },
+        });
       } catch {
         // Bot nicht da → skip
       }
@@ -99,34 +99,33 @@ export async function GET() {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     const userDataRaw = await userIdRes.json();
-
-    if (!isDiscordUser(userDataRaw)) {
-      throw new Error('Discord User ID konnte nicht abgerufen werden');
-    }
-
+    if (!isDiscordUser(userDataRaw)) throw new Error('Discord User ID konnte nicht abgerufen werden');
     const userData: DiscordUser = userDataRaw;
     const userId = userData.id;
 
     // ---------------------
-    // Rollen aus DB abrufen
+    // ServerUser upsert (Owner = aktueller User)
+    // ---------------------
+    for (const g of guildsWithBot) {
+      await prisma.serverUser.upsert({
+        where: { serverId_userId: { serverId: g.id, userId } },
+        update: { role: 'OWNER' },
+        create: { serverId: g.id, userId, role: 'OWNER', categories: [] },
+      });
+    }
+
+    // ---------------------
+    // Filtered Guilds für Response
     // ---------------------
     const serverUsers = await prisma.serverUser.findMany({
-      where: {
-        userId,
-        serverId: { in: guildsWithBot.map((g) => g.id) },
-      },
+      where: { userId, serverId: { in: guildsWithBot.map(g => g.id) } },
     });
 
     const filteredGuilds = guildsWithBot
-      .map((g) => {
-        const roleEntry = serverUsers.find((r) => r.serverId === g.id);
+      .map(g => {
+        const roleEntry = serverUsers.find(r => r.serverId === g.id);
         if (!roleEntry) return null;
-        return {
-          id: g.id,
-          name: g.name,
-          icon: g.icon,
-          role: roleEntry.role as RoleType,
-        };
+        return { id: g.id, name: g.name, icon: g.icon, role: roleEntry.role as RoleType };
       })
       .filter(Boolean);
 
