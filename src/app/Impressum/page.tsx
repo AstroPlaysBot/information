@@ -2,7 +2,7 @@
 'use client';
 import React from 'react';
 import Layout from './layout';
-import { agb } from './impressum';
+import { agb } from './texts';
 
 export default function ImpreesumPage() {
   return (
