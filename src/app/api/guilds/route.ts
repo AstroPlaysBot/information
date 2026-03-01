@@ -72,23 +72,31 @@ export async function GET() {
     if (!BOT_TOKEN) throw new Error('DISCORD_BOT_TOKEN fehlt in .env');
 
     const guildsWithBot: DiscordGuild[] = [];
+
     for (const g of discordGuilds) {
       try {
         const res = await fetch(`https://discord.com/api/guilds/${g.id}/members/${BOT_ID}`, {
           headers: { Authorization: `Bot ${BOT_TOKEN}` },
         });
-        if (res.ok) guildsWithBot.push(g);
 
-        // ---------------------
-        // Server & ServerUser upsert
-        // ---------------------
-        await prisma.server.upsert({
-          where: { id: g.id },
-          update: { name: g.name, icon: g.icon, botJoined: true },
-          create: { id: g.id, name: g.name, icon: g.icon, botJoined: true, ownerId: g.owner ? BOT_ID : BOT_ID },
-        });
+        if (res.ok) {
+          guildsWithBot.push(g);
+
+          // Server upsert, botJoined = true
+          await prisma.server.upsert({
+            where: { id: g.id },
+            update: { name: g.name, icon: g.icon, botJoined: true },
+            create: { id: g.id, name: g.name, icon: g.icon, botJoined: true, ownerId: g.owner ? BOT_ID : BOT_ID },
+          });
+        } else {
+          // Bot ist nicht mehr auf dem Server → botJoined = false
+          await prisma.server.updateMany({
+            where: { id: g.id },
+            data: { botJoined: false },
+          });
+        }
       } catch {
-        // Bot nicht da → skip
+        // Discord-Fehler → skip
       }
     }
 
