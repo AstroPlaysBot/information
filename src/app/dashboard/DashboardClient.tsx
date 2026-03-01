@@ -65,13 +65,13 @@ export default function DashboardClient() {
   // Farben für Rollen
   const roleColors: Record<Guild['role'], string> = {
     OWNER: 'bg-green-600',
-    COOWNER: 'bg-yellow-500',
+    CO_OWNER: 'bg-yellow-500',
     TEILHABER: 'bg-orange-500',
   };
 
   const roleText: Record<Guild['role'], string> = {
     OWNER: 'Eigentümer',
-    COOWNER: 'Co-Owner',
+    CO_OWNER: 'Co-Owner',
     TEILHABER: 'Teilhaber',
   };
 
