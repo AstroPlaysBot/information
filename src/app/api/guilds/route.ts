@@ -7,41 +7,37 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const cookieStore = cookies();
-    const userToken = cookieStore.get('user_token')?.value;
     const adminToken = cookieStore.get('admin_token')?.value;
+    const userToken = cookieStore.get('user_token')?.value;
 
-    if (!userToken && !adminToken) {
-      return NextResponse.json({ error: 'Nicht eingeloggt' }, { status: 401 });
-    }
+    const accessToken = adminToken || userToken;
+    if (!accessToken) return NextResponse.json({ error: 'Nicht eingeloggt' }, { status: 401 });
 
-    const accessToken = userToken || adminToken; // Zugriff auf Discord-API
-
-    // 🔹 User Guilds holen
+    // 🔹 User Guilds von Discord holen
     const guildsRes = await fetch('https://discord.com/api/users/@me/guilds', {
-      headers: {
-        Authorization: `Bearer ${accessToken}`, // muss ein gültiger OAuth-Token sein
-      },
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
 
     if (!guildsRes.ok) {
-      return NextResponse.json({ error: 'Fehler beim Laden der Server' }, { status: 500 });
+      const text = await guildsRes.text();
+      return NextResponse.json({ error: `Discord API Fehler: ${text}` }, { status: 500 });
     }
 
     const guilds = await guildsRes.json();
 
-    // Filter für Owner oder Bot drin
+    // Nur Server wo User Owner ist oder Bot drin ist
     const filteredGuilds = guilds
-      .filter((guild: any) => guild.owner) // hier kannst du Bot-Permission-Check ergänzen
-      .map((guild: any) => ({
-        id: guild.id,
-        name: guild.name,
-        icon: guild.icon,
-        owner: guild.owner,
+      .filter((g: any) => g.owner) // optional: Bot-Permission check hinzufügen
+      .map((g: any) => ({
+        id: g.id,
+        name: g.name,
+        icon: g.icon,
+        owner: g.owner,
       }));
 
     return NextResponse.json({ guilds: filteredGuilds });
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
+    console.error(err);
     return NextResponse.json({ error: 'Serverfehler' }, { status: 500 });
   }
 }
