@@ -2,7 +2,7 @@
 'use client';
 import React from 'react';
 import Layout from './layout';
-import { agb } from './datenschutz';
+import { agb } from './texts';
 
 export default function DatenschutzPage() {
   return (
