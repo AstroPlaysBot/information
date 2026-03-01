@@ -5,29 +5,30 @@ import { ADMIN_USER_IDS } from './data/admins';
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const discordId = req.cookies.get('discord_id')?.value;
 
-  // Öffentlich zugänglich
+  const userToken = req.cookies.get('user_token')?.value || '';
+  const adminToken = req.cookies.get('admin_token')?.value || '';
+
+  // Öffentlich
   if (pathname === '/' || pathname.startsWith('/api') || pathname.startsWith('/login')) {
     return NextResponse.next();
   }
 
-  // Dashboard → nur normaler User oder Admin
+  // Dashboard → User oder Admin
   if (pathname.startsWith('/dashboard')) {
-    if (!discordId) return NextResponse.redirect('/login');
+    if (!userToken && !adminToken) return NextResponse.redirect('/login');
     return NextResponse.next();
   }
 
-  // Adminboard → nur Admins
+  // Adminboard → nur Admin
   if (pathname.startsWith('/adminboard')) {
-    if (!discordId || !ADMIN_USER_IDS.includes(discordId)) return NextResponse.redirect('/login');
+    if (!adminToken) return NextResponse.redirect('/login');
     return NextResponse.next();
   }
 
   return NextResponse.next();
 }
 
-// Apply middleware nur auf bestimmte Pfade
 export const config = {
-  matcher: ['/dashboard/:path*', '/adminboard/:path*', '/login/:path*'],
+  matcher: ['/dashboard/:path*', '/adminboard/:path*', '/login', '/login/:path*'],
 };
