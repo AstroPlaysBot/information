@@ -1,6 +1,7 @@
 // src/app/dashboard/page.tsx
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import DashboardClient from './DashboardClient';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,9 +14,5 @@ export default function DashboardPage() {
     redirect('/');
   }
 
-  return (
-    <div className="min-h-screen flex items-center justify-center text-white bg-black">
-      <h1 className="text-4xl">Dashboard</h1>
-    </div>
-  );
+  return <DashboardClient />;
 }
