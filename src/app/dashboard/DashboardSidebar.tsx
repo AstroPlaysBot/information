@@ -3,18 +3,18 @@ import React, { useState } from 'react';
 import { useParams, useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Sections + Unterpunkte
+// Kategorien + Unterpunkte
 const sections = [
   { label: 'AstroModeration', sub: ['AstroGreeting','AstroBoost','AstroBump','AstroAutoRoles','AstroCall','AstroClear','AstroTickets'] },
   { label: 'AstroProtect', sub: ['AstroShield','AstroModeration','AstroModlogs','AstroLogs','AstroLock'] },
   { label: 'AstroStreams', sub: ['Coming Soon...'] },
   { label: 'AstroPLAYS', sub: ['Minecraft','GTA V','Fortnite'] },
   { label: 'Premium', sub: ['AstroTickets+'] },
+  { label: 'Verwaltung', sub: [] }, // wird dynamisch
 ];
 
-// Props definieren
 interface DashboardSidebarProps {
-  closeSidebar?: () => void; // optional, für mobile Toggle
+  closeSidebar?: () => void;
 }
 
 export default function DashboardSidebar({ closeSidebar }: DashboardSidebarProps) {
@@ -31,7 +31,7 @@ export default function DashboardSidebar({ closeSidebar }: DashboardSidebarProps
 
   const handleSubClick = (sub: string) => {
     console.log(`Clicked ${sub}`);
-    if (closeSidebar) closeSidebar(); // Mobile Menu schließen, falls Prop gesetzt
+    if (closeSidebar) closeSidebar();
   };
 
   return (
@@ -81,6 +81,24 @@ export default function DashboardSidebar({ closeSidebar }: DashboardSidebarProps
                           {sub}
                         </button>
                       ))}
+
+                      {/* Verwaltung Input für Owner */}
+                      {s.label === 'Verwaltung' && (
+                        <div className="mt-2 flex flex-col space-y-2">
+                          <input
+                            type="text"
+                            placeholder="User ID hinzufügen"
+                            className="px-3 py-2 rounded-lg text-black"
+                          />
+                          <select className="px-3 py-2 rounded-lg text-black">
+                            <option value="TEILHABER">Teilhaber</option>
+                            <option value="COOWNER">Co-Owner</option>
+                          </select>
+                          <button className="px-3 py-2 bg-purple-600 rounded-lg text-white hover:bg-purple-700 transition">
+                            Hinzufügen
+                          </button>
+                        </div>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>
