@@ -2,17 +2,16 @@
 import { NextResponse } from 'next/server';
 import { ADMIN_USER_IDS } from '@/data/admins';
 
-export const dynamic = 'force-dynamic'; // Wichtig für dynamische Server-API
+export const dynamic = 'force-dynamic';
 
 const DISCORD_TOKEN_URL = 'https://discord.com/api/oauth2/token';
 const DISCORD_USER_URL = 'https://discord.com/api/users/@me';
 
 export async function GET(req: Request) {
   try {
-    // nur serverseitig: URL aus req.nextUrl
     const code = new URL(req.url).searchParams.get('code');
+
     if (!code) {
-      console.warn('Kein Discord Code erhalten.');
       return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
     }
 
@@ -20,12 +19,7 @@ export async function GET(req: Request) {
     const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET!;
     const REDIRECT_URI = `${process.env.NEXT_PUBLIC_APP_URL}/api/discord-auth`;
 
-    if (!CLIENT_ID || !CLIENT_SECRET || !process.env.NEXT_PUBLIC_APP_URL) {
-      console.error('Env-Variablen fehlen!');
-      return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
-    }
-
-    // Token abrufen
+    // 1️⃣ Token holen
     const tokenRes = await fetch(DISCORD_TOKEN_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -37,33 +31,44 @@ export async function GET(req: Request) {
         redirect_uri: REDIRECT_URI,
       }),
     });
+
     const tokenData = await tokenRes.json();
+
     if (!tokenData.access_token) {
-      console.warn('Discord Access Token fehlt:', tokenData);
       return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
     }
 
-    // User abrufen
+    // 2️⃣ User holen
     const userRes = await fetch(DISCORD_USER_URL, {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
+
     const user = await userRes.json();
+
     if (!user?.id) {
-      console.warn('Discord User konnte nicht abgerufen werden:', user);
       return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
     }
 
-    // Admin prüfen
     const isAdmin = ADMIN_USER_IDS.includes(user.id);
-    const redirectUrl = isAdmin
-      ? `${process.env.NEXT_PUBLIC_APP_URL}/login?discord_id=${user.id}`
-      : `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?discord_id=${user.id}`;
 
-    const response = NextResponse.redirect(redirectUrl);
-    response.cookies.set('discord_id', user.id, { path: '/' });
+    const response = NextResponse.redirect(
+      `${process.env.NEXT_PUBLIC_APP_URL}/login`
+    );
+
+    // 3️⃣ Cookie setzen (30 Minuten)
+    response.cookies.set(
+      isAdmin ? 'admin_token' : 'user_token',
+      user.id,
+      {
+        httpOnly: true,
+        maxAge: 60 * 30,
+        path: '/',
+      }
+    );
+
     return response;
   } catch (err) {
-    console.error('Fehler in /api/discord-auth:', err);
+    console.error(err);
     return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
   }
 }
