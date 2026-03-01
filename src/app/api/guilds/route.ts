@@ -30,7 +30,9 @@ export async function GET() {
     const userToken = cookieStore.get('user_token')?.value;
     const accessToken = adminToken || userToken;
 
-    if (!accessToken) return NextResponse.json({ error: 'Nicht eingeloggt' }, { status: 401 });
+    if (!accessToken) {
+      return NextResponse.json({ error: 'Nicht eingeloggt' }, { status: 401 });
+    }
 
     // 🔹 User Guilds von Discord holen
     const guildsRes = await fetch('https://discord.com/api/users/@me/guilds', {
@@ -74,7 +76,19 @@ export async function GET() {
     const userIdRes = await fetch('https://discord.com/api/users/@me', {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
-    const userData: DiscordUser = await userIdRes.json();
+
+    const userDataRaw: unknown = await userIdRes.json();
+
+    // Typensicherheit: prüfen, dass id existiert
+    if (
+      typeof userDataRaw !== 'object' ||
+      userDataRaw === null ||
+      !('id' in userDataRaw)
+    ) {
+      throw new Error('Discord User Data ungültig');
+    }
+
+    const userData = userDataRaw as DiscordUser;
     const userId = userData.id;
     if (!userId) throw new Error('Discord User ID konnte nicht abgerufen werden');
 
