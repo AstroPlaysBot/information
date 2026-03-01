@@ -6,7 +6,7 @@ import fetch from 'node-fetch';
 
 export const dynamic = 'force-dynamic';
 
-// Typen
+// Discord Guild Typ
 interface DiscordGuild {
   id: string;
   name: string;
@@ -14,6 +14,7 @@ interface DiscordGuild {
   owner: boolean;
 }
 
+// Discord User Typ
 interface DiscordUser {
   id: string;
   username: string;
@@ -21,7 +22,8 @@ interface DiscordUser {
   avatar?: string;
 }
 
-type RoleType = 'OWNER' | 'COOWNER' | 'TEILHABER';
+// Rollen Typ
+type RoleType = 'OWNER' | 'CO_OWNER' | 'PARTNER';
 
 export async function GET() {
   try {
@@ -30,9 +32,8 @@ export async function GET() {
     const userToken = cookieStore.get('user_token')?.value;
     const accessToken = adminToken || userToken;
 
-    if (!accessToken) {
+    if (!accessToken)
       return NextResponse.json({ error: 'Nicht eingeloggt' }, { status: 401 });
-    }
 
     // 🔹 User Guilds von Discord holen
     const guildsRes = await fetch('https://discord.com/api/users/@me/guilds', {
@@ -63,9 +64,10 @@ export async function GET() {
     const guildsWithBot: DiscordGuild[] = [];
     for (const g of discordGuilds) {
       try {
-        const res = await fetch(`https://discord.com/api/guilds/${g.id}/members/${BOT_ID}`, {
-          headers: { Authorization: `Bot ${BOT_TOKEN}` },
-        });
+        const res = await fetch(
+          `https://discord.com/api/guilds/${g.id}/members/${BOT_ID}`,
+          { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
+        );
         if (res.ok) guildsWithBot.push(g);
       } catch {
         // Bot nicht da → skip
@@ -76,32 +78,21 @@ export async function GET() {
     const userIdRes = await fetch('https://discord.com/api/users/@me', {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
-
-    const userDataRaw: unknown = await userIdRes.json();
-
-    // Typensicherheit: prüfen, dass id existiert
-    if (
-      typeof userDataRaw !== 'object' ||
-      userDataRaw === null ||
-      !('id' in userDataRaw)
-    ) {
-      throw new Error('Discord User Data ungültig');
-    }
-
-    const userData = userDataRaw as DiscordUser;
+    const userData: DiscordUser = await userIdRes.json();
     const userId = userData.id;
     if (!userId) throw new Error('Discord User ID konnte nicht abgerufen werden');
 
-    const guildRoles = await prisma.guildUser.findMany({
+    const guildRoles = await prisma.serverUser.findMany({
       where: {
         userId,
-        guildId: { in: guildsWithBot.map((g) => g.id) },
+        serverId: { in: guildsWithBot.map((g) => g.id) },
       },
     });
 
+    // 🔹 Filtere die Guilds nach Rollen
     const filteredGuilds = guildsWithBot
       .map((g) => {
-        const roleEntry = guildRoles.find((r) => r.guildId === g.id);
+        const roleEntry = guildRoles.find((r) => r.serverId === g.id);
         if (!roleEntry) return null;
         return {
           id: g.id,
