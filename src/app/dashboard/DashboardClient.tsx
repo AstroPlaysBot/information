@@ -9,7 +9,7 @@ interface Guild {
   id: string;
   name: string;
   icon?: string;
-  owner: boolean;
+  role: 'OWNER' | 'COOWNER' | 'TEILHABER';
 }
 
 export default function DashboardClient() {
@@ -30,9 +30,7 @@ export default function DashboardClient() {
       })
       .then(data => {
         if (!data.guilds || data.guilds.length === 0) {
-          setError(
-            'Keine Server gefunden. Bitte stelle sicher, dass du mindestens einen Server verwaltest.'
-          );
+          setError('Keine Server gefunden. Bitte stelle sicher, dass du mindestens einen Server verwaltest.');
         } else {
           setGuilds(data.guilds);
         }
@@ -64,14 +62,27 @@ export default function DashboardClient() {
       </div>
     );
 
+  // Farben für Rollen
+  const roleColors: Record<Guild['role'], string> = {
+    OWNER: 'bg-green-600',
+    COOWNER: 'bg-yellow-500',
+    TEILHABER: 'bg-orange-500',
+  };
+
+  const roleText: Record<Guild['role'], string> = {
+    OWNER: 'Eigentümer',
+    COOWNER: 'Co-Owner',
+    TEILHABER: 'Teilhaber',
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black px-6 py-16 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black px-4 sm:px-6 md:px-10 py-16 text-white">
       <h1 className="text-5xl font-extrabold text-center mb-16 animate-fadeIn">
         Wähle einen Server
       </h1>
 
       <motion.div
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ staggerChildren: 0.1 }}
@@ -91,19 +102,17 @@ export default function DashboardClient() {
               />
             ) : (
               <div className="w-full h-40 flex items-center justify-center bg-white/10 rounded-t-3xl">
-                <span className="text-3xl font-bold">
-                  {g.name[0]}
-                </span>
+                <span className="text-3xl font-bold">{g.name[0]}</span>
               </div>
             )}
 
             <div className="p-6">
               <h3 className="text-xl font-bold mb-2">{g.name}</h3>
-              {g.owner && (
-                <span className="inline-block px-2 py-1 text-xs font-semibold bg-purple-600 rounded-full shadow-lg">
-                  Eigentümer
-                </span>
-              )}
+              <span
+                className={`inline-block px-2 py-1 text-xs font-semibold rounded-full shadow-lg ${roleColors[g.role]}`}
+              >
+                {roleText[g.role]}
+              </span>
             </div>
 
             <div className="absolute top-0 left-0 w-full h-full bg-white/5 opacity-0 group-hover:opacity-10 transition"></div>
