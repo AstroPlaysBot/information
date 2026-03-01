@@ -1,5 +1,3 @@
-// prisma/schema.prisma
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -41,11 +39,11 @@ model DashboardUser {
 // Server-Tabelle
 // ======================
 model Server {
-  id        String   @id                // Discord Server ID
+  id        String      @id                // Discord Server ID
   name      String
   icon      String?
-  botJoined Boolean  @default(true)    @map("bot_joined")
-  ownerId   String   @map("owner_id")  // Discord ID des Eigentümers
+  botJoined Boolean     @default(true)     @map("bot_joined")
+  ownerId   String      @map("owner_id")   // Discord ID des Eigentümers
 
   users     ServerUser[]
 }
@@ -56,9 +54,9 @@ model Server {
 model ServerUser {
   id         String   @id @default(cuid())
   serverId   String   @map("server_id")
-  userId     String   @map("user_id")   // Discord User ID
+  userId     String   @map("user_id")     // Discord User ID
   role       Role
-  categories Json     @default("[]")   // Array von Strings
+  categories Json     @default("[]")      // Array von Strings
 
   server     Server   @relation(fields: [serverId], references: [id])
 
