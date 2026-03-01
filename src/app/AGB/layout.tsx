@@ -3,12 +3,12 @@
 import React, { useState } from 'react';
 
 interface LayoutProps {
-  children: (props: { language: 'de' | 'en' }) => React.ReactNode;
+  children: React.ReactNode;
 }
 
 export default function Layout({ children }: LayoutProps) {
   const [language, setLanguage] = useState<'de' | 'en'>('de');
-  const toggleLanguage = () => setLanguage((prev) => (prev === 'de' ? 'en' : 'de'));
+  const toggleLanguage = () => setLanguage(prev => (prev === 'de' ? 'en' : 'de'));
 
   return (
     <div className="flex min-h-screen bg-gray-900 text-white">
@@ -35,7 +35,9 @@ export default function Layout({ children }: LayoutProps) {
         </nav>
       </aside>
 
-      <main className="flex-1 p-8 overflow-auto">{children({ language })}</main>
+      <main className="flex-1 p-8 overflow-auto">
+        {children}
+      </main>
     </div>
   );
 }
