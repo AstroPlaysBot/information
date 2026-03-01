@@ -13,18 +13,18 @@ generator client {
 // Bewerbungen bleiben unverändert
 // ======================
 model Application {
-  id             String   @id @default(cuid())
-  name           String
-  role           String
-  age            String?
-  email          String?
-  answers        Json     @default("{}")
-  submittedAt    DateTime @default(now())
+  id              String   @id @default(cuid())
+  name            String
+  role            String
+  age             String?
+  email           String?
+  answers         Json     @default("{}")
+  submittedAt     DateTime @default(now())
 
   // Discord-Daten
-  discord_id     String?
-  discriminator  String?
-  avatar         String?
+  discord_id      String?
+  discriminator   String?
+  avatar          String?
   account_created DateTime?
 }
 
@@ -33,7 +33,7 @@ model Application {
 // ======================
 model DashboardUser {
   id        String   @id @default(cuid())
-  discordId String   @unique
+  discordId String   @unique @map("discord_id")
   username  String
 }
 
@@ -41,13 +41,13 @@ model DashboardUser {
 // Server-Tabelle
 // ======================
 model Server {
-  id          String   @id                // Discord Server ID
-  name        String
-  icon        String?
-  botJoined   Boolean  @default(true)     // Bot ist auf dem Server
-  ownerId     String                       // Discord ID des Eigentümers
+  id        String   @id                // Discord Server ID
+  name      String
+  icon      String?
+  botJoined Boolean  @default(true)    @map("bot_joined")
+  ownerId   String   @map("owner_id")  // Discord ID des Eigentümers
 
-  users       ServerUser[]
+  users     ServerUser[]
 }
 
 // ======================
@@ -55,10 +55,10 @@ model Server {
 // ======================
 model ServerUser {
   id         String   @id @default(cuid())
-  serverId   String
-  userId     String    // Discord User ID
+  serverId   String   @map("server_id")
+  userId     String   @map("user_id")   // Discord User ID
   role       Role
-  categories Json      @default("[]") // Array mit Strings, z.B. ["AstroModeration", "AstroProtect"]
+  categories Json     @default("[]")   // Array von Strings
 
   server     Server   @relation(fields: [serverId], references: [id])
 
