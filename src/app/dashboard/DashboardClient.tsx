@@ -9,7 +9,7 @@ interface Guild {
   id: string;
   name: string;
   icon?: string;
-  role: 'OWNER' | 'COOWNER' | 'TEILHABER';
+  role: 'OWNER' | 'CO_OWNER' | 'TEILHABER';
 }
 
 export default function DashboardClient() {
