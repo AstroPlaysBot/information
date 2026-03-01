@@ -1,39 +1,48 @@
 // src/app/login/page.tsx
-'use client';
-import React from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+
+export const dynamic = 'force-dynamic';
 
 export default function LoginPage() {
-  const searchParams = useSearchParams();
-  const discordId = searchParams.get('discord_id');
-  const router = useRouter();
+  const cookieStore = cookies();
 
-  if (!discordId) {
-    // Wenn man manuell /login aufruft → weiterleiten zu OAuth
-    if (typeof window !== 'undefined') {
-      window.location.href = '/api/discord-auth?state=dashboard';
-    }
-    return null;
+  const adminToken = cookieStore.get('admin_token');
+  const userToken = cookieStore.get('user_token');
+
+  if (!adminToken && !userToken) {
+    redirect('/');
   }
+
+  const isAdmin = !!adminToken;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
       <div className="max-w-2xl w-full p-8 bg-neutral-800 rounded-2xl shadow-lg text-white">
-        <h1 className="text-3xl font-bold mb-4">Willkommen Admin</h1>
-        <p className="mb-6">Bitte wähle, wohin du möchtest:</p>
-        <div className="flex gap-4">
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="px-4 py-2 bg-indigo-600 rounded hover:bg-indigo-700 transition"
+        <h1 className="text-3xl font-bold mb-6">Wohin möchtest du?</h1>
+
+        <div className="flex gap-6">
+
+          {/* Dashboard */}
+          <a
+            href="/dashboard"
+            className="px-6 py-3 bg-indigo-600 rounded hover:bg-indigo-700 transition"
           >
             Dashboard
-          </button>
-          <button
-            onClick={() => router.push('/adminboard')}
-            className="px-4 py-2 bg-green-600 rounded hover:bg-green-700 transition"
+          </a>
+
+          {/* Adminboard */}
+          <a
+            href={isAdmin ? "/adminboard" : "#"}
+            className={`px-6 py-3 rounded transition ${
+              isAdmin
+                ? "bg-green-600 hover:bg-green-700"
+                : "bg-gray-600 cursor-not-allowed opacity-60"
+            }`}
           >
-            Adminboard
-          </button>
+            🔒 Adminboard
+          </a>
+
         </div>
       </div>
     </div>
