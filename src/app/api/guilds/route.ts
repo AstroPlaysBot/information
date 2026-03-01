@@ -6,9 +6,6 @@ import fetch from 'node-fetch';
 
 export const dynamic = 'force-dynamic';
 
-// ---------------------
-// Typen
-// ---------------------
 interface DiscordGuild {
   id: string;
   name: string;
@@ -25,9 +22,6 @@ interface DiscordUser {
 
 type RoleType = 'OWNER' | 'CO_OWNER' | 'PARTNER';
 
-// ---------------------
-// Type Guards
-// ---------------------
 function isDiscordGuild(obj: any): obj is DiscordGuild {
   return obj && typeof obj.id === 'string' && typeof obj.name === 'string' && typeof obj.owner === 'boolean';
 }
@@ -36,9 +30,6 @@ function isDiscordUser(obj: any): obj is DiscordUser {
   return obj && typeof obj.id === 'string' && typeof obj.username === 'string';
 }
 
-// ---------------------
-// GET Handler
-// ---------------------
 export async function GET() {
   try {
     const cookieStore = cookies();
@@ -48,7 +39,7 @@ export async function GET() {
 
     if (!accessToken) return NextResponse.json({ error: 'Nicht eingeloggt' }, { status: 401 });
 
-    // 🔹 User Guilds von Discord holen
+    // Discord User Guilds abrufen
     const guildsRes = await fetch('https://discord.com/api/users/@me/guilds', {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
@@ -63,9 +54,6 @@ export async function GET() {
 
     const discordGuilds: DiscordGuild[] = discordGuildsRaw.filter(isDiscordGuild);
 
-    // ---------------------
-    // Prüfen, welche Server Bot drauf ist
-    // ---------------------
     const BOT_ID = process.env.BOT_ID;
     const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
     if (!BOT_ID) throw new Error('BOT_ID fehlt in .env');
@@ -82,14 +70,14 @@ export async function GET() {
         if (res.ok) {
           guildsWithBot.push(g);
 
-          // Server upsert, botJoined = true
+          // Server upsert: botJoined = true
           await prisma.server.upsert({
             where: { id: g.id },
             update: { name: g.name, icon: g.icon, botJoined: true },
             create: { id: g.id, name: g.name, icon: g.icon, botJoined: true, ownerId: g.owner ? BOT_ID : BOT_ID },
           });
         } else {
-          // Bot ist nicht mehr auf dem Server → botJoined = false
+          // Bot nicht mehr auf dem Server → botJoined = false
           await prisma.server.updateMany({
             where: { id: g.id },
             data: { botJoined: false },
@@ -100,9 +88,7 @@ export async function GET() {
       }
     }
 
-    // ---------------------
     // Discord User ID abrufen
-    // ---------------------
     const userIdRes = await fetch('https://discord.com/api/users/@me', {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
@@ -111,9 +97,7 @@ export async function GET() {
     const userData: DiscordUser = userDataRaw;
     const userId = userData.id;
 
-    // ---------------------
     // ServerUser upsert (Owner = aktueller User)
-    // ---------------------
     for (const g of guildsWithBot) {
       await prisma.serverUser.upsert({
         where: { serverId_userId: { serverId: g.id, userId } },
@@ -122,20 +106,21 @@ export async function GET() {
       });
     }
 
-    // ---------------------
-    // Filtered Guilds für Response
-    // ---------------------
-    const serverUsers = await prisma.serverUser.findMany({
-      where: { userId, serverId: { in: guildsWithBot.map(g => g.id) } },
+    // Nur Server mit botJoined = true zurückgeben
+    const activeServerUsers = await prisma.serverUser.findMany({
+      where: {
+        userId,
+        server: { botJoined: true },
+      },
+      include: { server: true },
     });
 
-    const filteredGuilds = guildsWithBot
-      .map(g => {
-        const roleEntry = serverUsers.find(r => r.serverId === g.id);
-        if (!roleEntry) return null;
-        return { id: g.id, name: g.name, icon: g.icon, role: roleEntry.role as RoleType };
-      })
-      .filter(Boolean);
+    const filteredGuilds = activeServerUsers.map(su => ({
+      id: su.server.id,
+      name: su.server.name,
+      icon: su.server.icon,
+      role: su.role as RoleType,
+    }));
 
     return NextResponse.json({ guilds: filteredGuilds });
   } catch (err: any) {
