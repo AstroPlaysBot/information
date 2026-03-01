@@ -10,16 +10,13 @@ const DISCORD_USER_URL = 'https://discord.com/api/users/@me';
 export async function GET(req: Request) {
   try {
     const code = new URL(req.url).searchParams.get('code');
-
-    if (!code) {
-      return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
-    }
+    if (!code) return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
 
     const CLIENT_ID = process.env.DISCORD_CLIENT_ID!;
     const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET!;
     const REDIRECT_URI = `${process.env.NEXT_PUBLIC_APP_URL}/api/discord-auth`;
 
-    // 1️⃣ Token holen
+    // 1️⃣ Access Token holen
     const tokenRes = await fetch(DISCORD_TOKEN_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -33,35 +30,26 @@ export async function GET(req: Request) {
     });
 
     const tokenData = await tokenRes.json();
+    if (!tokenData.access_token) return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
 
-    if (!tokenData.access_token) {
-      return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
-    }
-
-    // 2️⃣ User holen
+    // 2️⃣ User Infos holen
     const userRes = await fetch(DISCORD_USER_URL, {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
-
     const user = await userRes.json();
-
-    if (!user?.id) {
-      return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
-    }
+    if (!user?.id) return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
 
     const isAdmin = ADMIN_USER_IDS.includes(user.id);
 
-    const response = NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/login`
-    );
+    const response = NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/login`);
 
-    // 3️⃣ Cookie setzen (30 Minuten)
+    // 3️⃣ Cookie setzen: jetzt enthält der Token
     response.cookies.set(
       isAdmin ? 'admin_token' : 'user_token',
-      user.id,
+      tokenData.access_token, // ⚠️ jetzt echter OAuth Token
       {
         httpOnly: true,
-        maxAge: 60 * 30,
+        maxAge: 60 * 30, // 30 Minuten
         path: '/',
       }
     );
