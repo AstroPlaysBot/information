@@ -6,7 +6,7 @@ import fetch from 'node-fetch';
 
 export const dynamic = 'force-dynamic';
 
-// Discord Guild Typ
+// Typen
 interface DiscordGuild {
   id: string;
   name: string;
@@ -14,7 +14,6 @@ interface DiscordGuild {
   owner: boolean;
 }
 
-// Discord User Typ
 interface DiscordUser {
   id: string;
   username: string;
@@ -22,7 +21,6 @@ interface DiscordUser {
   avatar?: string;
 }
 
-// Rollen Typ
 type RoleType = 'OWNER' | 'CO_OWNER' | 'PARTNER';
 
 export async function GET() {
@@ -32,8 +30,9 @@ export async function GET() {
     const userToken = cookieStore.get('user_token')?.value;
     const accessToken = adminToken || userToken;
 
-    if (!accessToken)
+    if (!accessToken) {
       return NextResponse.json({ error: 'Nicht eingeloggt' }, { status: 401 });
+    }
 
     // 🔹 User Guilds von Discord holen
     const guildsRes = await fetch('https://discord.com/api/users/@me/guilds', {
@@ -64,24 +63,29 @@ export async function GET() {
     const guildsWithBot: DiscordGuild[] = [];
     for (const g of discordGuilds) {
       try {
-        const res = await fetch(
-          `https://discord.com/api/guilds/${g.id}/members/${BOT_ID}`,
-          { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
-        );
+        const res = await fetch(`https://discord.com/api/guilds/${g.id}/members/${BOT_ID}`, {
+          headers: { Authorization: `Bot ${BOT_TOKEN}` },
+        });
         if (res.ok) guildsWithBot.push(g);
       } catch {
         // Bot nicht da → skip
       }
     }
 
-    // 🔹 Rollen aus DB abrufen
+    // 🔹 Discord User ID abrufen
     const userIdRes = await fetch('https://discord.com/api/users/@me', {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
-    const userData: DiscordUser = await userIdRes.json();
-    const userId = userData.id;
-    if (!userId) throw new Error('Discord User ID konnte nicht abgerufen werden');
 
+    // Cast mit Type Guard
+    const userDataRaw = await userIdRes.json();
+    if (!userDataRaw || typeof userDataRaw.id !== 'string') {
+      throw new Error('Discord User ID konnte nicht abgerufen werden');
+    }
+    const userData = userDataRaw as DiscordUser;
+    const userId = userData.id;
+
+    // 🔹 Rollen aus DB abrufen (ServerUser statt guildUser)
     const guildRoles = await prisma.serverUser.findMany({
       where: {
         userId,
@@ -89,7 +93,7 @@ export async function GET() {
       },
     });
 
-    // 🔹 Filtere die Guilds nach Rollen
+    // 🔹 Filtered Guilds zurückgeben
     const filteredGuilds = guildsWithBot
       .map((g) => {
         const roleEntry = guildRoles.find((r) => r.serverId === g.id);
