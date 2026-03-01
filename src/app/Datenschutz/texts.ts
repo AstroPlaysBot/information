@@ -3,51 +3,45 @@ export const datenschutz = {
   de: `
 # Datenschutz – AstroPlaysBot
 
-**1. Verantwortlicher:**  
-AstroPlaysBot  
-Email: astroplays.help@gmail.com
+**Erhebung & Verarbeitung von Daten**  
+AstroPlaysBot verarbeitet nur die Daten, die für die Funktionalität notwendig sind:
+- Discord User-ID, Rollen, Serverstatistiken
+- Eventuell Interaktionen im Bot (z. B. Games/Progress)
 
-**2. Erhobene Daten:**  
-- User-IDs, Rollen, Serverstatistiken zur Bot-Funktionalität  
-- Discord OAuth2 Daten (bei Anmeldung über Website)
-
-**3. Drittanbieter:**  
+**Drittanbieter**  
 - Vercel (Website Hosting)  
 - Neon (Datenbank)  
 - Hetzner (Bot Hosting)  
-- GitHub (Quellcodeverwaltung)
+- GitHub (Quellcode)
 
-**4. Rechte der Nutzer:**  
-- Auskunft über gespeicherte Daten  
-- Löschung oder Korrektur von Daten  
-- Widerruf der Zustimmung zur Verarbeitung
+**Haftung & Sicherheit**  
+- Daten werden mit Sorgfalt behandelt, aber ohne Garantie  
+- Keine Haftung für Schäden durch Datenverlust oder Fehlfunktionen
 
-**5. Cookies & Tracking:**  
-Website verwendet nur notwendige Cookies für Funktionalität und Authentifizierung.
+**Kontakt**  
+- Discord: 3cvhBBm87G  
+- Email: astroplays.help@gmail.com
 `,
   en: `
 # Privacy Policy – AstroPlaysBot
 
-**1. Responsible:**  
-AstroPlaysBot  
-Email: astroplays.help@gmail.com
+**Data Collection & Processing**  
+AstroPlaysBot only processes data necessary for its functionality:
+- Discord user ID, roles, server statistics
+- Possibly bot interactions (e.g., games/progress)
 
-**2. Collected Data:**  
-- User IDs, roles, server statistics for bot functionality  
-- Discord OAuth2 data (when registering via website)
-
-**3. Third Parties:**  
+**Third-Party Services**  
 - Vercel (Website Hosting)  
 - Neon (Database)  
 - Hetzner (Bot Hosting)  
-- GitHub (Source Code Management)
+- GitHub (Source Code)
 
-**4. User Rights:**  
-- Access to stored data  
-- Deletion or correction of data  
-- Revocation of consent for processing
+**Liability & Security**  
+- Data handled with care, but without guarantee  
+- No liability for damage due to data loss or malfunctions
 
-**5. Cookies & Tracking:**  
-Website only uses necessary cookies for functionality and authentication.
+**Contact**  
+- Discord: 3cvhBBm87G  
+- Email: astroplays.help@gmail.com
 `,
 };
