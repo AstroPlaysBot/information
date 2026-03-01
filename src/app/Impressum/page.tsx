@@ -1,17 +1,17 @@
 // src/app/Impressum/page.tsx
 'use client';
-import React from 'react';
+import React, { useState } from 'react';
 import Layout from './layout';
-import { agb } from './texts';
+import { impressum } from './texts';
 
-export default function ImpreesumPage() {
+export default function ImpressumPage() {
+  const [language, setLanguage] = useState<'de' | 'en'>('de');
+
   return (
     <Layout>
-      {({ language }) => (
-        <div className="prose prose-invert max-w-3xl">
-          <div dangerouslySetInnerHTML={{ __html: agb[language].replace(/\n/g, '<br/>') }} />
-        </div>
-      )}
+      <div className="prose prose-invert max-w-3xl">
+        <div dangerouslySetInnerHTML={{ __html: impressum[language].replace(/\n/g, '<br/>') }} />
+      </div>
     </Layout>
   );
 }
