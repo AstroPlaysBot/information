@@ -1,4 +1,4 @@
-// src/app/dashboard/[guildId]/page.tsx
+// src/app/dashboard/[guildId]/layout.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
