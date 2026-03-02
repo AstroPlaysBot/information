@@ -20,7 +20,7 @@ interface DiscordUser {
   avatar?: string;
 }
 
-type RoleType = 'OWNER' | 'CO_OWNER' | 'TEILHABER';
+type RoleType = 'OWNER' | 'CO_OWNER' | 'PARTNER';
 
 function isDiscordGuild(obj: any): obj is DiscordGuild {
   return obj && typeof obj.id === 'string' && typeof obj.name === 'string' && typeof obj.owner === 'boolean';
