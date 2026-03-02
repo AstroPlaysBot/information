@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import DashboardSidebar from './DashboardSidebar';
+import DashboardSidebar from '../DashboardSidebar';
 
 export default function DashboardLayout({
   children,
