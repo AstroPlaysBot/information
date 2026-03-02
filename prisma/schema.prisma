@@ -45,17 +45,18 @@ model DashboardUser {
 // Server-Tabelle
 // ======================
 model Server {
-  id        String      @id
+  id        String         @id
   name      String
   icon      String?
-  botJoined Boolean     @default(true)     @map("bot_joined")
-  ownerId   String      @map("owner_id")
+  botJoined Boolean        @default(true) @map("bot_joined")
+  ownerId   String         @map("owner_id")
 
-  createdAt DateTime    @default(now())
+  createdAt DateTime       @default(now())
 
   users     ServerUser[]
   settings  ServerSettings?
   logs      DashboardLog[]
+  modules   ServerModule[] // Gegenrelation zu ServerModule
 }
 
 // ======================
@@ -70,7 +71,7 @@ model ServerUser {
 
   joinedAt   DateTime @default(now())
 
-  server     Server   @relation(fields: [serverId], references: [id])
+  server     Server         @relation(fields: [serverId], references: [id])
   user       DashboardUser? @relation(fields: [userId], references: [discordId])
 
   @@unique([serverId, userId])
