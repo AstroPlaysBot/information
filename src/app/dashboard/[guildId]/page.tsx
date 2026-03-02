@@ -1,29 +1,73 @@
 // src/app/dashboard/[guildId]/page.tsx
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
-import DashboardSidebar from '../DashboardSidebar';
+'use client';
 
-interface PageProps {
-  params: { guildId: string };
-}
+import React, { useState, useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import DashboardSidebar from './DashboardSidebar';
 
-export const dynamic = 'force-dynamic';
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
 
-export default function GuildPage({ params }: PageProps) {
-  const cookieStore = cookies();
-  const userToken = cookieStore.get('user_token');
-  const adminToken = cookieStore.get('admin_token');
+  useEffect(() => {
+    const checkScreen = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+      if (window.innerWidth >= 1024) setSidebarOpen(true);
+      else setSidebarOpen(false);
+    };
 
-  if (!userToken && !adminToken) redirect('/');
-
-  const { guildId } = params;
+    checkScreen();
+    window.addEventListener('resize', checkScreen);
+    return () => window.removeEventListener('resize', checkScreen);
+  }, []);
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-gradient-to-br from-black via-gray-900 to-gray-950 text-white">
-      <DashboardSidebar />
-      <main className="flex-1 p-6 md:p-10 overflow-auto">
-        <h1 className="text-3xl font-bold mb-4">Server Dashboard: {guildId}</h1>
-        <p>Hier kannst du Einstellungen für diesen Server verwalten.</p>
+
+      {/* Hamburger */}
+      {!isDesktop && (
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="fixed top-4 left-4 z-50 p-3 rounded-lg bg-white/10 backdrop-blur hover:bg-white/20"
+        >
+          ☰
+        </button>
+      )}
+
+      {/* Sidebar */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div
+            initial={{ x: -320 }}
+            animate={{ x: 0 }}
+            exit={{ x: -320 }}
+            transition={{ type: 'spring', stiffness: 220, damping: 25 }}
+            className="fixed inset-y-0 left-0 w-80 z-40"
+          >
+            <DashboardSidebar closeSidebar={() => !isDesktop && setSidebarOpen(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Overlay (nur mobile) */}
+      {!isDesktop && sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 bg-black/60 z-30"
+        />
+      )}
+
+      {/* Main Content */}
+      <main
+        className={`flex-1 overflow-auto p-6 md:p-10 transition-all duration-300 ${
+          isDesktop ? 'ml-80' : ''
+        }`}
+      >
+        {children}
       </main>
     </div>
   );
