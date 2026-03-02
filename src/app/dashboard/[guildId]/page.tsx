@@ -5,18 +5,20 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 interface Member {
-  username: string;
-  userId: string;
-  role: 'TEILHABER' | 'CO_OWNER';
+
+  username: string
+  userId: string
+  role: string
+
 }
 
 export default function GuildDashboardPage() {
 
   const { guildId } = useParams<{ guildId: string }>();
   const search = useSearchParams();
-  const tab = search.get('tab');
+  const tab = search.get("tab");
 
-  const [guildName, setGuildName] = useState<string>('Lade...');
+  const [guildName, setGuildName] = useState("Loading...");
   const [members, setMembers] = useState<Member[]>([]);
 
   useEffect(() => {
@@ -24,8 +26,10 @@ export default function GuildDashboardPage() {
     fetch(`/api/guild/${guildId}`)
       .then(r => r.json())
       .then(data => {
+
         setGuildName(data.name);
         setMembers(data.members || []);
+
       });
 
   }, [guildId]);
@@ -33,81 +37,98 @@ export default function GuildDashboardPage() {
   if (tab === "verwaltung") {
 
     return (
-      <div className="space-y-10">
+
+      <div className="space-y-8">
 
         <h1 className="text-3xl font-bold">
           Server: {guildName} ({guildId})
         </h1>
 
-        {/* Liste */}
-        <div className="bg-gray-900 rounded-2xl overflow-hidden">
+        <div className="grid grid-cols-2 gap-10">
 
-          {members.map((m, i) => (
+          {/* Liste */}
 
-            <div
-              key={i}
-              className="grid grid-cols-3 items-center px-6 py-4 border-b border-gray-800"
-            >
+          <div className="bg-gray-900 rounded-xl overflow-hidden">
 
-              <div>{m.username}</div>
+            {members.map((m,i) => (
 
-              <div className="text-gray-400">
-                {m.userId}
+              <div
+                key={i}
+                className="grid grid-cols-3 items-center px-6 py-4 border-b border-gray-800"
+              >
+
+                <div>{m.username}</div>
+
+                <div className="text-gray-400">
+                  {m.userId}
+                </div>
+
+                <div className="flex gap-3">
+
+                  <select
+                    defaultValue={m.role}
+                    className="bg-gray-800 px-3 py-1 rounded"
+                  >
+                    <option value="PARTNER">Teilhaber</option>
+                    <option value="CO_OWNER">Co Owner</option>
+                  </select>
+
+                  <button className="text-red-400 hover:text-red-600">
+                    Entfernen
+                  </button>
+
+                </div>
+
               </div>
 
-              <div className="flex items-center gap-3">
+            ))}
 
-                <select
-                  value={m.role}
-                  className="bg-gray-800 px-3 py-1 rounded"
-                >
-                  <option value="TEILHABER">Teilhaber</option>
-                  <option value="CO_OWNER">Co-Owner</option>
-                </select>
+          </div>
 
-                <button className="text-red-400 hover:text-red-600">
-                  Entfernen
-                </button>
+          {/* Hinzufügen */}
 
-              </div>
+          <div className="bg-gray-900 p-6 rounded-xl space-y-4 h-fit">
 
-            </div>
+            <h2 className="text-xl font-semibold">
+              Person hinzufügen
+            </h2>
 
-          ))}
+            <input
+              placeholder="Username"
+              className="w-full px-4 py-2 bg-gray-800 rounded"
+            />
 
-        </div>
+            <input
+              placeholder="Discord User ID"
+              className="w-full px-4 py-2 bg-gray-800 rounded"
+            />
 
-        {/* Hinzufügen */}
+            <select className="w-full px-4 py-2 bg-gray-800 rounded">
 
-        <div className="bg-gray-900 p-6 rounded-2xl max-w-xl space-y-4">
+              <option value="PARTNER">
+                Teilhaber
+              </option>
 
-          <h2 className="text-xl font-semibold">
-            Person hinzufügen
-          </h2>
+              <option value="CO_OWNER">
+                Co Owner
+              </option>
 
-          <input
-            placeholder="Username"
-            className="w-full px-4 py-2 rounded bg-gray-800"
-          />
+            </select>
 
-          <input
-            placeholder="User ID"
-            className="w-full px-4 py-2 rounded bg-gray-800"
-          />
+            <button className="w-full bg-purple-600 hover:bg-purple-700 py-2 rounded">
 
-          <select className="w-full px-4 py-2 rounded bg-gray-800">
-            <option value="TEILHABER">Teilhaber</option>
-            <option value="CO_OWNER">Co-Owner</option>
-          </select>
+              Hinzufügen
 
-          <button className="w-full py-2 rounded bg-purple-600 hover:bg-purple-700">
-            Hinzufügen
-          </button>
+            </button>
+
+          </div>
 
         </div>
 
       </div>
+
     );
+
   }
 
   return (
@@ -119,10 +140,13 @@ export default function GuildDashboardPage() {
       </h1>
 
       <div className="text-gray-400">
-        Übersicht
+
+        Dashboard Übersicht
+
       </div>
 
     </div>
 
   );
+
 }
