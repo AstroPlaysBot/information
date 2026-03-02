@@ -1,8 +1,52 @@
 // src/app/dashboard/DashboardSidebar.tsx
 'use client';
 
-import React from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import React, { useState } from 'react';
+import { useParams, useRouter, usePathname } from 'next/navigation';
+import { AnimatePresence, motion } from 'framer-motion';
+
+const sections = [
+
+  {
+    label: 'AstroModeration',
+    sub: [
+      'AstroGreeting',
+      'AstroBoost',
+      'AstroBump',
+      'AstroAutoRoles',
+      'AstroCall',
+      'AstroClear',
+      'AstroTickets'
+    ]
+  },
+
+  {
+    label: 'AstroProtect',
+    sub: [
+      'AstroShield',
+      'AstroModeration',
+      'AstroModlogs',
+      'AstroLogs',
+      'AstroLock'
+    ]
+  },
+
+  {
+    label: 'AstroStreams',
+    sub: ['Coming Soon...']
+  },
+
+  {
+    label: 'AstroPLAYS',
+    sub: ['Minecraft','GTA V','Fortnite']
+  },
+
+  {
+    label: 'Premium',
+    sub: ['AstroTickets+']
+  }
+
+];
 
 interface Props {
   closeSidebar?: () => void;
@@ -12,10 +56,14 @@ export default function DashboardSidebar({ closeSidebar }: Props) {
 
   const { guildId } = useParams<{ guildId: string }>();
   const router = useRouter();
+  const pathname = usePathname();
+
+  const [openSection, setOpenSection] = useState<string | null>(null);
 
   if (!guildId) return null;
 
   return (
+
     <aside className="w-80 h-screen flex flex-col justify-between p-6 bg-gradient-to-b from-gray-900 to-black shadow-2xl">
 
       <div>
@@ -27,7 +75,7 @@ export default function DashboardSidebar({ closeSidebar }: Props) {
           🚀 AstroPlays
         </h1>
 
-        <nav className="space-y-3">
+        <nav className="space-y-2">
 
           <button
             onClick={() => router.push(`/dashboard/${guildId}`)}
@@ -44,28 +92,53 @@ export default function DashboardSidebar({ closeSidebar }: Props) {
           </button>
 
           <div className="pt-6 text-gray-500 text-sm">
-            Modules
+            MODULES
           </div>
 
-          <button className="w-full px-5 py-3 text-left rounded-xl hover:bg-white/10">
-            AstroModeration
-          </button>
+          {sections.map((s) => (
 
-          <button className="w-full px-5 py-3 text-left rounded-xl hover:bg-white/10">
-            AstroProtect
-          </button>
+            <div key={s.label}>
 
-          <button className="w-full px-5 py-3 text-left rounded-xl hover:bg-white/10">
-            AstroStreams
-          </button>
+              <button
+                onClick={() =>
+                  setOpenSection(prev => prev === s.label ? null : s.label)
+                }
+                className="w-full px-5 py-3 text-left rounded-xl hover:bg-white/10"
+              >
+                {s.label}
+              </button>
 
-          <button className="w-full px-5 py-3 text-left rounded-xl hover:bg-white/10">
-            AstroPLAYS
-          </button>
+              <AnimatePresence>
 
-          <button className="w-full px-5 py-3 text-left rounded-xl hover:bg-white/10">
-            Premium
-          </button>
+                {openSection === s.label && (
+
+                  <motion.div
+                    initial={{ height: 0 }}
+                    animate={{ height: "auto" }}
+                    exit={{ height: 0 }}
+                    className="ml-4 flex flex-col overflow-hidden"
+                  >
+
+                    {s.sub.map(sub => (
+
+                      <button
+                        key={sub}
+                        className="text-left px-4 py-2 rounded-lg hover:bg-purple-700/30"
+                      >
+                        {sub}
+                      </button>
+
+                    ))}
+
+                  </motion.div>
+
+                )}
+
+              </AnimatePresence>
+
+            </div>
+
+          ))}
 
         </nav>
 
@@ -82,5 +155,6 @@ export default function DashboardSidebar({ closeSidebar }: Props) {
       </button>
 
     </aside>
+
   );
 }
