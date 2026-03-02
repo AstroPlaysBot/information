@@ -1,75 +1,72 @@
 // src/app/dashboard/DashboardSidebar.tsx
 'use client';
 
-import React, { useState } from 'react';
-import { useParams, useRouter, usePathname } from 'next/navigation';
-import { AnimatePresence, motion } from 'framer-motion';
+import { useParams, useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-const sections = [
+const modules = [
 
   {
-    label: 'AstroModeration',
-    sub: [
-      'AstroGreeting',
-      'AstroBoost',
-      'AstroBump',
-      'AstroAutoRoles',
-      'AstroCall',
-      'AstroClear',
-      'AstroTickets'
+    label: "AstroModeration",
+    items: [
+      "AstroGreeting",
+      "AstroBoost",
+      "AstroBump",
+      "AstroAutoRoles",
+      "AstroCall",
+      "AstroClear",
+      "AstroTickets"
     ]
   },
 
   {
-    label: 'AstroProtect',
-    sub: [
-      'AstroShield',
-      'AstroModeration',
-      'AstroModlogs',
-      'AstroLogs',
-      'AstroLock'
+    label: "AstroProtect",
+    items: [
+      "AstroShield",
+      "AstroModeration",
+      "AstroModlogs",
+      "AstroLogs",
+      "AstroLock"
     ]
   },
 
   {
-    label: 'AstroStreams',
-    sub: ['Coming Soon...']
+    label: "AstroStreams",
+    items: ["Coming Soon"]
   },
 
   {
-    label: 'AstroPLAYS',
-    sub: ['Minecraft','GTA V','Fortnite']
+    label: "AstroPLAYS",
+    items: ["Minecraft","GTA V","Fortnite"]
   },
 
   {
-    label: 'Premium',
-    sub: ['AstroTickets+']
+    label: "Premium",
+    items: ["AstroTickets+"]
   }
 
 ];
 
-interface Props {
-  closeSidebar?: () => void;
-}
-
-export default function DashboardSidebar({ closeSidebar }: Props) {
+export default function DashboardSidebar({
+  closeSidebar
+}: {
+  closeSidebar?: () => void
+}) {
 
   const { guildId } = useParams<{ guildId: string }>();
   const router = useRouter();
-  const pathname = usePathname();
 
-  const [openSection, setOpenSection] = useState<string | null>(null);
-
-  if (!guildId) return null;
+  const [open, setOpen] = useState<string | null>(null);
 
   return (
 
-    <aside className="w-80 h-screen flex flex-col justify-between p-6 bg-gradient-to-b from-gray-900 to-black shadow-2xl">
+    <aside className="w-80 h-screen bg-gradient-to-b from-gray-900 to-black p-6 flex flex-col justify-between shadow-2xl">
 
       <div>
 
         <h1
-          className="text-3xl font-extrabold mb-10 cursor-pointer hover:text-purple-400"
+          className="text-3xl font-bold mb-10 cursor-pointer hover:text-purple-400"
           onClick={() => router.push(`/dashboard/${guildId}`)}
         >
           🚀 AstroPlays
@@ -77,16 +74,20 @@ export default function DashboardSidebar({ closeSidebar }: Props) {
 
         <nav className="space-y-2">
 
+          {/* Übersicht */}
+
           <button
             onClick={() => router.push(`/dashboard/${guildId}`)}
-            className="w-full px-5 py-3 text-left rounded-xl hover:bg-white/10"
+            className="w-full text-left px-4 py-3 rounded-lg hover:bg-white/10"
           >
             Übersicht
           </button>
 
+          {/* Verwaltung */}
+
           <button
             onClick={() => router.push(`/dashboard/${guildId}?tab=verwaltung`)}
-            className="w-full px-5 py-3 text-left rounded-xl hover:bg-white/10"
+            className="w-full text-left px-4 py-3 rounded-lg hover:bg-white/10"
           >
             Verwaltung
           </button>
@@ -95,37 +96,35 @@ export default function DashboardSidebar({ closeSidebar }: Props) {
             MODULES
           </div>
 
-          {sections.map((s) => (
+          {modules.map((m) => (
 
-            <div key={s.label}>
+            <div key={m.label}>
 
               <button
-                onClick={() =>
-                  setOpenSection(prev => prev === s.label ? null : s.label)
-                }
-                className="w-full px-5 py-3 text-left rounded-xl hover:bg-white/10"
+                onClick={() => setOpen(open === m.label ? null : m.label)}
+                className="w-full text-left px-4 py-3 rounded-lg hover:bg-white/10"
               >
-                {s.label}
+                {m.label}
               </button>
 
               <AnimatePresence>
 
-                {openSection === s.label && (
+                {open === m.label && (
 
                   <motion.div
                     initial={{ height: 0 }}
                     animate={{ height: "auto" }}
                     exit={{ height: 0 }}
-                    className="ml-4 flex flex-col overflow-hidden"
+                    className="overflow-hidden flex flex-col ml-4"
                   >
 
-                    {s.sub.map(sub => (
+                    {m.items.map((item) => (
 
                       <button
-                        key={sub}
-                        className="text-left px-4 py-2 rounded-lg hover:bg-purple-700/30"
+                        key={item}
+                        className="text-left px-4 py-2 rounded hover:bg-purple-600/30"
                       >
-                        {sub}
+                        {item}
                       </button>
 
                     ))}
@@ -147,9 +146,9 @@ export default function DashboardSidebar({ closeSidebar }: Props) {
       <button
         onClick={() => {
           router.push('/dashboard');
-          if (closeSidebar) closeSidebar();
+          closeSidebar?.();
         }}
-        className="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-700"
+        className="bg-purple-600 hover:bg-purple-700 py-3 rounded-lg"
       >
         Server wechseln
       </button>
@@ -157,4 +156,5 @@ export default function DashboardSidebar({ closeSidebar }: Props) {
     </aside>
 
   );
+
 }
