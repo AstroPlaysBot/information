@@ -9,7 +9,7 @@ interface Guild {
   id: string;
   name: string;
   icon?: string;
-  role: 'OWNER' | 'CO_OWNER' | 'TEILHABER';
+  role: 'OWNER' | 'CO_OWNER' | 'PARTNER';
 }
 
 export default function DashboardClient() {
@@ -20,14 +20,12 @@ export default function DashboardClient() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-
     fetch('/api/guilds')
       .then(res => res.json())
       .then(data => {
         setGuilds(data.guilds || []);
       })
       .finally(() => setLoading(false));
-
   }, []);
 
   if (loading)
@@ -60,10 +58,21 @@ export default function DashboardClient() {
       </div>
     );
 
+  // Role Colors
   const roleColor = {
     OWNER: "bg-green-600",
     CO_OWNER: "bg-yellow-500",
-    TEILHABER: "bg-orange-500"
+    PARTNER: "bg-orange-500"
+  };
+
+  // Role Mapping für Anzeige
+  const roleLabel = (role: 'OWNER' | 'CO_OWNER' | 'PARTNER') => {
+    switch(role) {
+      case 'OWNER': return 'Eigentümer';
+      case 'CO_OWNER': return 'Miteigentümer';
+      case 'PARTNER': return 'Teilhaber';
+      default: return role;
+    }
   };
 
   return (
@@ -106,7 +115,7 @@ export default function DashboardClient() {
               </h3>
 
               <span className={`px-2 py-1 text-xs rounded ${roleColor[g.role]}`}>
-                {g.role}
+                {roleLabel(g.role)}
               </span>
 
             </div>
