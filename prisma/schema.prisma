@@ -34,19 +34,28 @@ model DashboardUser {
   id        String   @id @default(cuid())
   discordId String   @unique @map("discord_id")
   username  String
+  avatar    String?
+
+  createdAt DateTime @default(now())
+
+  servers   ServerUser[]
 }
 
 // ======================
 // Server-Tabelle
 // ======================
 model Server {
-  id        String      @id                // Discord Server ID
+  id        String      @id
   name      String
   icon      String?
   botJoined Boolean     @default(true)     @map("bot_joined")
-  ownerId   String      @map("owner_id")   // Discord ID des Eigentümers
+  ownerId   String      @map("owner_id")
+
+  createdAt DateTime    @default(now())
 
   users     ServerUser[]
+  settings  ServerSettings?
+  logs      DashboardLog[]
 }
 
 // ======================
@@ -55,17 +64,70 @@ model Server {
 model ServerUser {
   id         String   @id @default(cuid())
   serverId   String   @map("server_id")
-  userId     String   @map("user_id")     // Discord User ID
+  userId     String   @map("user_id")
   role       Role
-  categories Json     @default("[]")      // Array von Strings
+  categories Json     @default("[]")
+
+  joinedAt   DateTime @default(now())
 
   server     Server   @relation(fields: [serverId], references: [id])
+  user       DashboardUser? @relation(fields: [userId], references: [discordId])
 
   @@unique([serverId, userId])
 }
 
 // ======================
-// Rollen: Eigentümer, Co-Owner, Teilhaber
+// Server Einstellungen
+// ======================
+model ServerSettings {
+  id          String   @id @default(cuid())
+  serverId    String   @unique @map("server_id")
+
+  prefix      String   @default("!")
+  language    String   @default("de")
+
+  dashboardEnabled Boolean @default(true)
+
+  server      Server   @relation(fields: [serverId], references: [id])
+}
+
+// ======================
+// Dashboard Logs
+// ======================
+model DashboardLog {
+  id        String   @id @default(cuid())
+
+  serverId  String
+  userId    String
+
+  action    String
+  targetId  String?
+
+  createdAt DateTime @default(now())
+
+  server    Server   @relation(fields: [serverId], references: [id])
+}
+
+// ======================
+// Module (aktiv / deaktiviert)
+// ======================
+model ServerModule {
+  id        String   @id @default(cuid())
+
+  serverId  String   @map("server_id")
+  module    String
+
+  enabled   Boolean  @default(true)
+
+  config    Json     @default("{}")
+
+  server    Server   @relation(fields: [serverId], references: [id])
+
+  @@unique([serverId, module])
+}
+
+// ======================
+// Rollen
 // ======================
 enum Role {
   OWNER
