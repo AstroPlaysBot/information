@@ -13,112 +13,110 @@ interface Guild {
 }
 
 export default function DashboardClient() {
+
   const router = useRouter();
 
   const [guilds, setGuilds] = useState<Guild[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+
     fetch('/api/guilds')
-      .then(async res => {
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(`Fehler beim Laden der Server: ${text}`);
-        }
-        return res.json();
-      })
+      .then(res => res.json())
       .then(data => {
-        if (!data.guilds || data.guilds.length === 0) {
-          setError('Keine Server gefunden. Bitte stelle sicher, dass du mindestens einen Server verwaltest.');
-        } else {
-          setGuilds(data.guilds);
-        }
-      })
-      .catch(err => {
-        console.error('Fetch error:', err);
-        setError(err.message || 'Fehler beim Laden der Server.');
+        setGuilds(data.guilds || []);
       })
       .finally(() => setLoading(false));
+
   }, []);
 
   if (loading)
     return (
-      <div className="h-screen flex items-center justify-center text-white text-2xl">
-        Lade Server…
+      <div className="h-screen flex items-center justify-center text-2xl">
+        Lade Server...
       </div>
     );
 
-  if (error)
+  if (guilds.length === 0)
     return (
-      <div className="h-screen flex flex-col items-center justify-center text-white text-center p-6">
-        <p className="mb-6 text-red-500">{error}</p>
-        <button
-          onClick={() => router.push('/')}
-          className="px-6 py-3 rounded-xl bg-purple-600 hover:bg-pink-600 transition text-white font-semibold"
+      <div className="h-screen flex flex-col items-center justify-center text-center">
+
+        <h2 className="text-4xl font-bold mb-6">
+          Kein Server gefunden
+        </h2>
+
+        <p className="text-gray-400 mb-10">
+          Lade den Bot zuerst auf einen Server ein.
+        </p>
+
+        <a
+          href="https://discord.com/oauth2/authorize?client_id=1462897111166095412&permissions=8&response_type=code&redirect_uri=https%3A%2F%2Fastroplaysbot.vercel.app%2Fapi%2Fdiscord-auth&integration_type=0&scope=guilds+identify+guilds.members.read+bot"
+          target="_blank"
+          className="px-8 py-4 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:scale-105"
         >
-          Zurück zur Startseite
-        </button>
+          Bot einladen
+        </a>
+
       </div>
     );
 
-  // Farben für Rollen
-  const roleColors: Record<Guild['role'], string> = {
-    OWNER: 'bg-green-600',
-    CO_OWNER: 'bg-yellow-500',
-    TEILHABER: 'bg-orange-500',
-  };
-
-  const roleText: Record<Guild['role'], string> = {
-    OWNER: 'Eigentümer',
-    CO_OWNER: 'Co-Owner',
-    TEILHABER: 'Teilhaber',
+  const roleColor = {
+    OWNER: "bg-green-600",
+    CO_OWNER: "bg-yellow-500",
+    TEILHABER: "bg-orange-500"
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black px-4 sm:px-6 md:px-10 py-16 text-white">
-      <h1 className="text-5xl font-extrabold text-center mb-16 animate-fadeIn">
-        Wähle einen Server
+    <div className="min-h-screen px-10 py-16">
+
+      <h1 className="text-5xl font-bold text-center mb-16">
+        Server auswählen
       </h1>
 
       <motion.div
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ staggerChildren: 0.1 }}
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
       >
+
         {guilds.map(g => (
+
           <motion.button
             key={g.id}
             onClick={() => router.push(`/dashboard/${g.id}`)}
-            className="group relative overflow-hidden rounded-3xl shadow-2xl bg-gradient-to-br from-gray-800 to-gray-900 hover:from-purple-700 hover:to-pink-600 transition transform hover:scale-105"
-            whileHover={{ scale: 1.06 }}
+            whileHover={{ scale: 1.08 }}
+            className="rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br from-gray-800 to-gray-900 hover:from-purple-700 hover:to-pink-600"
           >
+
             {g.icon ? (
               <img
-                src={`https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png`}
-                alt={g.name}
-                className="w-full h-40 object-cover rounded-t-3xl"
+                src={`https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=256`}
+                className="w-full h-48 object-cover"
               />
             ) : (
-              <div className="w-full h-40 flex items-center justify-center bg-white/10 rounded-t-3xl">
-                <span className="text-3xl font-bold">{g.name[0]}</span>
+              <div className="w-full h-48 flex items-center justify-center text-3xl">
+                {g.name[0]}
               </div>
             )}
 
             <div className="p-6">
-              <h3 className="text-xl font-bold mb-2">{g.name}</h3>
-              <span
-                className={`inline-block px-2 py-1 text-xs font-semibold rounded-full shadow-lg ${roleColors[g.role]}`}
-              >
-                {roleText[g.role]}
+
+              <h3 className="text-xl font-bold mb-2">
+                {g.name}
+              </h3>
+
+              <span className={`px-2 py-1 text-xs rounded ${roleColor[g.role]}`}>
+                {g.role}
               </span>
+
             </div>
 
-            <div className="absolute top-0 left-0 w-full h-full bg-white/5 opacity-0 group-hover:opacity-10 transition"></div>
           </motion.button>
+
         ))}
+
       </motion.div>
+
     </div>
   );
 }
