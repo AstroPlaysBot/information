@@ -1,14 +1,14 @@
 // src/app/dashboard/[guildId]/layout.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import DashboardSidebar from '../DashboardSidebar';
 
 export default function DashboardLayout({
-  children,
+  children
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -16,7 +16,7 @@ export default function DashboardLayout({
 
   useEffect(() => {
 
-    const checkScreen = () => {
+    const check = () => {
 
       if (window.innerWidth >= 1024) {
         setIsDesktop(true);
@@ -28,28 +28,31 @@ export default function DashboardLayout({
 
     };
 
-    checkScreen();
+    check();
+    window.addEventListener('resize', check);
 
-    window.addEventListener('resize', checkScreen);
-
-    return () => window.removeEventListener('resize', checkScreen);
+    return () => window.removeEventListener('resize', check);
 
   }, []);
 
   return (
 
-    <div className="flex h-screen w-screen overflow-hidden bg-gradient-to-br from-black via-gray-900 to-gray-950 text-white">
+    <div className="flex h-screen bg-gradient-to-br from-black via-gray-900 to-gray-950 text-white">
+
+      {/* Mobile Button */}
 
       {!isDesktop && (
 
         <button
           onClick={() => setSidebarOpen(true)}
-          className="fixed top-4 left-4 z-50 p-3 rounded-lg bg-white/10 backdrop-blur hover:bg-white/20"
+          className="fixed top-4 left-4 z-50 bg-white/10 backdrop-blur px-3 py-2 rounded-lg"
         >
           ☰
         </button>
 
       )}
+
+      {/* Sidebar */}
 
       <AnimatePresence>
 
@@ -59,8 +62,8 @@ export default function DashboardLayout({
             initial={{ x: -320 }}
             animate={{ x: 0 }}
             exit={{ x: -320 }}
-            transition={{ type: 'spring', stiffness: 220, damping: 25 }}
-            className="fixed inset-y-0 left-0 w-80 z-40"
+            transition={{ duration: 0.25 }}
+            className="fixed lg:relative z-40"
           >
 
             <DashboardSidebar
@@ -73,20 +76,20 @@ export default function DashboardLayout({
 
       </AnimatePresence>
 
+      {/* Overlay */}
+
       {!isDesktop && sidebarOpen && (
 
         <div
-          onClick={() => setSidebarOpen(false)}
           className="fixed inset-0 bg-black/60 z-30"
+          onClick={() => setSidebarOpen(false)}
         />
 
       )}
 
-      <main
-        className={`flex-1 overflow-auto p-8 transition-all ${
-          isDesktop ? 'ml-80' : ''
-        }`}
-      >
+      {/* Content */}
+
+      <main className="flex-1 overflow-auto p-10">
 
         {children}
 
