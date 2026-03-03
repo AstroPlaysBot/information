@@ -37,7 +37,9 @@ export async function GET() {
     const userToken = cookieStore.get('user_token')?.value;
     const accessToken = adminToken || userToken;
 
-    if (!accessToken) return NextResponse.json({ error: 'Nicht eingeloggt' }, { status: 401 });
+    if (!accessToken) {
+      return NextResponse.json({ error: 'Nicht eingeloggt' }, { status: 401 });
+    }
 
     // ======================
     // Discord User laden
@@ -80,7 +82,7 @@ export async function GET() {
     const guildsWithBot: DiscordGuild[] = [];
 
     // ======================
-    // Bot-Prüfung
+    // Bot-Prüfung & Server upsert
     // ======================
     for (const g of discordGuilds) {
       try {
@@ -88,30 +90,32 @@ export async function GET() {
           headers: { Authorization: `Bot ${BOT_TOKEN}` },
         });
 
-        if (res.ok) {
-          guildsWithBot.push(g);
-        }
+        const botIsInServer = res.ok;
 
-        // Server upsert immer, damit dein Server sichtbar wird
+        // Server upsert
         await prisma.server.upsert({
           where: { id: g.id },
-          update: { name: g.name, icon: g.icon, botJoined: res.ok, ownerId: userId },
-          create: { id: g.id, name: g.name, icon: g.icon, botJoined: res.ok, ownerId: userId },
+          update: { name: g.name, icon: g.icon, botJoined: botIsInServer, ownerId: g.owner ? userId : undefined },
+          create: { id: g.id, name: g.name, icon: g.icon, botJoined: botIsInServer, ownerId: g.owner ? userId : undefined },
         });
 
-        // ServerUser upsert: OWNER immer für aktuellen User
-        await prisma.serverUser.upsert({
-          where: { serverId_userId: { serverId: g.id, userId } },
-          update: { role: 'OWNER' },
-          create: { serverId: g.id, userId, role: 'OWNER', categories: [] },
-        });
+        // Nur ServerUser upsert, wenn Bot auf dem Server ist
+        if (botIsInServer) {
+          guildsWithBot.push(g); // Merken für finalen Return
+
+          await prisma.serverUser.upsert({
+            where: { serverId_userId: { serverId: g.id, userId } },
+            update: { role: g.owner ? 'OWNER' : 'PARTNER' },
+            create: { serverId: g.id, userId, role: g.owner ? 'OWNER' : 'PARTNER', categories: [] },
+          });
+        }
       } catch {
         // Fehler ignorieren
       }
     }
 
     // ======================
-    // CO_OWNER / PARTNER bereits in DB
+    // Server abrufen: nur Bot + gültige Rolle
     // ======================
     const activeServerUsers = await prisma.serverUser.findMany({
       where: {
@@ -122,9 +126,17 @@ export async function GET() {
       include: { server: true },
     });
 
+    // ======================
+    // Sortieren (Owner zuerst)
+    // ======================
     const rolePriority = { OWNER: 0, CO_OWNER: 1, PARTNER: 2 };
     const filteredGuilds = activeServerUsers
-      .map(su => ({ id: su.server.id, name: su.server.name, icon: su.server.icon, role: su.role as RoleType }))
+      .map(su => ({
+        id: su.server.id,
+        name: su.server.name,
+        icon: su.server.icon,
+        role: su.role as RoleType,
+      }))
       .sort((a, b) => rolePriority[a.role] - rolePriority[b.role]);
 
     return NextResponse.json({ guilds: filteredGuilds });
