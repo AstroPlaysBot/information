@@ -47,6 +47,12 @@ export async function GET() {
     const userRes = await fetch('https://discord.com/api/users/@me', {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
+    if (!userRes.ok) {
+      const text = await userRes.text();
+      console.error('Discord User API Fehler:', userRes.status, text);
+      return NextResponse.json({ error: `Discord User API Fehler: ${userRes.status}` }, { status: 500 });
+    }
+
     const userRaw = await userRes.json();
     if (!isDiscordUser(userRaw)) throw new Error('Discord User konnte nicht geladen werden');
     const user = userRaw;
@@ -67,7 +73,8 @@ export async function GET() {
     });
     if (!guildsRes.ok) {
       const text = await guildsRes.text();
-      return NextResponse.json({ error: `Discord API Fehler: ${text}` }, { status: 500 });
+      console.error('Discord Guilds API Fehler:', guildsRes.status, text);
+      return NextResponse.json({ error: `Discord Guilds API Fehler: ${guildsRes.status}` }, { status: 500 });
     }
 
     const discordGuildsRaw: unknown = await guildsRes.json();
@@ -86,6 +93,8 @@ export async function GET() {
     // ======================
     for (const g of discordGuilds) {
       try {
+        if (!g.id) continue;
+
         const res = await fetch(`https://discord.com/api/guilds/${g.id}/members/${BOT_ID}`, {
           headers: { Authorization: `Bot ${BOT_TOKEN}` },
         });
@@ -100,22 +109,19 @@ export async function GET() {
         });
 
         // Nur ServerUser upsert, wenn Bot auf dem Server ist
-        if (botIsInServer) {
+        if (botIsInServer && userId) {
           guildsWithBot.push(g);
+
+          const role: RoleType = g.owner ? 'OWNER' : 'PARTNER';
 
           await prisma.serverUser.upsert({
             where: { serverId_userId: { serverId: g.id, userId } },
-            update: { role: g.owner ? 'OWNER' : 'PARTNER' }, // Prisma Enum Role
-            create: {
-              serverId: g.id,
-              userId: userId!, // non-null assertion
-              role: g.owner ? 'OWNER' : 'PARTNER', // nur OWNER, CO_OWNER, PARTNER
-              categories: [],
-            },
+            update: { role },
+            create: { serverId: g.id, userId, role, categories: [] },
           });
         }
-      } catch {
-        // Fehler ignorieren, Server ggf. nicht erreichbar
+      } catch (err) {
+        console.error('Fehler beim Upsert für Server', g.id, err);
       }
     }
 
@@ -146,7 +152,7 @@ export async function GET() {
 
     return NextResponse.json({ guilds: filteredGuilds });
   } catch (err: any) {
-    console.error(err);
+    console.error('Server Route Fehler:', err);
     return NextResponse.json({ error: err.message || 'Serverfehler' }, { status: 500 });
   }
 }
