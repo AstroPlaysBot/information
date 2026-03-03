@@ -95,8 +95,8 @@ export async function GET() {
         // Server upsert
         await prisma.server.upsert({
           where: { id: g.id },
-          update: { name: g.name, icon: g.icon, botJoined: botIsInServer, ownerId: g.owner ? userId : undefined },
-          create: { id: g.id, name: g.name, icon: g.icon, botJoined: botIsInServer, ownerId: g.owner ? userId : undefined },
+          update: { name: g.name, icon: g.icon, botJoined: botIsInServer },
+          create: { id: g.id, name: g.name, icon: g.icon, botJoined: botIsInServer },
         });
 
         // Nur ServerUser upsert, wenn Bot auf dem Server ist
