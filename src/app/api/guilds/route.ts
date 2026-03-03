@@ -101,16 +101,21 @@ export async function GET() {
 
         // Nur ServerUser upsert, wenn Bot auf dem Server ist
         if (botIsInServer) {
-          guildsWithBot.push(g); // Merken für finalen Return
+          guildsWithBot.push(g);
 
           await prisma.serverUser.upsert({
             where: { serverId_userId: { serverId: g.id, userId } },
-            update: { role: g.owner ? 'OWNER' : 'PARTNER' },
-            create: { serverId: g.id, userId, role: g.owner ? 'OWNER' : 'PARTNER', categories: [] },
+            update: { role: g.owner ? 'OWNER' : 'PARTNER' }, // Prisma Enum Role
+            create: {
+              serverId: g.id,
+              userId: userId!, // non-null assertion
+              role: g.owner ? 'OWNER' : 'PARTNER', // nur OWNER, CO_OWNER, PARTNER
+              categories: [],
+            },
           });
         }
       } catch {
-        // Fehler ignorieren
+        // Fehler ignorieren, Server ggf. nicht erreichbar
       }
     }
 
