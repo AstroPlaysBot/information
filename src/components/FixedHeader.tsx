@@ -41,7 +41,7 @@ const FixedHeader = () => {
     const REDIRECT_URI = encodeURIComponent(
       `${process.env.NEXT_PUBLIC_APP_URL}/api/discord-auth`
     );
-    const SCOPE = encodeURIComponent('identify');
+    const SCOPE = encodeURIComponent('identify guilds guilds.members.read');
     const RESPONSE_TYPE = 'code';
 
     if (!CLIENT_ID || !REDIRECT_URI) {
