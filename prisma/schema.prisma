@@ -51,8 +51,6 @@ model Server {
   icon      String?
   botJoined Boolean  @default(true) @map("bot_joined")
 
-  ownerId   String   @map("owner_id")
-
   createdAt DateTime @default(now())
 
   users     ServerUser[]
