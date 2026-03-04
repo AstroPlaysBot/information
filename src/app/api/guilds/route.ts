@@ -37,9 +37,7 @@ export async function GET() {
     const userToken = cookieStore.get('user_token')?.value;
     const accessToken = adminToken || userToken;
 
-    if (!accessToken) {
-      return NextResponse.json({ error: 'Nicht eingeloggt' }, { status: 401 });
-    }
+    if (!accessToken) return NextResponse.json({ error: 'Nicht eingeloggt' }, { status: 401 });
 
     // ======================
     // Discord User laden
@@ -47,22 +45,17 @@ export async function GET() {
     const userRes = await fetch('https://discord.com/api/users/@me', {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!userRes.ok) {
-      const text = await userRes.text();
-      console.error('Discord User API Fehler:', userRes.status, text);
-      return NextResponse.json({ error: `Discord User API Fehler: ${userRes.status}` }, { status: 500 });
-    }
+    if (!userRes.ok) throw new Error('Discord User API Fehler');
 
     const userRaw = await userRes.json();
     if (!isDiscordUser(userRaw)) throw new Error('Discord User konnte nicht geladen werden');
-    const user = userRaw;
-    const userId = user.id;
+    const userId = userRaw.id;
 
     // DashboardUser upsert
     await prisma.dashboardUser.upsert({
       where: { discordId: userId },
-      update: { username: user.username, avatar: user.avatar ?? null },
-      create: { discordId: userId, username: user.username, avatar: user.avatar ?? null },
+      update: { username: userRaw.username, avatar: userRaw.avatar ?? null },
+      create: { discordId: userId, username: userRaw.username, avatar: userRaw.avatar ?? null },
     });
 
     // ======================
@@ -71,86 +64,70 @@ export async function GET() {
     const guildsRes = await fetch('https://discord.com/api/users/@me/guilds', {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!guildsRes.ok) {
-      const text = await guildsRes.text();
-      console.error('Discord Guilds API Fehler:', guildsRes.status, text);
-      return NextResponse.json({ error: `Discord Guilds API Fehler: ${guildsRes.status}` }, { status: 500 });
-    }
+    if (!guildsRes.ok) throw new Error('Discord Guilds API Fehler');
 
     const discordGuildsRaw: unknown = await guildsRes.json();
     if (!Array.isArray(discordGuildsRaw)) throw new Error('Discord API liefert kein Array');
     const discordGuilds: DiscordGuild[] = discordGuildsRaw.filter(isDiscordGuild);
 
-    const BOT_ID = process.env.BOT_ID;
-    const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
-    if (!BOT_ID) throw new Error('BOT_ID fehlt in .env');
-    if (!BOT_TOKEN) throw new Error('DISCORD_BOT_TOKEN fehlt in .env');
-
-    const guildsWithBot: DiscordGuild[] = [];
+    const BOT_ID = process.env.BOT_ID!;
+    const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN!;
+    if (!BOT_ID || !BOT_TOKEN) throw new Error('BOT_ID oder DISCORD_BOT_TOKEN fehlt');
 
     // ======================
-    // Bot-Prüfung & Server upsert
+    // Server upsert + BotCheck
     // ======================
     for (const g of discordGuilds) {
       try {
-        if (!g.id) continue;
-
         const res = await fetch(`https://discord.com/api/guilds/${g.id}/members/${BOT_ID}`, {
           headers: { Authorization: `Bot ${BOT_TOKEN}` },
         });
+        const botJoined = res.ok;
 
-        const botIsInServer = res.ok;
-
-        // Server upsert
         await prisma.server.upsert({
           where: { id: g.id },
-          update: { name: g.name, icon: g.icon, botJoined: botIsInServer },
-          create: { id: g.id, name: g.name, icon: g.icon, botJoined: botIsInServer },
+          update: { name: g.name, icon: g.icon, botJoined },
+          create: { id: g.id, name: g.name, icon: g.icon, botJoined },
         });
-
-        // Nur ServerUser upsert, wenn Bot auf dem Server ist
-        if (botIsInServer && userId) {
-          guildsWithBot.push(g);
-
-          const role: RoleType = g.owner ? 'OWNER' : 'PARTNER';
-
-          await prisma.serverUser.upsert({
-            where: { serverId_userId: { serverId: g.id, userId } },
-            update: { role },
-            create: { serverId: g.id, userId, role, categories: [] },
-          });
-        }
       } catch (err) {
         console.error('Fehler beim Upsert für Server', g.id, err);
       }
     }
 
     // ======================
-    // Server abrufen: nur Bot + gültige Rolle
+    // Alle relevanten Server abrufen
     // ======================
-    const activeServerUsers = await prisma.serverUser.findMany({
-      where: {
-        userId,
-        role: { in: ['OWNER', 'CO_OWNER', 'PARTNER'] },
-        server: { botJoined: true },
-      },
+    // 1️⃣ OWNER-Server aus Discord
+    const ownerServers = discordGuilds
+      .filter(g => g.owner)
+      .map(g => ({ id: g.id, name: g.name, icon: g.icon, role: 'OWNER' as RoleType }));
+
+    // 2️⃣ CO_OWNER / PARTNER aus DB, nur wenn BotJoined
+    const dbRoles = await prisma.serverUser.findMany({
+      where: { userId, role: { in: ['CO_OWNER', 'PARTNER'] }, server: { botJoined: true } },
       include: { server: true },
     });
 
-    // ======================
-    // Sortieren (Owner zuerst)
-    // ======================
-    const rolePriority = { OWNER: 0, CO_OWNER: 1, PARTNER: 2 };
-    const filteredGuilds = activeServerUsers
-      .map(su => ({
-        id: su.server.id,
-        name: su.server.name,
-        icon: su.server.icon,
-        role: su.role as RoleType,
-      }))
-      .sort((a, b) => rolePriority[a.role] - rolePriority[b.role]);
+    const roleServers = dbRoles.map(r => ({
+      id: r.server.id,
+      name: r.server.name,
+      icon: r.server.icon,
+      role: r.role as RoleType,
+    }));
 
-    return NextResponse.json({ guilds: filteredGuilds });
+    // 3️⃣ Nur Server anzeigen, bei denen Bot auf dem Server ist
+    const botServers = await prisma.server.findMany({ where: { botJoined: true } });
+    const botServerIds = botServers.map(s => s.id);
+
+    const combinedGuilds = [...ownerServers, ...roleServers]
+      .filter(g => botServerIds.includes(g.id))
+      // 4️⃣ Sortieren nach Rolle: OWNER > CO_OWNER > PARTNER
+      .sort((a, b) => {
+        const priority = { OWNER: 0, CO_OWNER: 1, PARTNER: 2 };
+        return priority[a.role] - priority[b.role];
+      });
+
+    return NextResponse.json({ guilds: combinedGuilds });
   } catch (err: any) {
     console.error('Server Route Fehler:', err);
     return NextResponse.json({ error: err.message || 'Serverfehler' }, { status: 500 });
