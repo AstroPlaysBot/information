@@ -25,7 +25,7 @@ export async function GET(req: Request) {
     // 3️⃣ Owner-Server aus DB (über Server.owner_id optional)
     //    Wenn du Owner dynamisch aus Discord holen willst, einfach Owner-Check ergänzen
     const ownerServers = await prisma.server.findMany({
-      where: { owner_id: discordId, botJoined: true },
+      where: { ownerid: discordId, botJoined: true },
     });
 
     // 4️⃣ Kombinieren und Rolle setzen
