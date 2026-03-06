@@ -65,7 +65,7 @@ export async function GET() {
       let role: RoleType | null = null;
 
       // OWNER prüfen
-      if (g.owner) {
+      if (g.owner || g.owner_id === userId) {
         role = 'OWNER';
 
         await prisma.serverUser.upsert({
