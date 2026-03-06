@@ -50,13 +50,33 @@ export async function GET() {
 
       let role: RoleType | null = null;
 
-      // OWNER live prüfen
-      if (g.owner) role = 'OWNER';
-      else {
+      // OWNER prüfen
+      if (g.owner) {
+        role = 'OWNER';
+
+        await prisma.serverUser.upsert({
+          where: {
+            serverId_userId: {
+              serverId: g.id,
+              userId: userId
+            }
+          },
+          update: {
+            role: 'OWNER'
+          },
+          create: {
+            serverId: g.id,
+            userId: userId,
+            role: 'OWNER'
+          }
+        });
+
+      } else {
         // CO_OWNER / PARTNER aus Prisma
         const dbRole = await prisma.serverUser.findUnique({
           where: { serverId_userId: { serverId: g.id, userId } },
         });
+
         if (dbRole && ['CO_OWNER', 'PARTNER'].includes(dbRole.role)) {
           role = dbRole.role as RoleType;
         }
