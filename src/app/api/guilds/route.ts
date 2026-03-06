@@ -21,7 +21,7 @@ export async function GET() {
     const userRaw = await userRes.json();
     const userId = userRaw.id;
 
-    // DashboardUser upsert (optional)
+    // DashboardUser upsert
     await prisma.dashboardUser.upsert({
       where: { discordId: userId },
       update: { username: userRaw.username, avatar: userRaw.avatar ?? null },
@@ -48,26 +48,29 @@ export async function GET() {
       });
       if (!botRes.ok) continue; // Bot ist nicht auf diesem Server
 
-      // 🔹 Server in DB speichern
+      // 🔹 Server in DB speichern inkl. ownerId
       await prisma.server.upsert({
         where: { id: g.id },
         update: {
           name: g.name,
-          icon: g.icon ?? null
+          icon: g.icon ?? null,
+          ownerId: userId // <-- Owner speichern
         },
         create: {
           id: g.id,
           name: g.name,
-          icon: g.icon ?? null
+          icon: g.icon ?? null,
+          ownerId: userId
         }
       });
-      
+
       let role: RoleType | null = null;
 
       // OWNER prüfen
       if (g.owner || g.owner_id === userId) {
         role = 'OWNER';
 
+        // 🔹 In ServerUser eintragen
         await prisma.serverUser.upsert({
           where: {
             serverId_userId: {
