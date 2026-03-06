@@ -48,6 +48,20 @@ export async function GET() {
       });
       if (!botRes.ok) continue; // Bot ist nicht auf diesem Server
 
+      // 🔹 Server in DB speichern
+      await prisma.server.upsert({
+        where: { id: g.id },
+        update: {
+          name: g.name,
+          icon: g.icon ?? null
+        },
+        create: {
+          id: g.id,
+          name: g.name,
+          icon: g.icon ?? null
+        }
+      });
+      
       let role: RoleType | null = null;
 
       // OWNER prüfen
