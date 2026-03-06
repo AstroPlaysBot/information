@@ -35,7 +35,7 @@ export async function GET() {
     if (!guildsRes.ok) throw new Error('Discord Guilds API Fehler');
     const userGuilds = await guildsRes.json();
 
-    const DISCORD_BOT_TOKEN = process.env.BOT_TOKEN;
+    const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
     if (!BOT_TOKEN) throw new Error('BOT_TOKEN fehlt');
 
     const result: { id: string; name: string; icon?: string; role: RoleType }[] = [];
