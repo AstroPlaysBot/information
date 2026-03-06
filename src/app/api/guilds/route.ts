@@ -8,21 +8,33 @@ export type RoleType = "OWNER" | "CO_OWNER" | "PARTNER";
 
 export async function GET() {
   try {
-
     const cookieStore = cookies();
+
     const token =
       cookieStore.get("admin_token")?.value ||
       cookieStore.get("user_token")?.value;
 
-    if (!token)
-      return NextResponse.json({ error: "Nicht eingeloggt" }, { status: 401 });
+    if (!token) {
+      return NextResponse.json(
+        { error: "Nicht eingeloggt" },
+        { status: 401 }
+      );
+    }
 
-    // USER
+    // USER INFO
     const userRes = await fetch("https://discord.com/api/users/@me", {
       headers: { Authorization: `Bearer ${token}` },
     });
 
     const user = await userRes.json();
+
+    if (!user?.id) {
+      return NextResponse.json(
+        { error: "Discord User Fehler" },
+        { status: 500 }
+      );
+    }
+
     const userId = user.id;
 
     await prisma.dashboardUser.upsert({
@@ -39,26 +51,40 @@ export async function GET() {
     });
 
     // USER GUILDS
-    const guildRes = await fetch("https://discord.com/api/users/@me/guilds", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const guildRes = await fetch(
+      "https://discord.com/api/users/@me/guilds",
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
 
     const userGuilds = await guildRes.json();
 
+    if (!Array.isArray(userGuilds)) {
+      return NextResponse.json({ guilds: [] });
+    }
+
     // BOT GUILDS
-    const botRes = await fetch("https://discord.com/api/users/@me/guilds", {
-      headers: {
-        Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}`,
-      },
-    });
+    const botRes = await fetch(
+      "https://discord.com/api/users/@me/guilds",
+      {
+        headers: {
+          Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}`,
+        },
+      }
+    );
 
     const botGuilds = await botRes.json();
-    const botGuildIds = new Set(botGuilds.map((g: any) => g.id));
+
+    const botGuildIds = new Set(
+      Array.isArray(botGuilds)
+        ? botGuilds.map((g: any) => g.id)
+        : []
+    );
 
     const result: any[] = [];
 
     for (const g of userGuilds) {
-
       // Bot muss im Server sein
       if (!botGuildIds.has(g.id)) continue;
 
@@ -97,9 +123,7 @@ export async function GET() {
             role: "OWNER",
           },
         });
-
       } else {
-
         const dbRole = await prisma.serverUser.findUnique({
           where: {
             serverId_userId: {
@@ -110,7 +134,6 @@ export async function GET() {
         });
 
         if (dbRole) role = dbRole.role as RoleType;
-
       }
 
       if (role) {
@@ -121,7 +144,6 @@ export async function GET() {
           role,
         });
       }
-
     }
 
     const priority: Record<RoleType, number> = {
@@ -133,15 +155,12 @@ export async function GET() {
     result.sort((a, b) => priority[a.role] - priority[b.role]);
 
     return NextResponse.json({ guilds: result });
-
   } catch (err) {
-
     console.error(err);
 
     return NextResponse.json(
       { error: "Serverfehler" },
       { status: 500 }
     );
-
   }
 }
