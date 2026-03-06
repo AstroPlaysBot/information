@@ -1,4 +1,3 @@
-// src/app/dashboard/DashboardClient.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -28,8 +27,13 @@ export default function DashboardClient() {
       setError(null);
       try {
         const res = await fetch('/api/guilds');
-        if (!res.ok) throw new Error('Fehler beim Laden der Server');
         const data = await res.json();
+
+        if (!res.ok) {
+          // ⚠️ Hier wird jetzt der echte Fehlertext angezeigt
+          throw new Error(data.error || 'Fehler beim Laden der Server');
+        }
+
         setGuilds(data.guilds || []);
       } catch (err: any) {
         console.error(err);
