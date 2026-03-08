@@ -1,81 +1,62 @@
 // src/app/AGB/texts.ts
 export const agb = {
-  de: `
-# Allgemeine Geschäftsbedingungen (AGB) – AstroPlaysBot
+de: `
 
-**1. Geltungsbereich**  
-Diese AGB gelten für alle Nutzer des Discord-Bots "AstroPlaysBot". Durch die Nutzung akzeptierst du diese Bedingungen.
+<h2>1. Geltungsbereich</h2>
+<p>
+Diese Nutzungsbedingungen gelten für alle Personen, die den Discord-Bot
+<strong>AstroPlaysBot</strong> verwenden. Durch die Nutzung des Bots
+erklären Sie sich mit diesen Bedingungen einverstanden.
+</p>
 
-**2. Funktionen & Nutzung**  
-AstroPlaysBot ist ein All-In-One Bot für Moderation, Gaming und Community-Management.  
-Die Nutzung ist ausschließlich für legale Zwecke erlaubt. Verboten sind insbesondere:
-- Illegale Inhalte, Urheberrechtsverletzungen
-- Spam, Werbung ohne Zustimmung
-- Rassismus, Diskriminierung, Hassrede
+<h2>2. Funktionen und Nutzung</h2>
+<p>
+AstroPlaysBot ist ein Multifunktions-Bot für Moderation,
+Community-Management und verschiedene Zusatzfunktionen.
+</p>
 
-**3. Daten & Drittanbieter**  
-AstroPlaysBot speichert und verarbeitet notwendige Daten für die Funktionalität (z. B. User-IDs, Rollen, Serverstatistiken).  
-Daten können über Drittanbieter verarbeitet werden, z. B.:
-- Vercel (Website Hosting)
-- Neon (Datenbank)
-- Hetzner (Bot Hosting)
-- GitHub (Quellcode)
+<ul>
+<li>Die Nutzung ist ausschließlich für rechtmäßige Zwecke erlaubt.</li>
+<li>Missbrauch, Spam oder automatisierte Angriffe sind untersagt.</li>
+<li>Diskriminierende oder illegale Inhalte sind nicht erlaubt.</li>
+</ul>
 
-**4. Haftung & Gewährleistung**  
-Der Bot wird ohne Gewähr bereitgestellt.  
-Der Betreiber übernimmt keine Haftung für:
-- Schäden oder Verluste durch Nutzung
-- Fehlerhafte Funktion einzelner Module
-- Ausfallzeiten oder Offline-Zeiten
+<h2>3. Verarbeitung von Daten</h2>
+<p>
+Zur technischen Bereitstellung können bestimmte Daten verarbeitet werden,
+darunter Discord-IDs, Serverinformationen oder Bot-Interaktionen.
+</p>
 
-**5. Änderungen & Zugriff**  
-Der Betreiber kann:
-- Den Bot oder einzelne Module pausieren, ändern oder entfernen
-- Den Zugriff einzelner Nutzer entziehen
-- Diese AGB jederzeit ändern
+<p>Diese Daten können über folgende Dienste verarbeitet werden:</p>
 
-**6. Kontakt**  
-Bei Fragen oder Problemen:
-- Discord: 3cvhBBm87G
-- Email: astroplays.help@gmail.com
-`,
-  en: `
-# Terms of Service (ToS) – AstroPlaysBot
+<ul>
+<li>Vercel – Hosting der Website</li>
+<li>Neon – Datenbank</li>
+<li>Hetzner – Serverhosting</li>
+<li>GitHub – Quellcodeverwaltung</li>
+</ul>
 
-**1. Scope**  
-These Terms of Service apply to all users of the "AstroPlaysBot" Discord bot. By using the bot, you accept these terms.
+<h2>4. Haftung</h2>
+<p>
+Der Bot wird ohne Gewähr bereitgestellt. Es besteht kein Anspruch auf
+dauerhafte Verfügbarkeit oder fehlerfreie Funktion.
+</p>
 
-**2. Features & Usage**  
-AstroPlaysBot is an all-in-one bot for moderation, gaming, and community management.  
-Usage is permitted for legal purposes only. Prohibited actions include:
-- Illegal content, copyright infringement
-- Spam, unsolicited advertising
-- Racism, discrimination, hate speech
+<h2>5. Änderungen</h2>
+<p>
+Der Betreiber kann Funktionen, Zugriff oder diese Bedingungen jederzeit
+ändern oder aktualisieren.
+</p>
 
-**3. Data & Third Parties**  
-AstroPlaysBot collects and processes necessary data for functionality (e.g., user IDs, roles, server statistics).  
-Data may be processed via third-party services, e.g.:
-- Vercel (Website Hosting)
-- Neon (Database)
-- Hetzner (Bot Hosting)
-- GitHub (Source Code)
+<h2>6. Kontakt</h2>
+<p>
+Bei Fragen oder Problemen erreichen Sie uns unter:
+</p>
 
-**4. Liability & Warranty**  
-The bot is provided without warranty.  
-The operator is not liable for:
-- Damage or loss caused by use
-- Malfunction of individual modules
-- Downtime or offline periods
+<ul>
+<li>Discord: 3cvhBBm87G</li>
+<li>Email: astroplays.help@gmail.com</li>
+</ul>
 
-**5. Changes & Access**  
-The operator may:
-- Pause, change, or remove the bot or individual modules
-- Revoke access for individual users
-- Change these Terms at any time
-
-**6. Contact**  
-For questions or issues:
-- Discord: 3cvhBBm87G
-- Email: astroplays.help@gmail.com
-`,
+`
 };
