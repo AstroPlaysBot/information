@@ -21,29 +21,10 @@ interface DiscordUser {
 }
 
 const applications: ApplicationType[] = [
-  {
-    id: 'betatester',
-    title: 'Beta Tester',
-    description: 'Erhalte Premium kostenlos und teste Module vor Release.',
-    perks: ['Frühzugriff auf neue Features', 'Premium kostenlos', 'Mitgestaltung von Features'],
-  },
-  {
-    id: 'moderator',
-    title: 'Moderator',
-    description: 'Moderation im Discord, z.B. Tickets bearbeiten.',
-  },
-  {
-    id: 'frontend-developer',
-    title: 'Frontend Developer',
-    description: 'Hilf beim Erstellen von Benutzeroberflächen für Dashboards & Webseiten.',
-    perks: ['React/Next.js Projekte', 'Design Integration', 'UI/UX Umsetzung'],
-  },
-  {
-    id: 'backend-developer',
-    title: 'Backend Developer',
-    description: 'Entwickle Serverlogik, APIs und Bot-Funktionen.',
-    perks: ['Discord Bot APIs', 'Datenbankanbindung', 'Backend-Optimierung'],
-  },
+  { id: 'betatester', title: 'Beta Tester', description: 'Erhalte Premium kostenlos und teste Module vor Release.', perks: ['Frühzugriff auf neue Features', 'Premium kostenlos', 'Mitgestaltung von Features'] },
+  { id: 'moderator', title: 'Moderator', description: 'Moderation im Discord, z.B. Tickets bearbeiten.' },
+  { id: 'frontend-developer', title: 'Frontend Developer', description: 'Hilf beim Erstellen von Benutzeroberflächen für Dashboards & Webseiten.', perks: ['React/Next.js Projekte', 'Design Integration', 'UI/UX Umsetzung'] },
+  { id: 'backend-developer', title: 'Backend Developer', description: 'Entwickle Serverlogik, APIs und Bot-Funktionen.', perks: ['Discord Bot APIs', 'Datenbankanbindung', 'Backend-Optimierung'] },
 ];
 
 export default function ApplyPage() {
@@ -51,17 +32,13 @@ export default function ApplyPage() {
   const [discordUser, setDiscordUser] = useState<DiscordUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // 🔹 Discord-User über Cookie laden
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const res = await fetch('/api/me', {
-          credentials: 'include',
-        });
-
+        const res = await fetch('/api/me', { credentials: 'include' });
         if (!res.ok) {
-          // nicht eingeloggt → Discord OAuth
-          window.location.href = '/api/discord-auth?state=/apply';
+          // 🔹 Nicht eingeloggt → Discord-Apply OAuth
+          window.location.href = '/api/discord-auth-apply?state=/apply';
           return;
         }
 
@@ -73,7 +50,6 @@ export default function ApplyPage() {
         setLoading(false);
       }
     };
-
     loadUser();
   }, []);
 
@@ -91,26 +67,16 @@ export default function ApplyPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-950 text-white px-6 py-16">
-
-      {/* 🔹 Discord Profil */}
       {discordUser && (
         <div className="flex items-center gap-4 mb-8">
           <img
             className="w-12 h-12 rounded-full"
-            src={
-              discordUser.avatar
-                ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`
-                : '/default-avatar.png'
-            }
+            src={discordUser.avatar ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png` : '/default-avatar.png'}
             alt="Avatar"
           />
           <div>
-            <p className="font-bold">
-              {discordUser.username}#{discordUser.discriminator}
-            </p>
-            <p className="text-gray-400 text-sm">
-              Account erstellt: {new Date(discordUser.created_at).toLocaleDateString()}
-            </p>
+            <p className="font-bold">{discordUser.username}#{discordUser.discriminator}</p>
+            <p className="text-gray-400 text-sm">Account erstellt: {new Date(discordUser.created_at).toLocaleDateString()}</p>
           </div>
         </div>
       )}
@@ -123,10 +89,7 @@ export default function ApplyPage() {
         className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto"
         initial="hidden"
         animate="visible"
-        variants={{
-          hidden: {},
-          visible: { transition: { staggerChildren: 0.15 } },
-        }}
+        variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.15 } } }}
       >
         {applications.map((app) => (
           <motion.div
@@ -140,16 +103,12 @@ export default function ApplyPage() {
             <div>
               <h2 className="text-2xl font-bold mb-3">{app.title}</h2>
               <p className="text-gray-300 mb-4">{app.description}</p>
-
               {app.perks && (
                 <ul className="list-disc list-inside text-gray-400 mb-6">
-                  {app.perks.map((perk, i) => (
-                    <li key={i}>{perk}</li>
-                  ))}
+                  {app.perks.map((perk, i) => (<li key={i}>{perk}</li>))}
                 </ul>
               )}
             </div>
-
             <button
               onClick={() => handleApply(app.id)}
               className="mt-4 py-3 px-6 rounded-xl bg-purple-600 hover:bg-pink-600 text-white font-semibold shadow-lg transition-all"
@@ -161,13 +120,8 @@ export default function ApplyPage() {
       </motion.div>
 
       <style jsx>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 1s ease forwards;
-        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .animate-fadeIn { animation: fadeIn 1s ease forwards; }
       `}</style>
     </div>
   );
