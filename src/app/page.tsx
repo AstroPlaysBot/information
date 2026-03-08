@@ -146,11 +146,11 @@ export default function HomePage() {
         </p>
 
         <a
-          href="/apply"
+          href="/api/discord-auth-apply?state=/apply"
           className="inline-flex items-center justify-center
-                     rounded-xl bg-indigo-600 hover:bg-indigo-500
-                     transition text-white font-semibold
-                     px-10 py-4 text-lg shadow-xl hover:shadow-2xl"
+                    rounded-xl bg-indigo-600 hover:bg-indigo-500
+                    transition text-white font-semibold
+                    px-10 py-4 text-lg shadow-xl hover:shadow-2xl"
         >
           Jetzt bewerben →
         </a>
