@@ -1,4 +1,8 @@
 // src/app/Impressum/page.tsx
+'use client';
+import React from 'react';
+import LegalLayout from '../(legal)/layout';
+
 export default function Impressum() {
   return (
     <div className="max-w-3xl mx-auto text-gray-200 space-y-8">
