@@ -1,17 +1,24 @@
 // src/app/AGB/page.tsx
-'use client';
-import React, { useState } from 'react';
-import Layout from './layout';
-import { agb } from './texts';
+import { agb } from "./texts";
 
 export default function AGBPage() {
-  const [language, setLanguage] = useState<'de' | 'en'>('de');
-
   return (
-    <Layout>
-      <div className="prose prose-invert max-w-3xl">
-        <div dangerouslySetInnerHTML={{ __html: agb[language].replace(/\n/g, '<br/>') }} />
-      </div>
-    </Layout>
+    <article className="space-y-6">
+
+      <h1 className="text-3xl font-bold text-white">
+        Allgemeine Geschäftsbedingungen
+      </h1>
+
+      <p className="text-gray-400">
+        Diese Bedingungen regeln die Nutzung des Discord-Bots
+        <strong className="text-white"> AstroPlaysBot</strong>.
+      </p>
+
+      <div
+        className="space-y-6 leading-relaxed text-gray-300"
+        dangerouslySetInnerHTML={{ __html: agb.de }}
+      />
+
+    </article>
   );
 }
