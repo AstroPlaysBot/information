@@ -47,7 +47,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
                 href="https://discord.com/users/3cvhBBm87G"
                 className="text-purple-400 hover:underline"
               >
-                3cvhBBm87G
+                Beitreten
               </a>
             </p>
             <p>
