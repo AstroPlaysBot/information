@@ -1,17 +1,44 @@
 // src/app/Impressum/page.tsx
-'use client';
-import React, { useState } from 'react';
-import Layout from './layout';
-import { impressum } from './texts';
-
-export default function ImpressumPage() {
-  const [language, setLanguage] = useState<'de' | 'en'>('de');
-
+export default function Impressum() {
   return (
-    <Layout>
-      <div className="prose prose-invert max-w-3xl">
-        <div dangerouslySetInnerHTML={{ __html: impressum[language].replace(/\n/g, '<br/>') }} />
-      </div>
-    </Layout>
+    <div className="max-w-3xl mx-auto text-gray-200 space-y-8">
+      <h1 className="text-4xl font-bold text-white">Impressum</h1>
+
+      <section className="space-y-3">
+        <h2 className="text-2xl font-semibold text-white">Angaben gemäß § 5 TMG</h2>
+
+        <p>
+          <strong>Projekt:</strong><br />
+          AstroPlays Discord Bot
+        </p>
+
+        <p>
+          <strong>Betreiber:</strong><br />
+          [Dein Name]
+        </p>
+
+        <p>
+          <strong>Kontakt:</strong><br />
+          E-Mail: astroplays.help@gmail.com
+        </p>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-2xl font-semibold text-white">Haftung für Inhalte</h2>
+        <p>
+          Die Inhalte unserer Seiten wurden mit größter Sorgfalt erstellt. Für die
+          Richtigkeit, Vollständigkeit und Aktualität der Inhalte können wir jedoch
+          keine Gewähr übernehmen.
+        </p>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-2xl font-semibold text-white">Haftung für Links</h2>
+        <p>
+          Unsere Website enthält Links zu externen Websites Dritter, auf deren
+          Inhalte wir keinen Einfluss haben.
+        </p>
+      </section>
+    </div>
   );
 }
