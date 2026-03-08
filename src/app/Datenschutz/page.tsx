@@ -1,4 +1,8 @@
 // src/app/Datenschutz/page.tsx
+'use client';
+import React from 'react';
+import LegalLayout from '../(legal)/layout';
+
 export default function Datenschutz() {
   return (
     <div className="max-w-4xl mx-auto text-gray-200 space-y-8">
