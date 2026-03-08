@@ -12,7 +12,8 @@ export const metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="de">
-      <body className="relative flex flex-col text-white">
+      <body className="relative flex flex-col min-h-screen text-white">
+
         {/* 🌌 GLOBALER CSS-HINTERGRUND */}
         <div className="bg-space pointer-events-none" />
 
@@ -25,6 +26,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <div className="relative z-10">
           <FixedFooter />
         </div>
+
       </body>
     </html>
   );
