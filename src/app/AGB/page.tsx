@@ -1,6 +1,7 @@
 // src/app/AGB/page.tsx
 'use client';
 import React from 'react';
+import LegalLayout from '../(legal)/layout';
 
 export default function AGBPage() {
   return (
