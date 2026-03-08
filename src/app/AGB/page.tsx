@@ -1,7 +1,6 @@
 // src/app/AGB/page.tsx
 'use client';
 import React from 'react';
-import { agb } from './texts';
 
 export default function AGBPage() {
   return (
