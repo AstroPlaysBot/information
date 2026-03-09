@@ -1,4 +1,3 @@
-// src/app/api/discord-auth-apply/route.ts
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -21,7 +20,7 @@ export async function GET(req: Request) {
     if (!code) {
       const discordLogin = `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(
         REDIRECT_URI
-      )}&scope=identify&state=${state}`;
+      )}&scope=identify&state=${encodeURIComponent(state)}`;
 
       return NextResponse.redirect(discordLogin);
     }
@@ -45,11 +44,11 @@ export async function GET(req: Request) {
       return NextResponse.redirect(`${APP_URL}${state}`);
     }
 
-    // 🔹 Cookie setzen oder überschreiben
+    // 🔹 Cookie setzen
     const response = NextResponse.redirect(`${APP_URL}${state}`);
     response.cookies.set('user_token', tokenData.access_token, {
       httpOnly: true,
-      maxAge: 60 * 60, // 1h
+      maxAge: 60 * 60,
       path: '/',
       sameSite: 'lax',
       secure: process.env.NODE_ENV === 'production',
