@@ -34,7 +34,6 @@ export default function ModeratorApplyPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!isFormValid || !user) {
       setShowToast({
         type: 'error',
@@ -95,16 +94,21 @@ export default function ModeratorApplyPage() {
     }
   };
 
-  // 🔹 Discord-User über neues Cookie-System laden
+  // 🔹 Discord-User über Cookie-System laden, Token-Fehler → /apply mit Toast
   useEffect(() => {
     async function loadUser() {
       try {
         const res = await fetch('/api/me', { credentials: 'include' });
         const urlParams = new URLSearchParams(window.location.search);
 
-        // ✅ Nur redirecten, wenn kein Cookie UND nicht gerade von OAuth zurück
+        // Nur redirect, wenn kein Cookie UND nicht gerade von OAuth zurückkommt
         if (!res.ok && !urlParams.get('code')) {
-          window.location.href = '/api/discord-auth-apply?state=/apply/moderator';
+          // Fehler-Toast setzen
+          sessionStorage.setItem(
+            'apply_error_toast',
+            JSON.stringify({ message: 'Discord-Login fehlgeschlagen. Bitte erneut versuchen.' })
+          );
+          router.replace('/apply');
           return;
         }
 
@@ -140,6 +144,7 @@ export default function ModeratorApplyPage() {
       )}
 
       <form onSubmit={handleSubmit} className="max-w-3xl mx-auto flex flex-col gap-6">
+        {/* Alle Inputs unverändert */}
         <input name="age" value={form.age} onChange={handleChange} placeholder="Alter" className="p-3 rounded-xl bg-gray-800 text-white"/>
         <input name="email" value={form.email} onChange={handleChange} placeholder="Email Adresse" className="p-3 rounded-xl bg-gray-800 text-white"/>
         <textarea name="discordExperience" value={form.discordExperience} onChange={handleChange} placeholder="Hast du Erfahrung mit Discord Moderation?" className="p-3 rounded-xl bg-gray-800 text-white"/>
