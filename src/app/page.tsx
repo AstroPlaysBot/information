@@ -146,7 +146,7 @@ export default function HomePage() {
         </p>
 
         <a
-          href={`https://discord.com/oauth2/authorize?client_id=${process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent('https://astroplaysbot.vercel.app/api/discord-auth-apply')}&scope=identify&state=/apply`}
+          href="/api/discord-auth-apply?state=/apply"
           className="inline-flex items-center justify-center
                      rounded-xl bg-indigo-600 hover:bg-indigo-500
                      transition text-white font-semibold
