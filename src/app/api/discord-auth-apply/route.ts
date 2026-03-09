@@ -1,3 +1,4 @@
+// src/app/api/discord-auth-apply/route.ts
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -14,10 +15,9 @@ export async function GET(req: Request) {
     const CLIENT_ID = process.env.DISCORD_CLIENT_ID!;
     const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET!;
     const APP_URL = process.env.NEXT_PUBLIC_APP_URL!;
-
     const REDIRECT_URI = `${APP_URL}/api/discord-auth-apply`;
 
-    // 🔹 Wenn noch kein Code → Discord Login starten
+    // 🔹 Kein Code → OAuth starten
     if (!code) {
       const discordLogin = `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(
         REDIRECT_URI
@@ -42,27 +42,17 @@ export async function GET(req: Request) {
     const tokenData = await tokenRes.json();
 
     if (!tokenData.access_token) {
-      return NextResponse.redirect(`${APP_URL}/`);
+      return NextResponse.redirect(`${APP_URL}${state}`);
     }
 
-    // 🔹 User holen
-    const userRes = await fetch(DISCORD_USER_URL, {
-      headers: { Authorization: `Bearer ${tokenData.access_token}` },
-    });
-
-    const user = await userRes.json();
-
-    if (!user?.id) {
-      return NextResponse.redirect(`${APP_URL}/`);
-    }
-
-    // 🔹 Cookie setzen
+    // 🔹 Cookie setzen oder überschreiben
     const response = NextResponse.redirect(`${APP_URL}${state}`);
-
     response.cookies.set('user_token', tokenData.access_token, {
       httpOnly: true,
-      maxAge: 60 * 30,
+      maxAge: 60 * 60, // 1h
       path: '/',
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
     });
 
     return response;
