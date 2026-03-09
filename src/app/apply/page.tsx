@@ -1,7 +1,6 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
 
 interface ApplicationType {
   id: string;
@@ -18,13 +17,6 @@ const applications: ApplicationType[] = [
 ];
 
 export default function ApplyPage() {
-  const router = useRouter();
-
-  const handleApply = (appId: string) => {
-    // Einfach weiterleiten auf die Detailseite
-    router.push(`/apply/${appId}`);
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-950 text-white px-6 py-16">
       <h1 className="text-5xl font-extrabold text-center mb-12 animate-fadeIn">
@@ -51,12 +43,12 @@ export default function ApplyPage() {
               <p className="text-gray-300 mb-4">{app.description}</p>
               {app.perks && (
                 <ul className="list-disc list-inside text-gray-400 mb-6">
-                  {app.perks.map((perk, i) => (<li key={i}>{perk}</li>))}
-                </ul>
+                  {app.perks.map((perk, i) => (<li key={i}>{perk}</li>))}</ul>
               )}
             </div>
+            {/* Hier kommt OAuth auf Klick */}
             <a
-              href="/api/discord-auth-apply?state=/apply"
+              href={`/api/discord-auth-apply?state=/apply/${app.id}`}
               className="mt-4 inline-block py-3 px-6 rounded-xl bg-purple-600 hover:bg-pink-600 text-white font-semibold shadow-lg transition-all text-center"
             >
               Bewerben
