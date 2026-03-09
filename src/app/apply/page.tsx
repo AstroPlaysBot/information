@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
 
 interface ApplicationType {
   id: string;
@@ -17,6 +18,20 @@ const applications: ApplicationType[] = [
 ];
 
 export default function ApplyPage() {
+  const [errorToast, setErrorToast] = useState<{ message: string } | null>(null);
+
+  useEffect(() => {
+    // Prüfen, ob ein Fehler von OAuth zurückkam
+    const toastStr = sessionStorage.getItem('apply_error_toast');
+    if (toastStr) {
+      const toast = JSON.parse(toastStr);
+      setErrorToast(toast);
+      sessionStorage.removeItem('apply_error_toast');
+
+      setTimeout(() => setErrorToast(null), 10000); // nach 10s ausblenden
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-950 text-white px-6 py-16">
       <h1 className="text-5xl font-extrabold text-center mb-12 animate-fadeIn">
@@ -43,10 +58,10 @@ export default function ApplyPage() {
               <p className="text-gray-300 mb-4">{app.description}</p>
               {app.perks && (
                 <ul className="list-disc list-inside text-gray-400 mb-6">
-                  {app.perks.map((perk, i) => (<li key={i}>{perk}</li>))}</ul>
+                  {app.perks.map((perk, i) => (<li key={i}>{perk}</li>))}
+                </ul>
               )}
             </div>
-            {/* Hier kommt OAuth auf Klick */}
             <a
               href={`/api/discord-auth-apply?state=/apply/${app.id}`}
               className="mt-4 inline-block py-3 px-6 rounded-xl bg-purple-600 hover:bg-pink-600 text-white font-semibold shadow-lg transition-all text-center"
@@ -56,6 +71,13 @@ export default function ApplyPage() {
           </motion.div>
         ))}
       </motion.div>
+
+      {errorToast && (
+        <div className="fixed bottom-6 right-6 px-4 py-2 rounded shadow-lg flex items-center gap-4 bg-red-600 text-white transition-opacity duration-500">
+          {errorToast.message}
+          <button className="font-bold" onClick={() => setErrorToast(null)}>×</button>
+        </div>
+      )}
 
       <style jsx>{`
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
