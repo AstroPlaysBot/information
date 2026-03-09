@@ -45,7 +45,6 @@ export default function ModeratorApplyPage() {
       return;
     }
 
-    // 🔹 Antworten erst hier unten vor dem Fetch
     const answers = {
       'Discord Erfahrung': form.discordExperience,
       'Ticket Erfahrung': form.ticketExperience,
@@ -100,18 +99,19 @@ export default function ModeratorApplyPage() {
   useEffect(() => {
     async function loadUser() {
       try {
-        const res = await fetch('/api/me', {
-          credentials: 'include',
-        });
+        const res = await fetch('/api/me', { credentials: 'include' });
+        const urlParams = new URLSearchParams(window.location.search);
 
-        if (!res.ok) {
-          // nicht eingeloggt → OAuth starten
-          window.location.href = '/api/discord-auth?state=/apply/moderator';
+        // ✅ Nur redirecten, wenn kein Cookie UND nicht gerade von OAuth zurück
+        if (!res.ok && !urlParams.get('code')) {
+          window.location.href = '/api/discord-auth-apply?state=/apply/moderator';
           return;
         }
 
-        const data = await res.json();
-        setUser(data.user);
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data.user);
+        }
       } catch (err) {
         console.error(err);
         setShowToast({ type: 'error', message: 'Discord-Daten konnten nicht geladen werden.' });
