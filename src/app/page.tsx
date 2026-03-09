@@ -146,7 +146,7 @@ export default function HomePage() {
         </p>
 
         <a
-          href="/api/discord-auth-apply?state=/apply"
+          href="/apply"
           className="inline-flex items-center justify-center
                      rounded-xl bg-indigo-600 hover:bg-indigo-500
                      transition text-white font-semibold
