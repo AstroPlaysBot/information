@@ -11,15 +11,22 @@ export async function GET(req: Request) {
     const code = url.searchParams.get('code');
     const state = url.searchParams.get('state') || '/apply';
 
-    if (!code) {
-      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}${state}`);
-    }
-
     const CLIENT_ID = process.env.DISCORD_CLIENT_ID!;
     const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET!;
-    const REDIRECT_URI = `${process.env.NEXT_PUBLIC_APP_URL}/api/discord-auth-apply`;
+    const APP_URL = process.env.NEXT_PUBLIC_APP_URL!;
 
-    // 1️⃣ Token holen
+    const REDIRECT_URI = `${APP_URL}/api/discord-auth-apply`;
+
+    // 🔹 Wenn noch kein Code → Discord Login starten
+    if (!code) {
+      const discordLogin = `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(
+        REDIRECT_URI
+      )}&scope=identify&state=${state}`;
+
+      return NextResponse.redirect(discordLogin);
+    }
+
+    // 🔹 Token holen
     const tokenRes = await fetch(DISCORD_TOKEN_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -33,22 +40,24 @@ export async function GET(req: Request) {
     });
 
     const tokenData = await tokenRes.json();
+
     if (!tokenData.access_token) {
-      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}${state}`);
+      return NextResponse.redirect(`${APP_URL}/`);
     }
 
-    // 2️⃣ User Infos holen
+    // 🔹 User holen
     const userRes = await fetch(DISCORD_USER_URL, {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
 
     const user = await userRes.json();
+
     if (!user?.id) {
-      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}${state}`);
+      return NextResponse.redirect(`${APP_URL}/`);
     }
 
-    // 3️⃣ Cookie setzen (immer user_token)
-    const response = NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}${state}`);
+    // 🔹 Cookie setzen
+    const response = NextResponse.redirect(`${APP_URL}${state}`);
 
     response.cookies.set('user_token', tokenData.access_token, {
       httpOnly: true,
@@ -59,6 +68,6 @@ export async function GET(req: Request) {
     return response;
   } catch (err) {
     console.error(err);
-    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/apply`);
+    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/`);
   }
 }
