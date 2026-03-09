@@ -1,23 +1,13 @@
-// src/app/apply/page.tsx
 'use client';
 
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
 
 interface ApplicationType {
   id: string;
   title: string;
   description: string;
   perks?: string[];
-}
-
-interface DiscordUser {
-  id: string;
-  username: string;
-  discriminator: string;
-  avatar: string | null;
-  created_at: string;
 }
 
 const applications: ApplicationType[] = [
@@ -29,58 +19,14 @@ const applications: ApplicationType[] = [
 
 export default function ApplyPage() {
   const router = useRouter();
-  const [discordUser, setDiscordUser] = useState<DiscordUser | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const res = await fetch('/api/me', { credentials: 'include' });
-        if (!res.ok) {
-          // 🔹 Nicht eingeloggt → Discord-Apply OAuth
-          window.location.href = '/api/discord-auth-apply?state=/apply';
-          return;
-        }
-
-        const data = await res.json();
-        setDiscordUser(data.user);
-      } catch (err) {
-        console.error('Failed to load user:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadUser();
-  }, []);
 
   const handleApply = (appId: string) => {
+    // Einfach weiterleiten auf die Detailseite
     router.push(`/apply/${appId}`);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-white">
-        Lädt...
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-950 text-white px-6 py-16">
-      {discordUser && (
-        <div className="flex items-center gap-4 mb-8">
-          <img
-            className="w-12 h-12 rounded-full"
-            src={discordUser.avatar ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png` : '/default-avatar.png'}
-            alt="Avatar"
-          />
-          <div>
-            <p className="font-bold">{discordUser.username}#{discordUser.discriminator}</p>
-            <p className="text-gray-400 text-sm">Account erstellt: {new Date(discordUser.created_at).toLocaleDateString()}</p>
-          </div>
-        </div>
-      )}
-
       <h1 className="text-5xl font-extrabold text-center mb-12 animate-fadeIn">
         Bewirb dich für eine Rolle
       </h1>
@@ -109,12 +55,12 @@ export default function ApplyPage() {
                 </ul>
               )}
             </div>
-            <button
-              onClick={() => handleApply(app.id)}
-              className="mt-4 py-3 px-6 rounded-xl bg-purple-600 hover:bg-pink-600 text-white font-semibold shadow-lg transition-all"
+            <a
+              href="/api/discord-auth-apply?state=/apply"
+              className="mt-4 inline-block py-3 px-6 rounded-xl bg-purple-600 hover:bg-pink-600 text-white font-semibold shadow-lg transition-all text-center"
             >
               Bewerben
-            </button>
+            </a>
           </motion.div>
         ))}
       </motion.div>
