@@ -53,10 +53,12 @@ export default function ApplyPage() {
   const [errorToast, setErrorToast] = useState<{ message: string } | null>(null);
 
   useEffect(() => {
+    // Toast nur anzeigen, wenn er von [role]/page gesetzt wurde
     const toast = sessionStorage.getItem('apply_error_toast');
     if (toast) {
       setErrorToast(JSON.parse(toast));
       sessionStorage.removeItem('apply_error_toast');
+
       const timer = setTimeout(() => setErrorToast(null), 10000);
       return () => clearTimeout(timer);
     }
@@ -105,7 +107,7 @@ export default function ApplyPage() {
         ))}
       </motion.div>
 
-      {/* Toast */}
+      {/* Toast nur, wenn gesetzt */}
       <AnimatePresence>
         {errorToast && (
           <motion.div
