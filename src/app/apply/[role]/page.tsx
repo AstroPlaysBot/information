@@ -79,39 +79,32 @@ export default function ApplyRole() {
     let didCancel = false;
 
     async function loadUser() {
-      // kurzes Delay, damit Token/Cookie erkannt wird
-      await new Promise(r => setTimeout(r, 100));
-
-      try {
-        const res = await fetch('/api/me', { credentials: 'include' });
-        if (!didCancel) {
-          if (res.ok) {
+      const retries = 6; // Anzahl Versuche
+      for (let i = 0; i < retries; i++) {
+        await new Promise(r => setTimeout(r, 200)); // 200ms pro Versuch
+        try {
+          const res = await fetch('/api/me', { credentials: 'include' });
+          if (!didCancel && res.ok) {
             const data = await res.json();
             setUser(data.user);
-          } else {
-            // Kein User → Toast + redirect
-            sessionStorage.setItem(
-              'apply_error_toast',
-              JSON.stringify({ message: 'Discord Login fehlgeschlagen' })
-            );
-            router.replace('/apply');
+            setLoading(false);
+            return; // Erfolg → sofort raus
           }
-        }
-      } catch {
-        if (!didCancel) {
-          sessionStorage.setItem(
-            'apply_error_toast',
-            JSON.stringify({ message: 'Discord Login fehlgeschlagen' })
-          );
-          router.replace('/apply');
-        }
-      } finally {
-        if (!didCancel) setLoading(false);
+        } catch {}
+      }
+
+      // Nach allen Versuchen → Toast + Redirect
+      if (!didCancel) {
+        sessionStorage.setItem(
+          'apply_error_toast',
+          JSON.stringify({ message: 'Discord Login fehlgeschlagen' })
+        );
+        router.replace('/apply');
+        setLoading(false);
       }
     }
 
     loadUser();
-
     return () => { didCancel = true; };
   }, [router]);
 
