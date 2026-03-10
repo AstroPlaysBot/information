@@ -34,6 +34,7 @@ export default function ModeratorApplyPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!isFormValid || !user) {
       setShowToast({
         type: 'error',
@@ -74,6 +75,7 @@ export default function ModeratorApplyPage() {
 
       if (data.success) {
         setShowToast({ type: 'success', message: 'Bewerbung gesendet!' });
+
         setForm({
           age: '',
           email: '',
@@ -84,6 +86,7 @@ export default function ModeratorApplyPage() {
           languages: '',
           phoneReachable: '',
         });
+
         setTimeout(() => router.push('/'), 500);
       } else {
         setShowToast({ type: 'error', message: 'Fehler beim Absenden: ' + data.error });
@@ -94,31 +97,37 @@ export default function ModeratorApplyPage() {
     }
   };
 
-  // 🔹 Discord-User über Cookie-System laden, Token-Fehler → /apply mit Toast
+  // 🔹 Discord User laden
   useEffect(() => {
     async function loadUser() {
       try {
         const res = await fetch('/api/me', { credentials: 'include' });
-        const urlParams = new URLSearchParams(window.location.search);
 
-        // Nur redirect, wenn kein Cookie UND nicht gerade von OAuth zurückkommt
-        if (!res.ok && !urlParams.get('code')) {
-          // Fehler-Toast setzen
+        if (!res.ok) {
           sessionStorage.setItem(
             'apply_error_toast',
-            JSON.stringify({ message: 'Discord-Login fehlgeschlagen. Bitte erneut versuchen.' })
+            JSON.stringify({
+              message: 'Discord-Login fehlgeschlagen. Bitte erneut versuchen.',
+            })
           );
+
           router.replace('/apply');
           return;
         }
 
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data.user);
-        }
+        const data = await res.json();
+        setUser(data.user);
       } catch (err) {
         console.error(err);
-        setShowToast({ type: 'error', message: 'Discord-Daten konnten nicht geladen werden.' });
+
+        sessionStorage.setItem(
+          'apply_error_toast',
+          JSON.stringify({
+            message: 'Discord-Login fehlgeschlagen. Bitte erneut versuchen.',
+          })
+        );
+
+        router.replace('/apply');
       }
     }
 
@@ -127,42 +136,126 @@ export default function ModeratorApplyPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-950 text-white px-6 py-16 relative">
-      <h1 className="text-4xl font-extrabold mb-10 text-center">Bewerbung: Moderator</h1>
+      <h1 className="text-4xl font-extrabold mb-10 text-center">
+        Bewerbung: Moderator
+      </h1>
 
       {user && (
         <div className="flex items-center gap-4 mb-8">
           <img
-            src={user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : '/default-avatar.png'}
+            src={
+              user.avatar
+                ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
+                : '/default-avatar.png'
+            }
             alt="Avatar"
             className="w-16 h-16 rounded-full"
           />
           <div>
-            <p className="font-bold text-xl">{user.username}#{user.discriminator}</p>
-            <p className="text-gray-400 text-sm">Account erstellt: {new Date(user.created_at).toLocaleDateString()}</p>
+            <p className="font-bold text-xl">
+              {user.username}#{user.discriminator}
+            </p>
+            <p className="text-gray-400 text-sm">
+              Account erstellt:{' '}
+              {new Date(user.created_at).toLocaleDateString()}
+            </p>
           </div>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="max-w-3xl mx-auto flex flex-col gap-6">
-        {/* Alle Inputs unverändert */}
-        <input name="age" value={form.age} onChange={handleChange} placeholder="Alter" className="p-3 rounded-xl bg-gray-800 text-white"/>
-        <input name="email" value={form.email} onChange={handleChange} placeholder="Email Adresse" className="p-3 rounded-xl bg-gray-800 text-white"/>
-        <textarea name="discordExperience" value={form.discordExperience} onChange={handleChange} placeholder="Hast du Erfahrung mit Discord Moderation?" className="p-3 rounded-xl bg-gray-800 text-white"/>
-        <textarea name="ticketExperience" value={form.ticketExperience} onChange={handleChange} placeholder="Hast du Erfahrung mit Ticketsystemen?" className="p-3 rounded-xl bg-gray-800 text-white"/>
-        <textarea name="conflictHandling" value={form.conflictHandling} onChange={handleChange} placeholder="Wie gehst du mit Konflikten um?" className="p-3 rounded-xl bg-gray-800 text-white"/>
-        <textarea name="availability" value={form.availability} onChange={handleChange} placeholder="Wie viel Zeit kannst du investieren?" className="p-3 rounded-xl bg-gray-800 text-white"/>
-        <textarea name="languages" value={form.languages} onChange={handleChange} placeholder="Welche Sprachkenntnisse besitzt du?" className="p-3 rounded-xl bg-gray-800 text-white"/>
-        <input name="phoneReachable" value={form.phoneReachable} onChange={handleChange} placeholder="Telefon erreichbar" className="p-3 rounded-xl bg-gray-800 text-white"/>
+      <form
+        onSubmit={handleSubmit}
+        className="max-w-3xl mx-auto flex flex-col gap-6"
+      >
+        <input
+          name="age"
+          value={form.age}
+          onChange={handleChange}
+          placeholder="Alter"
+          className="p-3 rounded-xl bg-gray-800 text-white"
+        />
 
-        <button type="submit" disabled={!isFormValid} className={`py-3 rounded-xl font-semibold shadow-lg transition ${isFormValid ? 'bg-purple-600 hover:bg-pink-600' : 'bg-gray-700 cursor-not-allowed'}`}>
+        <input
+          name="email"
+          value={form.email}
+          onChange={handleChange}
+          placeholder="Email Adresse"
+          className="p-3 rounded-xl bg-gray-800 text-white"
+        />
+
+        <textarea
+          name="discordExperience"
+          value={form.discordExperience}
+          onChange={handleChange}
+          placeholder="Hast du Erfahrung mit Discord Moderation?"
+          className="p-3 rounded-xl bg-gray-800 text-white"
+        />
+
+        <textarea
+          name="ticketExperience"
+          value={form.ticketExperience}
+          onChange={handleChange}
+          placeholder="Hast du Erfahrung mit Ticketsystemen?"
+          className="p-3 rounded-xl bg-gray-800 text-white"
+        />
+
+        <textarea
+          name="conflictHandling"
+          value={form.conflictHandling}
+          onChange={handleChange}
+          placeholder="Wie gehst du mit Konflikten um?"
+          className="p-3 rounded-xl bg-gray-800 text-white"
+        />
+
+        <textarea
+          name="availability"
+          value={form.availability}
+          onChange={handleChange}
+          placeholder="Wie viel Zeit kannst du investieren?"
+          className="p-3 rounded-xl bg-gray-800 text-white"
+        />
+
+        <textarea
+          name="languages"
+          value={form.languages}
+          onChange={handleChange}
+          placeholder="Welche Sprachkenntnisse besitzt du?"
+          className="p-3 rounded-xl bg-gray-800 text-white"
+        />
+
+        <input
+          name="phoneReachable"
+          value={form.phoneReachable}
+          onChange={handleChange}
+          placeholder="Telefon erreichbar"
+          className="p-3 rounded-xl bg-gray-800 text-white"
+        />
+
+        <button
+          type="submit"
+          disabled={!isFormValid}
+          className={`py-3 rounded-xl font-semibold shadow-lg transition ${
+            isFormValid
+              ? 'bg-purple-600 hover:bg-pink-600'
+              : 'bg-gray-700 cursor-not-allowed'
+          }`}
+        >
           Bewerbung abschicken
         </button>
       </form>
 
       {showToast && (
-        <div className={`fixed bottom-6 right-6 px-4 py-2 rounded shadow-lg flex items-center gap-4 transition-opacity duration-1000 ${showToast.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
+        <div
+          className={`fixed bottom-6 right-6 px-4 py-2 rounded shadow-lg flex items-center gap-4 transition-opacity duration-1000 ${
+            showToast.type === 'success'
+              ? 'bg-green-600 text-white'
+              : 'bg-red-600 text-white'
+          }`}
+        >
           {showToast.message}
-          <button className="font-bold" onClick={() => setShowToast(null)}>×</button>
+          <button className="font-bold" onClick={() => setShowToast(null)}>
+            ×
+          </button>
         </div>
       )}
     </div>
