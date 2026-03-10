@@ -57,7 +57,6 @@ export default function ApplyPage() {
     if (toast) {
       setErrorToast(JSON.parse(toast));
       sessionStorage.removeItem('apply_error_toast');
-
       const timer = setTimeout(() => setErrorToast(null), 10000);
       return () => clearTimeout(timer);
     }
