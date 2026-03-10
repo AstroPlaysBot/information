@@ -74,46 +74,58 @@ export default function ApplyRole() {
   const [user, setUser] = useState<any>(null);
   const [form, setForm] = useState<any>({ age: '', email: '' });
   const [loading, setLoading] = useState(true);
-  const [errorToast, setErrorToast] = useState<{ message: string } | null>(null);
 
-  // 🔹 Discord User laden mit Retry
   useEffect(() => {
     async function loadUser() {
-      for (let i = 0; i < 5; i++) {
-        try {
-          const res = await fetch('/api/me', { credentials: 'include' });
-          if (res.ok) {
-            const data = await res.json();
-            setUser(data.user);
-            setLoading(false);
-            return;
-          }
-        } catch (e) {}
-        await new Promise((r) => setTimeout(r, 500));
+      try {
+        const res = await fetch('/api/me', { credentials: 'include' });
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data.user);
+        } else {
+          sessionStorage.setItem('apply_error_toast', JSON.stringify({ message: 'Discord Login fehlgeschlagen' }));
+          router.replace('/apply');
+        }
+      } catch {
+        sessionStorage.setItem('apply_error_toast', JSON.stringify({ message: 'Discord Login fehlgeschlagen' }));
+        router.replace('/apply');
+      } finally {
+        setLoading(false);
       }
-      // nach allen Versuchen
-      sessionStorage.setItem(
-        'apply_error_toast',
-        JSON.stringify({ message: 'Discord Login fehlgeschlagen' })
-      );
-      setErrorToast({ message: 'Discord Login fehlgeschlagen' });
-      setLoading(false);
     }
     loadUser();
-  }, []);
+  }, [router]);
 
-  function handleChange(e: any) {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  }
+  if (!config) return <div>Role not found</div>;
 
-  async function submit(e: any) {
+  if (loading)
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center text-white">
+        <div className="loader mb-4"></div>
+        <p className="text-lg">Discord Login wird überprüft...</p>
+        <style jsx>{`
+          .loader {
+            border: 6px solid #444;
+            border-top: 6px solid #a855f7;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+          }
+          @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        `}</style>
+      </div>
+    );
+
+  const handleChange = (e: any) => setForm({ ...form, [e.target.name]: e.target.value });
+  const isFormValid = () => form.age && form.email && config.fields.every((f: any) => form[f.id]);
+
+  const submit = async (e: any) => {
     e.preventDefault();
-    if (!user) return;
+    if (!isFormValid() || !user) return;
 
     const answers: any = {};
-    config.fields.forEach((f: any) => {
-      answers[f.label] = form[f.id];
-    });
+    config.fields.forEach((f: any) => { answers[f.label] = form[f.id]; });
 
     try {
       const res = await fetch('/api/adminboard', {
@@ -131,42 +143,10 @@ export default function ApplyRole() {
           answers,
         }),
       });
-
       const data = await res.json();
-      if (data.success) {
-        router.push('/');
-      } else {
-        setErrorToast({ message: 'Fehler beim Absenden: ' + data.error });
-      }
-    } catch (err) {
-      setErrorToast({ message: 'Unerwarteter Fehler beim Absenden' });
-    }
-  }
-
-  if (!config) return <div>Role not found</div>;
-
-  if (loading)
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center text-white">
-        <div className="loader mb-4"></div>
-        <p className="text-lg">Discord Login wird überprüft...</p>
-
-        <style jsx>{`
-          .loader {
-            border: 6px solid #444;
-            border-top: 6px solid #a855f7;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            animation: spin 1s linear infinite;
-          }
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
-      </div>
-    );
+      if (data.success) router.push('/');
+    } catch {}
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-950 text-white px-6 py-20">
@@ -215,18 +195,12 @@ export default function ApplyRole() {
 
         <button
           type="submit"
-          className="py-3 bg-purple-600 hover:bg-pink-600 rounded-xl font-semibold transition-shadow shadow-lg"
+          disabled={!isFormValid()}
+          className={`py-3 rounded-xl font-semibold transition-shadow shadow-lg ${isFormValid() ? 'bg-purple-600 hover:bg-pink-600' : 'bg-gray-700 cursor-not-allowed'}`}
         >
           Bewerbung abschicken
         </button>
       </form>
-
-      {errorToast && (
-        <div className="fixed bottom-6 right-6 px-4 py-2 rounded shadow-lg flex items-center gap-4 bg-red-600 text-white">
-          {errorToast.message}
-          <button className="font-bold ml-2" onClick={() => setErrorToast(null)}>×</button>
-        </div>
-      )}
     </div>
   );
 }
