@@ -1,3 +1,5 @@
+'use server';
+
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -39,8 +41,17 @@ export async function GET(req: Request) {
     });
 
     const tokenData = await tokenRes.json();
-
     if (!tokenData.access_token) {
+      return NextResponse.redirect(`${APP_URL}${state}`);
+    }
+
+    // 🔹 User Infos holen
+    const userRes = await fetch(DISCORD_USER_URL, {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` },
+    });
+    const user = await userRes.json();
+
+    if (!user?.id) {
       return NextResponse.redirect(`${APP_URL}${state}`);
     }
 
@@ -48,11 +59,14 @@ export async function GET(req: Request) {
     const response = NextResponse.redirect(`${APP_URL}${state}`);
     response.cookies.set('user_token', tokenData.access_token, {
       httpOnly: true,
-      maxAge: 60 * 60,
+      maxAge: 60 * 60, // 1 Stunde
       path: '/',
       sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
+      secure: true,
     });
+
+    // Optional: User-Daten direkt im Cookie oder sessionStorage speichern, wenn nötig
+    // Hier nur Token gesetzt, der Client holt die Userinfos über /api/me
 
     return response;
   } catch (err) {
