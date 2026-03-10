@@ -76,31 +76,43 @@ export default function ApplyRole() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let didCancel = false;
+
     async function loadUser() {
+      // kurzes Delay, damit Token/Cookie erkannt wird
+      await new Promise(r => setTimeout(r, 100));
+
       try {
         const res = await fetch('/api/me', { credentials: 'include' });
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data.user);
-        } else {
-          // Kein User → redirect mit Toast
+        if (!didCancel) {
+          if (res.ok) {
+            const data = await res.json();
+            setUser(data.user);
+          } else {
+            // Kein User → Toast + redirect
+            sessionStorage.setItem(
+              'apply_error_toast',
+              JSON.stringify({ message: 'Discord Login fehlgeschlagen' })
+            );
+            router.replace('/apply');
+          }
+        }
+      } catch {
+        if (!didCancel) {
           sessionStorage.setItem(
             'apply_error_toast',
             JSON.stringify({ message: 'Discord Login fehlgeschlagen' })
           );
           router.replace('/apply');
         }
-      } catch {
-        sessionStorage.setItem(
-          'apply_error_toast',
-          JSON.stringify({ message: 'Discord Login fehlgeschlagen' })
-        );
-        router.replace('/apply');
       } finally {
-        setLoading(false);
+        if (!didCancel) setLoading(false);
       }
     }
+
     loadUser();
+
+    return () => { didCancel = true; };
   }, [router]);
 
   if (!config) return <div>Role not found</div>;
