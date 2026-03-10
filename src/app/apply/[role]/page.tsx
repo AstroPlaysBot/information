@@ -83,11 +83,18 @@ export default function ApplyRole() {
           const data = await res.json();
           setUser(data.user);
         } else {
-          sessionStorage.setItem('apply_error_toast', JSON.stringify({ message: 'Discord Login fehlgeschlagen' }));
+          // Kein User → redirect mit Toast
+          sessionStorage.setItem(
+            'apply_error_toast',
+            JSON.stringify({ message: 'Discord Login fehlgeschlagen' })
+          );
           router.replace('/apply');
         }
       } catch {
-        sessionStorage.setItem('apply_error_toast', JSON.stringify({ message: 'Discord Login fehlgeschlagen' }));
+        sessionStorage.setItem(
+          'apply_error_toast',
+          JSON.stringify({ message: 'Discord Login fehlgeschlagen' })
+        );
         router.replace('/apply');
       } finally {
         setLoading(false);
@@ -118,7 +125,8 @@ export default function ApplyRole() {
     );
 
   const handleChange = (e: any) => setForm({ ...form, [e.target.name]: e.target.value });
-  const isFormValid = () => form.age && form.email && config.fields.every((f: any) => form[f.id]);
+  const isFormValid = () =>
+    form.age && form.email && config.fields.every((f: any) => form[f.id]);
 
   const submit = async (e: any) => {
     e.preventDefault();
