@@ -157,7 +157,7 @@ export default function ApplyRole() {
         }),
       });
       const data = await res.json();
-      if (data.success) router.push('/advertised'); // <-- hier Weiterleitung geändert
+      if (data.success) router.push('/apply/advertised'); // <-- hier Weiterleitung geändert
     } catch {}
   };
 
