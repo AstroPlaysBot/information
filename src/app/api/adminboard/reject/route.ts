@@ -1,4 +1,3 @@
-// src/app/api/adminboard/reject/route.ts
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
@@ -11,12 +10,13 @@ export async function POST(req: Request) {
     data: { status: "REJECTED" },
   });
 
-  // E-Mail versenden
+  let mailError = null;
+
   try {
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT),
-      secure: Number(process.env.SMTP_PORT) === 465,
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
@@ -27,11 +27,19 @@ export async function POST(req: Request) {
       from: `"Team" <${process.env.SMTP_USER}>`,
       to: app.email,
       subject: `Deine Bewerbung für ${app.role} wurde abgelehnt`,
-      text: `Hallo ${app.name},\n\nLeider wurde deine Bewerbung für die Rolle ${app.role} abgelehnt.${body.reason ? '\nGrund: ' + body.reason : ''}\n\nViele Grüße,\nTeam`,
+      html: `
+        <div style="font-family:sans-serif; line-height:1.5; color:#111">
+          <h2 style="color:#ff3f3f;">Hallo ${app.name},</h2>
+          <p>Leider wurde deine Bewerbung für <strong>${app.role}</strong> abgelehnt.</p>
+          ${body.reason ? `<p><strong>Grund:</strong> ${body.reason}</p>` : ""}
+          <p>Viele Grüße,<br>Team</p>
+        </div>
+      `,
     });
   } catch (e) {
-    console.error("E-Mail konnte nicht gesendet werden:", e);
+    console.error("E-Mail Fehler:", e);
+    mailError = "E-Mail konnte nicht gesendet werden!";
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, mailError });
 }
