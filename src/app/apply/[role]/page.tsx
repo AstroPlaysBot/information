@@ -1,3 +1,4 @@
+// src/app/apply/[role]/page.tsx
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
@@ -79,21 +80,20 @@ export default function ApplyRole() {
     let didCancel = false;
 
     async function loadUser() {
-      const retries = 6; // Anzahl Versuche
+      const retries = 6;
       for (let i = 0; i < retries; i++) {
-        await new Promise(r => setTimeout(r, 200)); // 200ms pro Versuch
+        await new Promise(r => setTimeout(r, 200));
         try {
           const res = await fetch('/api/me', { credentials: 'include' });
           if (!didCancel && res.ok) {
             const data = await res.json();
             setUser(data.user);
             setLoading(false);
-            return; // Erfolg → sofort raus
+            return;
           }
         } catch {}
       }
 
-      // Nach allen Versuchen → Toast + Redirect
       if (!didCancel) {
         sessionStorage.setItem(
           'apply_error_toast',
@@ -157,7 +157,7 @@ export default function ApplyRole() {
         }),
       });
       const data = await res.json();
-      if (data.success) router.push('/');
+      if (data.success) router.push('/advertised'); // <-- hier Weiterleitung geändert
     } catch {}
   };
 
