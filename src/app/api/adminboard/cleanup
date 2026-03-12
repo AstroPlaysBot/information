@@ -1,9 +1,0 @@
-const limit = new Date();
-limit.setDate(limit.getDate() - 30);
-
-await prisma.application.deleteMany({
-  where: {
-    deleted: true,
-    deletedAt: { lt: limit },
-  },
-});
