@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     });
 
     await transporter.sendMail({
-      from: `"Team" <${process.env.SMTP_USER}>`,
+      from: `"Team AstroPlays" <${process.env.SMTP_USER}>`,
       to: app.email,
       subject: `Deine Bewerbung für ${app.role} wurde angenommen!`,
       html: `
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
           <p>Deine Bewerbung für <strong>${app.role}</strong> wurde angenommen.</p>
           <p><strong>Interview-Termin:</strong> ${new Date(body.date).toLocaleString()}</p>
           <p><strong>Ort:</strong> ${body.place}</p>
-          <p>Viele Grüße,<br>Team</p>
+          <p>Viele Grüße,<br>Team AstroPlays</p>
         </div>
       `,
     });
