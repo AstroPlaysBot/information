@@ -25,6 +25,13 @@ model Application {
   discriminator   String?
   avatar          String?
   account_created DateTime?
+
+  status          String   @default("PENDING")
+  deleted         Boolean  @default(false)
+  deletedAt       DateTime?
+
+  interviewDate   DateTime?
+  interviewPlace  String?
 }
 
 // ======================
