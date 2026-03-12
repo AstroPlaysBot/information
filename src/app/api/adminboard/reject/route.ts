@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     });
 
     await transporter.sendMail({
-      from: `"Team" <${process.env.SMTP_USER}>`,
+      from: `"Team AstroPlays" <${process.env.SMTP_USER}>`,
       to: app.email,
       subject: `Deine Bewerbung für ${app.role} wurde abgelehnt`,
       html: `
@@ -34,7 +34,7 @@ export async function POST(req: Request) {
           <h2 style="color:#374151;">Hallo ${app.name},</h2>
           <p>Leider wurde deine Bewerbung für <strong>${app.role}</strong> abgelehnt.</p>
           ${body.reason ? `<p><strong>Grund:</strong> ${body.reason}</p>` : ""}
-          <p>Viele Grüße,<br>Team</p>
+          <p>Viele Grüße,<br>Team AstroPlays</p>
         </div>
       `,
     });
