@@ -65,30 +65,6 @@ const roles: any = {
   },
 };
 
-// ----------------- Toast Component -----------------
-function Toast({ message, onClose }: { message: string; onClose: () => void }) {
-  useEffect(() => {
-    const timer = setTimeout(() => onClose(), 10000); // automatisch nach 10s ausblenden
-    return () => clearTimeout(timer);
-  }, [onClose]);
-
-  return (
-    <AnimatePresence>
-      {message && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          className="fixed top-6 right-6 bg-red-600 text-white px-4 py-2 rounded shadow-lg flex items-center gap-4 z-50"
-        >
-          <span>{message}</span>
-          <button onClick={onClose} className="font-bold">X</button>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
-
 // ----------------- Main Component -----------------
 export default function ApplyRole() {
   const router = useRouter();
@@ -99,7 +75,6 @@ export default function ApplyRole() {
   const [user, setUser] = useState<any>(null);
   const [form, setForm] = useState<any>({ age: '', email: '' });
   const [loading, setLoading] = useState(true);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let didCancel = false;
@@ -183,21 +158,16 @@ export default function ApplyRole() {
       });
       const data = await res.json();
 
-      if (data.mailError) {
-        setToastMessage(data.mailError); // <-- Fehler-Toast auf dieser Seite
-      } else if (data.success) {
+      if (data.success) {
         router.push('/apply/advertised'); // Erfolgreiche Bewerbung
       }
     } catch {
-      setToastMessage("Bewerbung konnte nicht gesendet werden!");
+      alert("Bewerbung konnte nicht gesendet werden!");
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-950 text-white px-6 py-20">
-      {/* Toast */}
-      <Toast message={toastMessage || ""} onClose={() => setToastMessage(null)} />
-
       <h1 className="text-4xl font-bold text-center mb-12">Bewerbung: {config.title}</h1>
 
       {user && (
