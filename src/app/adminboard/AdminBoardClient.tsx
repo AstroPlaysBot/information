@@ -1,32 +1,33 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Trash2, LogOut } from 'lucide-react'
 
 interface Application {
-  id: string;
-  role: string;
-  name: string;
-  age: string;
-  email: string;
-  answers: Record<string, string>;
-  submittedAt: string;
+  id: string
+  role: string
+  name: string
+  age: string
+  email: string
+  answers: Record<string,string>
+  submittedAt: string
 }
 
-const roleColors: Record<string, string> = {
-  'Beta Tester': 'bg-purple-600',
-  'Moderator': 'bg-indigo-600',
-  'Frontend Developer': 'bg-green-600',
-  'Backend Developer': 'bg-red-600',
-  'Praktikant': 'bg-yellow-600',
-  'Promotion Manager': 'bg-pink-600',
-};
+const roleColors:Record<string,string> = {
+  'Beta Tester':'bg-purple-600',
+  'Moderator':'bg-indigo-600',
+  'Frontend Developer':'bg-green-600',
+  'Backend Developer':'bg-red-600',
+  'Praktikant':'bg-yellow-500',
+  'Promotion Manager':'bg-pink-600'
+}
 
-export default function AdminBoardClient() {
+export default function AdminBoardClient(){
 
   const [applications,setApplications] = useState<Application[]>([])
-  const [loading,setLoading] = useState(true)
   const [expanded,setExpanded] = useState<string|null>(null)
+  const [loading,setLoading] = useState(true)
 
   useEffect(()=>{
     load()
@@ -60,22 +61,25 @@ export default function AdminBoardClient() {
   }
 
   async function reject(id:string){
-    const reason = prompt("Optionaler Grund für Ablehnung")
+
+    const confirmReject = confirm("Bewerbung wirklich ablehnen?")
+    if(!confirmReject) return
+
+    const reason = prompt("Optionaler Grund")
 
     await fetch('/api/adminboard/reject',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        id,
-        reason
-      })
+      body:JSON.stringify({id,reason})
     })
 
     load()
   }
 
   async function remove(id:string){
-    if(!confirm("Bewerbung wirklich löschen?")) return
+
+    const confirmDelete = confirm("Bewerbung in Papierkorb verschieben?")
+    if(!confirmDelete) return
 
     await fetch('/api/adminboard/delete',{
       method:'POST',
@@ -88,110 +92,159 @@ export default function AdminBoardClient() {
 
   if(loading){
     return(
-      <div className="h-screen flex justify-center items-center text-white text-2xl">
-        Lade Bewerbungen…
+      <div className="h-screen flex items-center justify-center text-white text-xl">
+        Lade Bewerbungen...
       </div>
     )
   }
 
   return(
-    <motion.div
-      initial={{opacity:0,scale:0.95}}
-      animate={{opacity:1,scale:1}}
-      className="min-h-screen bg-gray-900 text-white p-10"
-    >
 
-      <h1 className="text-4xl font-bold mb-10 text-center">
-        Admin Dashboard – Bewerbungen
-      </h1>
+  <motion.div
+  initial={{opacity:0}}
+  animate={{opacity:1}}
+  className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-black text-white p-10"
+  >
 
-      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+  {/* Papierkorb Button */}
+  <button
+  onClick={()=>location.href="/adminboard/trash"}
+  className="fixed top-6 left-6 bg-red-600 hover:bg-red-700 p-3 rounded-xl shadow-lg transition"
+  >
+  <Trash2 size={20}/>
+  </button>
 
-        {applications.map(app=>(
-          <motion.div
-            key={app.id}
-            layout
-            whileHover={{scale:1.03}}
-            className="bg-gray-800 rounded-2xl p-6 shadow-xl"
-          >
+  {/* Logout */}
+  <button
+  onClick={()=>location.href="/"}
+  className="fixed top-6 right-6 bg-gray-700 hover:bg-gray-600 p-3 rounded-xl shadow-lg"
+  >
+  <LogOut size={20}/>
+  </button>
 
-            <div className="flex justify-between mb-3">
+  {/* Title */}
+  <div className="text-center mb-14">
 
-              <h2 className="font-bold text-lg">
-                {app.name}
-              </h2>
+  <h1 className="text-5xl font-extrabold mb-2 tracking-tight">
+  Bewerbungs Dashboard
+  </h1>
 
-              <span className={`text-xs px-2 py-1 rounded ${roleColors[app.role] || 'bg-gray-600'}`}>
-                {app.role}
-              </span>
+  <p className="text-gray-400">
+  Verwalte eingegangene Bewerbungen
+  </p>
 
-            </div>
+  </div>
 
-            <p className="text-sm text-gray-400 mb-1">
-              Alter: {app.age}
-            </p>
+  {/* Grid */}
 
-            <p className="text-sm text-gray-400 mb-4">
-              {app.email}
-            </p>
+  <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-7">
 
-            <button
-              onClick={()=>setExpanded(expanded===app.id ? null : app.id)}
-              className="text-purple-400 text-sm mb-4"
-            >
-              Antworten anzeigen
-            </button>
+  {applications.map(app=>(
 
-            <AnimatePresence>
+  <motion.div
+  key={app.id}
+  layout
+  whileHover={{scale:1.04}}
+  className="bg-gray-800/70 backdrop-blur rounded-2xl p-6 border border-gray-700 shadow-xl"
+  >
 
-              {expanded===app.id && (
-                <motion.div
-                  initial={{opacity:0,height:0}}
-                  animate={{opacity:1,height:'auto'}}
-                  exit={{opacity:0,height:0}}
-                  className="space-y-2 mb-4"
-                >
-                  {Object.entries(app.answers).map(([q,a])=>(
-                    <div key={q}>
-                      <p className="text-gray-400 text-xs">{q}</p>
-                      <p className="text-sm">{a}</p>
-                    </div>
-                  ))}
-                </motion.div>
-              )}
+  {/* Header */}
 
-            </AnimatePresence>
+  <div className="flex justify-between items-center mb-4">
 
-            <div className="flex gap-2">
+  <h2 className="text-lg font-semibold">
+  {app.name}
+  </h2>
 
-              <button
-                onClick={()=>accept(app.id)}
-                className="bg-green-600 px-3 py-2 rounded"
-              >
-                Annehmen
-              </button>
+  <span className={`text-xs px-3 py-1 rounded-full ${roleColors[app.role] || 'bg-gray-600'}`}>
+  {app.role}
+  </span>
 
-              <button
-                onClick={()=>reject(app.id)}
-                className="bg-yellow-600 px-3 py-2 rounded"
-              >
-                Ablehnen
-              </button>
+  </div>
 
-              <button
-                onClick={()=>remove(app.id)}
-                className="bg-red-600 px-3 py-2 rounded"
-              >
-                Löschen
-              </button>
+  <p className="text-sm text-gray-400">
+  Alter: {app.age}
+  </p>
 
-            </div>
+  <p className="text-sm text-gray-400 mb-4">
+  {app.email}
+  </p>
 
-          </motion.div>
-        ))}
+  {/* Antworten */}
 
-      </div>
+  <button
+  onClick={()=>setExpanded(expanded===app.id ? null : app.id)}
+  className="text-purple-400 text-sm hover:underline mb-4"
+  >
+  Antworten anzeigen
+  </button>
 
-    </motion.div>
+  <AnimatePresence>
+
+  {expanded===app.id &&(
+
+  <motion.div
+  initial={{opacity:0,height:0}}
+  animate={{opacity:1,height:'auto'}}
+  exit={{opacity:0,height:0}}
+  className="space-y-3 mb-5 border-t border-gray-700 pt-3"
+  >
+
+  {Object.entries(app.answers).map(([q,a])=>(
+
+  <div key={q}>
+
+  <p className="text-xs text-gray-500">
+  {q}
+  </p>
+
+  <p className="text-sm">
+  {a}
+  </p>
+
+  </div>
+
+  ))}
+
+  </motion.div>
+
+  )}
+
+  </AnimatePresence>
+
+  {/* Buttons */}
+
+  <div className="flex gap-2 mt-2">
+
+  <button
+  onClick={()=>accept(app.id)}
+  className="flex-1 bg-green-600 hover:bg-green-700 transition px-3 py-2 rounded-lg text-sm"
+  >
+  Annehmen
+  </button>
+
+  <button
+  onClick={()=>reject(app.id)}
+  className="flex-1 bg-yellow-600 hover:bg-yellow-700 transition px-3 py-2 rounded-lg text-sm"
+  >
+  Ablehnen
+  </button>
+
+  <button
+  onClick={()=>remove(app.id)}
+  className="flex-1 bg-red-600 hover:bg-red-700 transition px-3 py-2 rounded-lg text-sm"
+  >
+  Löschen
+  </button>
+
+  </div>
+
+  </motion.div>
+
+  ))}
+
+  </div>
+
+  </motion.div>
   )
 }
