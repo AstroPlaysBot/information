@@ -141,7 +141,7 @@ export default function ApplyRole() {
     config.fields.forEach((f: any) => { answers[f.label] = form[f.id]; });
 
     try {
-      const res = await fetch('/api/adminboard', {
+      const res = await fetch('/api/sendApplicationMail', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
