@@ -1,7 +1,0 @@
-await prisma.application.update({
-  where: { id },
-  data: {
-    deleted: true,
-    deletedAt: new Date(),
-  },
-});
