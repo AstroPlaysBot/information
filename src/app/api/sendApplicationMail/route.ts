@@ -39,7 +39,7 @@ export async function POST(req: Request) {
       .join("");
 
     await transporter.sendMail({
-      from: `"Team" <${process.env.SMTP_USER}>`,
+      from: `"Team AstroPlays" <${process.env.SMTP_USER}>`,
       to: body.email,
       subject: `Deine Bewerbung für ${body.role} wurde eingereicht!`,
       html: `
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
             ${answersHtml}
           </table>
           <p>Wir melden uns bei dir, sobald es Neuigkeiten gibt.</p>
-          <p>Viele Grüße,<br>Team</p>
+          <p>Viele Grüße,<br>Team AstroPlays</p>
         </div>
       `,
     });
