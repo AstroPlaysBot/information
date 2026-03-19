@@ -22,7 +22,10 @@
     "@prisma/client": "^5.1.0",
     "node-fetch": "^3.3.2",
     "lucide-react": "^0.462.0",
-    "nodemailer": "^6.9.4"
+    "nodemailer": "^6.9.4",
+    "three": "^0.161.0",
+    "@react-three/fiber": "^8.15.0",
+    "@react-three/drei": "^9.64.0"
   },
   "devDependencies": {
     "typescript": "^5.1.6",
