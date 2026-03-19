@@ -11,8 +11,8 @@ import FixedFooter from '@/components/FixedFooter'
 function DiscordIcon({ position, texture }: { position: [number, number, number]; texture: THREE.Texture }) {
   const meshRef = useRef<THREE.Mesh>(null!)
   useFrame(({ clock }) => {
-    meshRef.current.position.y += Math.sin(clock.getElapsedTime() + position[0]) * 0.002
-    meshRef.current.rotation.z += 0.002
+    // leichtes Schweben
+    meshRef.current.position.y = position[1] + Math.sin(clock.getElapsedTime() + position[0]) * 0.1
   })
   return (
     <mesh ref={meshRef} position={position}>
@@ -22,25 +22,25 @@ function DiscordIcon({ position, texture }: { position: [number, number, number]
   )
 }
 
-// --- Kamera Flug ---
+// --- Ruhiger Kamera Flug ---
 function CameraFlight() {
   const { camera } = useThree()
   const t = useRef(0)
   useFrame((_, delta) => {
-    t.current += delta * 0.15
-    camera.position.x = Math.sin(t.current) * 12
-    camera.position.y = Math.cos(t.current / 2) * 6
-    camera.position.z = -t.current * 6 + 20
+    t.current += delta * 0.05 // viel langsamer
+    camera.position.x = Math.sin(t.current) * 8
+    camera.position.y = Math.cos(t.current / 2) * 3
+    camera.position.z = -t.current * 3 + 20
     camera.lookAt(0, 0, 0)
   })
   return null
 }
 
-// --- Leuchtender Stern ---
+// --- Dezenter Glowing Star ---
 function GlowingStar() {
   const mesh = useRef<THREE.Mesh>(null!)
   useFrame(({ clock }) => {
-    const scale = 1 + Math.sin(clock.getElapsedTime() * 3) * 0.3
+    const scale = 1 + Math.sin(clock.getElapsedTime() * 1.5) * 0.15 // weniger pulsierend
     mesh.current.scale.set(scale, scale, scale)
   })
   return (
@@ -48,7 +48,7 @@ function GlowingStar() {
       <sphereGeometry args={[1.5, 32, 32]} />
       <meshStandardMaterial
         emissive={new THREE.Color(0xffffaa)}
-        emissiveIntensity={2}
+        emissiveIntensity={1.2} // etwas schwächer
         color={'white'}
       />
     </mesh>
@@ -59,13 +59,11 @@ export default function AdminAnimation() {
   const router = useRouter()
   const [windowHeight, setWindowHeight] = useState(0)
 
-  // Weiterleitung nach 10 Sekunden
   useEffect(() => {
     const timer = setTimeout(() => router.push('/adminboard'), 10000)
     return () => clearTimeout(timer)
   }, [router])
 
-  // Fensterhöhe dynamisch
   useEffect(() => {
     const updateHeight = () => setWindowHeight(window.innerHeight)
     updateHeight()
@@ -73,7 +71,6 @@ export default function AdminAnimation() {
     return () => window.removeEventListener('resize', updateHeight)
   }, [])
 
-  // Discord Icon Textures
   const iconUrls = [
     '/icons/discord1.png',
     '/icons/discord2.png',
@@ -82,11 +79,10 @@ export default function AdminAnimation() {
   ]
   const textures = iconUrls.map((url) => new THREE.TextureLoader().load(url))
 
-  // Zufällige Positionen
-  const iconPositions: [number, number, number][] = Array.from({ length: 40 }, () => [
-    (Math.random() - 0.5) * 40,
-    (Math.random() - 0.5) * 20,
-    -(Math.random() * 120),
+  const iconPositions: [number, number, number][] = Array.from({ length: 30 }, () => [
+    (Math.random() - 0.5) * 30,
+    (Math.random() - 0.5) * 15,
+    -(Math.random() * 80),
   ])
 
   return (
@@ -96,10 +92,10 @@ export default function AdminAnimation() {
         className="fixed top-0 left-0 w-full"
         style={{ height: windowHeight, zIndex: 0 }}
       >
-        <Canvas camera={{ position: [0, 0, 20], fov: 75 }}>
+        <Canvas camera={{ position: [0, 0, 20], fov: 70 }}>
           <ambientLight intensity={0.2} />
-          <pointLight position={[0, 0, 0]} intensity={3} color={'white'} />
-          <Stars radius={150} depth={100} count={5000} factor={4} saturation={0} fade />
+          <pointLight position={[0, 0, 0]} intensity={1.5} color={'white'} />
+          <Stars radius={120} depth={60} count={2000} factor={3} saturation={0} fade />
           <GlowingStar />
           {iconPositions.map((pos, i) => (
             <DiscordIcon key={i} position={pos} texture={textures[i % textures.length]} />
@@ -108,7 +104,7 @@ export default function AdminAnimation() {
         </Canvas>
       </div>
 
-      {/* --- Platzhalter für Scrollbereich, damit Footer erst sichtbar wird --- */}
+      {/* --- Scrollbereich für Footer --- */}
       <div style={{ marginTop: windowHeight, minHeight: '50vh' }}>
         <FixedFooter />
       </div>
