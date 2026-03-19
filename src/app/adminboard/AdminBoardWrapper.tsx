@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import AdminBoardClient from './AdminBoardClient'
-import AdminAnimation from '../../components/AdminAnimation'
+import AdminAnimation from './AdminAnimation'
 
 export default function AdminBoardWrapper() {
   const [showAnimation, setShowAnimation] = useState(true)
