@@ -1,10 +1,6 @@
-'use client'
-
-import { useEffect, useState } from 'react'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import AdminBoardClient from './AdminBoardClient'
-import AdminAnimation from '../../components/AdminAnimation'
+import AdminBoardWrapper from './AdminBoardWrapper'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,16 +12,6 @@ export default function AdminBoardPage() {
     redirect('/')
   }
 
-  // === NEU: State für Animation ===
-  const [showAnimation, setShowAnimation] = useState(true)
-
-  useEffect(() => {
-    const timer = setTimeout(() => setShowAnimation(false), 10000) // 10 Sekunden
-    return () => clearTimeout(timer)
-  }, [])
-
-  // === Render ===
-  if (showAnimation) return <AdminAnimation /> // Animation einmalig
-
-  return <AdminBoardClient /> // echtes Dashboard danach
+  // AdminToken ist da → Client Component laden
+  return <AdminBoardWrapper />
 }
