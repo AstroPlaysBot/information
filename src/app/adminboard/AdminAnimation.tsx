@@ -10,21 +10,25 @@ export default function AdminAnimation() {
   const controls = useAnimation()
 
   useEffect(() => {
-    // Animation starten
+    // Start 3D Kamera/Parallax Animation
     controls.start({
-      scale: [1.2, 1, 1],
-      rotate: [-5, 0, 0],
+      scale: [1.3, 1, 1],
+      rotateX: [10, 0, 0],
+      rotateY: [-10, 0, 0],
       transition: { duration: 10, ease: 'easeInOut' },
     })
 
-    // Nach 10 Sekunden Dashboard anzeigen
+    // Nach 10 Sekunden weiter zum Dashboard
     const timer = setTimeout(() => router.push('/adminboard'), 10000)
     return () => clearTimeout(timer)
-  }, [router, controls])
+  }, [controls, router])
+
+  // Generiere zufällige Partikel
+  const particles = Array.from({ length: 50 })
 
   return (
-    <div className="relative w-full h-screen bg-black overflow-hidden flex items-center justify-center">
-
+    <div className="relative w-full h-screen bg-black overflow-hidden flex items-center justify-center perspective-[2000px]">
+      
       {/* Cinematic Background Gradient */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -33,64 +37,69 @@ export default function AdminAnimation() {
         className="absolute w-full h-full bg-gradient-to-tr from-indigo-900 via-purple-900 to-black"
       />
 
-      {/* Moving "Camera" Lights / Particles */}
+      {/* Glow-Partikel mit Parallax */}
       <div className="absolute inset-0">
-        {[...Array(40)].map((_, i) => (
-          <motion.div
-            key={i}
-            animate={{
-              x: [0, Math.random() * 100 - 50, 0],
-              y: [0, Math.random() * 80 - 40, 0],
-              opacity: [0.5, 1, 0.5],
-              scale: [0.5, 1, 0.5]
-            }}
-            transition={{
-              repeat: Infinity,
-              duration: 6 + Math.random() * 6,
-              delay: Math.random() * 3,
-              ease: 'easeInOut'
-            }}
-            className="absolute bg-white rounded-full w-[2px] h-[2px]"
-            style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`
-            }}
-          />
-        ))}
+        {particles.map((_, i) => {
+          const size = Math.random() * 4 + 1
+          const x = Math.random() * 100
+          const y = Math.random() * 100
+          const delay = Math.random() * 5
+          const duration = 6 + Math.random() * 8
+          return (
+            <motion.div
+              key={i}
+              animate={{
+                x: [0, Math.random() * 80 - 40, 0],
+                y: [0, Math.random() * 80 - 40, 0],
+                opacity: [0.2, 0.8, 0.2],
+                scale: [0.5, 1, 0.5]
+              }}
+              transition={{
+                repeat: Infinity,
+                duration,
+                delay,
+                ease: 'easeInOut'
+              }}
+              className="absolute bg-purple-400 rounded-full blur-xl"
+              style={{
+                width: `${size}px`,
+                height: `${size}px`,
+                top: `${y}%`,
+                left: `${x}%`,
+              }}
+            />
+          )
+        })}
       </div>
 
-      {/* Welcome Text */}
-      <motion.h1
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
+      {/* Willkommenstext mit Parallax */}
+      <motion.div
+        initial={{ opacity: 0, y: 50, z: 50 }}
+        animate={{ opacity: 1, y: 0, z: 0 }}
         transition={{ duration: 2, delay: 0.5 }}
-        className="relative z-10 text-5xl md:text-6xl lg:text-7xl font-extrabold text-white text-center drop-shadow-[0_0_20px_rgba(0,0,0,0.8)]"
+        className="relative z-10 text-center"
       >
-        Willkommen im Team
-        <br />
-        <span className="text-purple-500">AstroPlays</span>
-      </motion.h1>
+        <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-white drop-shadow-[0_0_25px_rgba(0,0,0,0.8)]">
+          Willkommen im Team
+          <br />
+          <span className="text-purple-400">AstroPlays</span>
+        </h1>
 
-      {/* Subtitle / Unternehmens-Slogan */}
-      <motion.p
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 0.9, y: 0 }}
-        transition={{ duration: 2, delay: 2 }}
-        className="relative z-10 mt-6 text-white/70 text-lg md:text-xl text-center max-w-2xl"
-      >
-        Dein Dashboard für professionelle Teamverwaltung und Projekte.
-      </motion.p>
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 0.9, y: 0 }}
+          transition={{ duration: 2, delay: 2 }}
+          className="mt-6 text-white/70 md:text-lg lg:text-xl max-w-2xl mx-auto"
+        >
+          Professionelle Teamverwaltung & Projekte – alles an einem Ort.
+        </motion.p>
+      </motion.div>
 
-      {/* Optional subtle overlay grid for tech vibe */}
-      <div className="absolute inset-0 grid grid-cols-20 grid-rows-20 pointer-events-none">
-        {Array.from({ length: 400 }).map((_, idx) => (
-          <div
-            key={idx}
-            className="w-[1px] h-[1px] bg-white/5"
-          />
-        ))}
-      </div>
-
+      {/* Sanfte Kamera-Parallax Bewegung */}
+      <motion.div
+        animate={controls}
+        className="absolute inset-0"
+      />
     </div>
   )
 }
