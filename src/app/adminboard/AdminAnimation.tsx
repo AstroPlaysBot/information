@@ -8,30 +8,28 @@ import * as THREE from 'three'
 // --- Einzelnes Icon als 3D Objekt ---
 function DiscordIcon({ position, texture }: { position: [number, number, number]; texture: THREE.Texture }) {
   const meshRef = useRef<THREE.Mesh>(null!)
-  useFrame(({ clock }) => {
-    // leichtes Schweben und Rotation
-    meshRef.current.position.y = position[1] + Math.sin(clock.getElapsedTime() + position[0]) * 0.1
-    meshRef.current.rotation.y += 0.001
+  const velocity = useRef([Math.random() * 0.01 - 0.005, Math.random() * 0.01 - 0.005, Math.random() * 0.01 - 0.005])
+  
+  useFrame(() => {
+    const mesh = meshRef.current
+    if (!mesh) return
+    
+    mesh.position.x += velocity.current[0]
+    mesh.position.y += velocity.current[1]
+    mesh.position.z += velocity.current[2]
+
+    // sanft zurücksetzen, falls es zu weit weg fliegt
+    for (let i = 0; i < 3; i++) {
+      if (Math.abs(mesh.position.getComponent(i)) > 25) velocity.current[i] *= -1
+    }
+
+    mesh.rotation.y += 0.0005
   })
+
   return (
     <mesh ref={meshRef} position={position}>
       <planeGeometry args={[1, 1]} />
       <meshStandardMaterial map={texture} transparent />
-    </mesh>
-  )
-}
-
-// --- Dezenter Hintergrund-Stern ---
-function GlowingStar() {
-  const mesh = useRef<THREE.Mesh>(null!)
-  useFrame(({ clock }) => {
-    const scale = 1 + Math.sin(clock.getElapsedTime() * 1.5) * 0.1
-    mesh.current.scale.set(scale, scale, scale)
-  })
-  return (
-    <mesh ref={mesh} position={[0, 0, -10]}>
-      <sphereGeometry args={[1.5, 32, 32]} />
-      <meshStandardMaterial emissive={new THREE.Color(0xffffaa)} emissiveIntensity={1.2} color={'white'} />
     </mesh>
   )
 }
@@ -54,9 +52,9 @@ export default function LoadingPage() {
     const start = Date.now()
     const interval = setInterval(() => {
       const elapsed = Date.now() - start
-      const randomIncrement = Math.random() * 2
+      const randomIncrement = Math.random() * 1.5
       setProgress((prev) => Math.min(prev + randomIncrement, 100))
-      if (elapsed >= 10000) setProgress(100) // nach 10 Sekunden voll
+      if (elapsed >= 10000) setProgress(100)
     }, 100)
     const timer = setTimeout(() => router.push('/adminboard'), 10000)
     return () => {
@@ -85,8 +83,7 @@ export default function LoadingPage() {
       {/* --- 3D Hintergrund --- */}
       <Canvas camera={{ position: [0, 0, 15], fov: 70 }} className="absolute inset-0">
         <ambientLight intensity={0.2} />
-        <pointLight position={[0, 0, 0]} intensity={1.5} color={'white'} />
-        <GlowingStar />
+        <pointLight position={[0, 0, 0]} intensity={1.2} color={'white'} />
         {iconPositions.map((pos, i) => (
           <DiscordIcon key={i} position={pos} texture={textures[i % textures.length]} />
         ))}
