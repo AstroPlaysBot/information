@@ -10,7 +10,7 @@ import * as THREE from 'three'
 function DiscordIcon({ position, texture }: { position: [number, number, number], texture: THREE.Texture }) {
   return (
     <mesh position={position}>
-      <planeBufferGeometry args={[1, 1]} />
+      <planeGeometry args={[1, 1]} />
       <meshStandardMaterial map={texture} transparent />
     </mesh>
   )
