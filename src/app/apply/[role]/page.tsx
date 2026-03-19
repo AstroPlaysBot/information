@@ -186,7 +186,7 @@ export default function ApplyRole() {
             className="w-16 h-16 rounded-full"
           />
           <div>
-            <p className="font-bold text-xl">{user.username}#{user.discriminator}</p>
+            <p className="font-bold text-xl">{user.global_name ?? user.username}{user.discriminator !== "0" && `#${user.discriminator}`}</p>
             <p className="text-gray-400 text-sm">Account erstellt: {new Date(user.created_at).toLocaleDateString()}</p>
           </div>
         </div>
