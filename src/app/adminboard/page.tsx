@@ -1,17 +1,31 @@
-// src/app/adminboard/page.tsx
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
-import AdminBoardClient from './AdminBoardClient';
+'use client'
 
-export const dynamic = 'force-dynamic';
+import { useEffect, useState } from 'react'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+import AdminBoardClient from './AdminBoardClient'
+import AdminAnimation from '../../components/AdminAnimation'
+
+export const dynamic = 'force-dynamic'
 
 export default function AdminBoardPage() {
-  const cookieStore = cookies();
-  const adminToken = cookieStore.get('admin_token');
+  const cookieStore = cookies()
+  const adminToken = cookieStore.get('admin_token')
 
   if (!adminToken) {
-    redirect('/');
+    redirect('/')
   }
 
-  return <AdminBoardClient />;
+  // === NEU: State für Animation ===
+  const [showAnimation, setShowAnimation] = useState(true)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowAnimation(false), 10000) // 10 Sekunden
+    return () => clearTimeout(timer)
+  }, [])
+
+  // === Render ===
+  if (showAnimation) return <AdminAnimation /> // Animation einmalig
+
+  return <AdminBoardClient /> // echtes Dashboard danach
 }
