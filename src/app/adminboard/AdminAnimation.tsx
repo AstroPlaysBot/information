@@ -2,17 +2,16 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Stars } from '@react-three/drei'
+import { Canvas, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import FixedFooter from '@/components/FixedFooter'
 
 // --- Einzelnes Icon als 3D Objekt ---
 function DiscordIcon({ position, texture }: { position: [number, number, number]; texture: THREE.Texture }) {
   const meshRef = useRef<THREE.Mesh>(null!)
   useFrame(({ clock }) => {
-    // leichtes Schweben
+    // leichtes Schweben und Rotation
     meshRef.current.position.y = position[1] + Math.sin(clock.getElapsedTime() + position[0]) * 0.1
+    meshRef.current.rotation.y += 0.001
   })
   return (
     <mesh ref={meshRef} position={position}>
@@ -22,48 +21,27 @@ function DiscordIcon({ position, texture }: { position: [number, number, number]
   )
 }
 
-// --- Ruhiger Kamera Flug ---
-function CameraFlight() {
-  const { camera } = useThree()
-  const t = useRef(0)
-  useFrame((_, delta) => {
-    t.current += delta * 0.05 // viel langsamer
-    camera.position.x = Math.sin(t.current) * 8
-    camera.position.y = Math.cos(t.current / 2) * 3
-    camera.position.z = -t.current * 3 + 20
-    camera.lookAt(0, 0, 0)
-  })
-  return null
-}
-
-// --- Dezenter Glowing Star ---
+// --- Dezenter Hintergrund-Stern ---
 function GlowingStar() {
   const mesh = useRef<THREE.Mesh>(null!)
   useFrame(({ clock }) => {
-    const scale = 1 + Math.sin(clock.getElapsedTime() * 1.5) * 0.15 // weniger pulsierend
+    const scale = 1 + Math.sin(clock.getElapsedTime() * 1.5) * 0.1
     mesh.current.scale.set(scale, scale, scale)
   })
   return (
-    <mesh ref={mesh} position={[0, 0, 0]}>
+    <mesh ref={mesh} position={[0, 0, -10]}>
       <sphereGeometry args={[1.5, 32, 32]} />
-      <meshStandardMaterial
-        emissive={new THREE.Color(0xffffaa)}
-        emissiveIntensity={1.2} // etwas schwächer
-        color={'white'}
-      />
+      <meshStandardMaterial emissive={new THREE.Color(0xffffaa)} emissiveIntensity={1.2} color={'white'} />
     </mesh>
   )
 }
 
-export default function AdminAnimation() {
+export default function LoadingPage() {
   const router = useRouter()
+  const [progress, setProgress] = useState(0)
   const [windowHeight, setWindowHeight] = useState(0)
 
-  useEffect(() => {
-    const timer = setTimeout(() => router.push('/adminboard'), 10000)
-    return () => clearTimeout(timer)
-  }, [router])
-
+  // Fensterhöhe dynamisch
   useEffect(() => {
     const updateHeight = () => setWindowHeight(window.innerHeight)
     updateHeight()
@@ -71,6 +49,23 @@ export default function AdminAnimation() {
     return () => window.removeEventListener('resize', updateHeight)
   }, [])
 
+  // Ladebalken Fortschritt
+  useEffect(() => {
+    const start = Date.now()
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - start
+      const randomIncrement = Math.random() * 2
+      setProgress((prev) => Math.min(prev + randomIncrement, 100))
+      if (elapsed >= 10000) setProgress(100) // nach 10 Sekunden voll
+    }, 100)
+    const timer = setTimeout(() => router.push('/adminboard'), 10000)
+    return () => {
+      clearInterval(interval)
+      clearTimeout(timer)
+    }
+  }, [router])
+
+  // Discord Icon Textures
   const iconUrls = [
     '/icons/discord1.png',
     '/icons/discord2.png',
@@ -79,34 +74,36 @@ export default function AdminAnimation() {
   ]
   const textures = iconUrls.map((url) => new THREE.TextureLoader().load(url))
 
-  const iconPositions: [number, number, number][] = Array.from({ length: 30 }, () => [
+  const iconPositions: [number, number, number][] = Array.from({ length: 25 }, () => [
     (Math.random() - 0.5) * 30,
     (Math.random() - 0.5) * 15,
-    -(Math.random() * 80),
+    -(Math.random() * 50),
   ])
 
   return (
-    <div className="w-full">
-      {/* --- Fullscreen Canvas --- */}
-      <div
-        className="fixed top-0 left-0 w-full"
-        style={{ height: windowHeight, zIndex: 0 }}
-      >
-        <Canvas camera={{ position: [0, 0, 20], fov: 70 }}>
-          <ambientLight intensity={0.2} />
-          <pointLight position={[0, 0, 0]} intensity={1.5} color={'white'} />
-          <Stars radius={120} depth={60} count={2000} factor={3} saturation={0} fade />
-          <GlowingStar />
-          {iconPositions.map((pos, i) => (
-            <DiscordIcon key={i} position={pos} texture={textures[i % textures.length]} />
-          ))}
-          <CameraFlight />
-        </Canvas>
-      </div>
+    <div className="w-full h-screen relative bg-black overflow-hidden">
+      {/* --- 3D Hintergrund --- */}
+      <Canvas camera={{ position: [0, 0, 15], fov: 70 }} className="absolute inset-0">
+        <ambientLight intensity={0.2} />
+        <pointLight position={[0, 0, 0]} intensity={1.5} color={'white'} />
+        <GlowingStar />
+        {iconPositions.map((pos, i) => (
+          <DiscordIcon key={i} position={pos} texture={textures[i % textures.length]} />
+        ))}
+      </Canvas>
 
-      {/* --- Scrollbereich für Footer --- */}
-      <div style={{ marginTop: windowHeight, minHeight: '50vh' }}>
-        <FixedFooter />
+      {/* --- Overlay Content --- */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white z-10 px-4">
+        <h1 className="text-4xl md:text-6xl font-bold mb-8">Willkommen bei AstroPlays</h1>
+        
+        {/* Ladebalken Container */}
+        <div className="w-full max-w-xl h-6 bg-gray-700 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 transition-all duration-200"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <p className="mt-2 text-gray-300">{Math.floor(progress)}%</p>
       </div>
     </div>
   )
