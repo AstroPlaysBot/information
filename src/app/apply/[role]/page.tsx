@@ -65,7 +65,6 @@ const roles: any = {
   },
 };
 
-// ----------------- Main Component -----------------
 export default function ApplyRole() {
   const router = useRouter();
   const params = useParams();
@@ -75,6 +74,7 @@ export default function ApplyRole() {
   const [user, setUser] = useState<any>(null);
   const [form, setForm] = useState<any>({ age: '', email: '' });
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false); // ⭐ NEU
 
   useEffect(() => {
     let didCancel = false;
@@ -130,12 +130,16 @@ export default function ApplyRole() {
     );
 
   const handleChange = (e: any) => setForm({ ...form, [e.target.name]: e.target.value });
+
   const isFormValid = () =>
     form.age && form.email && config.fields.every((f: any) => form[f.id]);
 
   const submit = async (e: any) => {
     e.preventDefault();
-    if (!isFormValid() || !user) return;
+
+    if (!isFormValid() || !user || submitting) return; // ⭐ SPAM SCHUTZ
+
+    setSubmitting(true);
 
     const answers: any = {};
     config.fields.forEach((f: any) => { answers[f.label] = form[f.id]; });
@@ -156,13 +160,17 @@ export default function ApplyRole() {
           answers,
         }),
       });
+
       const data = await res.json();
 
       if (data.success) {
-        router.push('/apply/advertised'); // Erfolgreiche Bewerbung
+        router.push('/apply/advertised');
+      } else {
+        setSubmitting(false);
       }
     } catch {
       alert("Bewerbung konnte nicht gesendet werden!");
+      setSubmitting(false);
     }
   };
 
@@ -192,6 +200,7 @@ export default function ApplyRole() {
           onChange={handleChange}
           className="p-3 bg-gray-800 rounded-xl"
         />
+
         <input
           name="email"
           placeholder="Email"
@@ -213,10 +222,14 @@ export default function ApplyRole() {
 
         <button
           type="submit"
-          disabled={!isFormValid()}
-          className={`py-3 rounded-xl font-semibold transition-shadow shadow-lg ${isFormValid() ? 'bg-purple-600 hover:bg-pink-600' : 'bg-gray-700 cursor-not-allowed'}`}
+          disabled={!isFormValid() || submitting}
+          className={`py-3 rounded-xl font-semibold transition-shadow shadow-lg ${
+            !isFormValid() || submitting
+              ? 'bg-gray-700 cursor-not-allowed'
+              : 'bg-purple-600 hover:bg-pink-600'
+          }`}
         >
-          Bewerbung abschicken
+          {submitting ? "Wird gesendet..." : "Bewerbung abschicken"}
         </button>
       </form>
     </div>
