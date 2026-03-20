@@ -240,9 +240,9 @@ export default function ApplyRole() {
             className="accent-purple-600 w-4 h-4"
           />
           Ich stimme den{' '}
-          <a href="/agb" className="text-blue-500 underline">AGB</a>,{' '}
-          <a href="/impressum" className="text-blue-500 underline">Impressum</a> und{' '}
-          <a href="/datenschutz" className="text-blue-500 underline">Datenschutzbestimmungen</a> zu.
+          <a href="/AGB" className="text-blue-500 underline">AGB</a>,{' '}
+          <a href="/Impressum" className="text-blue-500 underline">Impressum</a> und{' '}
+          <a href="/Datenschutz" className="text-blue-500 underline">Datenschutzbestimmungen</a> zu.
 
           {/* Tooltip */}
           <AnimatePresence>
