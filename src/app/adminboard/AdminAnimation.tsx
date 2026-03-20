@@ -98,17 +98,16 @@ function ParticleSystem({ targets, flash }: { targets: THREE.Vector3[], flash: b
   )
 }
 
-function CameraFlight({ tElapsed }: { tElapsed: number }) {
-  const camRef = useRef<THREE.Camera>(null!)
-
+function CameraFlight() {
+  const clockRef = useRef({t:0})
   useFrame((state)=>{
-    const t=tElapsed
-    const cam=state.camera
-    // Kamera startet nah, zoomt zurück auf Mitte
+    clockRef.current.t = state.clock.getElapsedTime()
+    const t = clockRef.current.t
+    const cam = state.camera
     if(t<5){
-      cam.position.z = 20 - t*1.5 // nah
+      cam.position.z = 20 - t*1.5
     } else if(t<10){
-      cam.position.z = 12 + (t-5)*2.5 // zoomt raus
+      cam.position.z = 12 + (t-5)*2.5
     } else {
       cam.position.z = 25
     }
@@ -121,7 +120,6 @@ export default function AdminAnimation({onFinish}: AdminAnimationProps){
   const [targets,setTargets]=useState<THREE.Vector3[]>([])
   const [showText,setShowText]=useState(false)
   const [flash,setFlash]=useState(false)
-  const [timeElapsed,setTimeElapsed]=useState(0)
 
   useEffect(()=>{const timer=setTimeout(()=>onFinish?.(),14000);return ()=>clearTimeout(timer)},[onFinish])
   useEffect(()=>{const timer=setTimeout(()=>setShowText(true),3000);return ()=>clearTimeout(timer)},[])
@@ -148,21 +146,17 @@ export default function AdminAnimation({onFinish}: AdminAnimationProps){
     }
     setTargets(temp)
 
-    // Flash Effekt: kurz weiß
-    setTimeout(()=>{setFlash(true)},7000)
-    setTimeout(()=>{setFlash(false)},8500)
+    // Flash Effekt
+    setTimeout(()=>setFlash(true),7000)
+    setTimeout(()=>setFlash(false),8500)
   },[])
-
-  useFrame((state)=>{
-    setTimeElapsed(state.clock.getElapsedTime())
-  })
 
   return (
     <div className="w-full h-screen bg-black relative overflow-hidden">
       <Canvas camera={{position:[0,0,20],fov:70}} style={{width:'100%',height:'100%'}}>
         <ambientLight intensity={0.5}/>
         {targets.length>0 && <ParticleSystem targets={targets} flash={flash}/>}
-        <CameraFlight tElapsed={timeElapsed}/>
+        <CameraFlight/>
       </Canvas>
 
       <div className={`absolute top-20 w-full text-center text-white text-4xl font-bold transition-opacity duration-3000 ease-in-out ${showText?'opacity-100':'opacity-0'}`}>
