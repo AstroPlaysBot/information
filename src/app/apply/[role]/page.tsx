@@ -74,7 +74,9 @@ export default function ApplyRole() {
   const [user, setUser] = useState<any>(null);
   const [form, setForm] = useState<any>({ age: '', email: '' });
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false); // ⭐ NEU
+  const [submitting, setSubmitting] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
 
   useEffect(() => {
     let didCancel = false;
@@ -132,12 +134,18 @@ export default function ApplyRole() {
   const handleChange = (e: any) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const isFormValid = () =>
-    form.age && form.email && config.fields.every((f: any) => form[f.id]);
+    form.age && form.email && config.fields.every((f: any) => form[f.id]) && agreed;
 
   const submit = async (e: any) => {
     e.preventDefault();
 
-    if (!isFormValid() || !user || submitting) return; // ⭐ SPAM SCHUTZ
+    if (!isFormValid() || !user || submitting) {
+      if (!agreed) {
+        setShowTooltip(true);
+        setTimeout(() => setShowTooltip(false), 2000); // Tooltip 2s zeigen
+      }
+      return;
+    }
 
     setSubmitting(true);
 
@@ -219,6 +227,37 @@ export default function ApplyRole() {
             className="p-3 bg-gray-800 rounded-xl"
           />
         ))}
+
+        {/* ✅ Checkbox mit Animation */}
+        <motion.label
+          className="flex items-center gap-2 text-sm text-gray-200 relative"
+          animate={showTooltip ? { x: [0, -5, 5, -5, 5, 0] } : { x: 0 }}
+        >
+          <input
+            type="checkbox"
+            checked={agreed}
+            onChange={e => setAgreed(e.target.checked)}
+            className="accent-purple-600 w-4 h-4"
+          />
+          Ich stimme den{' '}
+          <a href="/agb" className="text-blue-500 underline">AGB</a>,{' '}
+          <a href="/impressum" className="text-blue-500 underline">Impressum</a> und{' '}
+          <a href="/datenschutz" className="text-blue-500 underline">Datenschutzbestimmungen</a> zu.
+
+          {/* Tooltip */}
+          <AnimatePresence>
+            {showTooltip && (
+              <motion.span
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: -10 }}
+                exit={{ opacity: 0, y: -5 }}
+                className="absolute -top-6 left-0 text-xs text-red-500"
+              >
+                Bitte akzeptiere die Bedingungen!
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </motion.label>
 
         <button
           type="submit"
