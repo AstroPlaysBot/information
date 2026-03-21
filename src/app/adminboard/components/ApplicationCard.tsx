@@ -12,9 +12,23 @@ export default function ApplicationCard({ app, reload }: any) {
   const [time,setTime] = useState("")
   const [channel,setChannel] = useState("")
 
+  const [errors,setErrors] = useState({
+    date:false,
+    time:false,
+    channel:false
+  })
+
   async function invite(){
 
-    if(!date || !time || !channel) return alert("Bitte alles ausfüllen")
+    const newErrors = {
+      date:!date,
+      time:!time,
+      channel:!channel
+    }
+
+    setErrors(newErrors)
+
+    if(newErrors.date || newErrors.time || newErrors.channel) return
 
     await fetch('/api/adminboard/accept',{
       method:'POST',
@@ -27,6 +41,10 @@ export default function ApplicationCard({ app, reload }: any) {
     })
 
     setInviteOpen(false)
+    setDate("")
+    setTime("")
+    setChannel("")
+
     reload()
 
   }
@@ -63,39 +81,25 @@ export default function ApplicationCard({ app, reload }: any) {
 
   return (
 
+    <>
+    
     <motion.div
     whileHover={{scale:1.03}}
     className="bg-gradient-to-br from-gray-900 to-gray-950 border border-gray-800 rounded-2xl p-6 shadow-xl">
 
-      {/* Header */}
+      <h2 className="text-lg font-semibold text-white">
+        {app.name}
+      </h2>
 
-      <div className="flex justify-between items-start">
-
-        <div>
-          <h2 className="text-lg font-semibold text-white">
-            {app.name}
-          </h2>
-
-          <p className="text-sm text-purple-400">
-            Bewerbung für {app.role}
-          </p>
-        </div>
-
-        <span className="text-xs bg-gray-800 px-2 py-1 rounded">
-          #{app.id}
-        </span>
-
-      </div>
-
-      {/* Toggle */}
+      <p className="text-sm text-purple-400">
+        Bewerbung für {app.role}
+      </p>
 
       <button
       onClick={()=>setOpen(!open)}
       className="text-purple-400 text-sm mt-4 hover:underline">
         {open ? "Antworten verbergen" : "Antworten anzeigen"}
       </button>
-
-      {/* Antworten */}
 
       <AnimatePresence>
 
@@ -127,8 +131,6 @@ export default function ApplicationCard({ app, reload }: any) {
 
       </AnimatePresence>
 
-      {/* Buttons */}
-
       <div className="flex gap-2 mt-6">
 
         <button
@@ -151,95 +153,121 @@ export default function ApplicationCard({ app, reload }: any) {
 
       </div>
 
-      {/* Invite Modal */}
+    </motion.div>
 
-      <AnimatePresence>
 
-      {inviteOpen && (
+    {/* MODAL */}
+
+    <AnimatePresence>
+
+    {inviteOpen && (
+
+      <motion.div
+      initial={{opacity:0}}
+      animate={{opacity:1}}
+      exit={{opacity:0}}
+      className="fixed inset-0 bg-black/70 backdrop-blur flex items-center justify-center z-50">
 
         <motion.div
-        initial={{opacity:0}}
-        animate={{opacity:1}}
-        exit={{opacity:0}}
-        className="fixed inset-0 bg-black/60 backdrop-blur flex items-center justify-center z-50">
+        initial={{scale:0.9,opacity:0}}
+        animate={{scale:1,opacity:1}}
+        exit={{scale:0.9,opacity:0}}
+        className="bg-gray-900 border border-gray-800 rounded-xl p-6 w-[380px] space-y-4">
 
-          <motion.div
-          initial={{scale:0.9,opacity:0}}
-          animate={{scale:1,opacity:1}}
-          exit={{scale:0.9,opacity:0}}
-          className="bg-gray-900 border border-gray-800 rounded-xl p-6 w-[350px] space-y-4">
+          <h3 className="text-lg font-semibold text-white">
+            Vorstellungsgespräch planen
+          </h3>
 
-            <h3 className="text-lg font-semibold">
-              Vorstellungsgespräch planen
-            </h3>
+          {/* Datum */}
 
-            <div className="space-y-2">
+          <div className="space-y-1">
 
-              <label className="text-sm text-gray-400">
-                Datum
-              </label>
+            <label className="text-sm text-gray-400">
+              Datum
+            </label>
 
-              <input
-              type="date"
-              value={date}
-              onChange={e=>setDate(e.target.value)}
-              className="w-full bg-gray-800 p-2 rounded"/>
+            <input
+            type="date"
+            value={date}
+            onChange={e=>{
+              setDate(e.target.value)
+              setErrors({...errors,date:false})
+            }}
+            className={`w-full p-2 rounded bg-gray-800 border ${
+              errors.date ? "border-red-500" : "border-gray-700"
+            }`}/>
 
-            </div>
+          </div>
 
-            <div className="space-y-2">
+          {/* Uhrzeit */}
 
-              <label className="text-sm text-gray-400">
-                Uhrzeit
-              </label>
+          <div className="space-y-1">
 
-              <input
-              type="time"
-              value={time}
-              onChange={e=>setTime(e.target.value)}
-              className="w-full bg-gray-800 p-2 rounded"/>
+            <label className="text-sm text-gray-400">
+              Uhrzeit
+            </label>
 
-            </div>
+            <input
+            type="time"
+            value={time}
+            onChange={e=>{
+              setTime(e.target.value)
+              setErrors({...errors,time:false})
+            }}
+            className={`w-full p-2 rounded bg-gray-800 border ${
+              errors.time ? "border-red-500" : "border-gray-700"
+            }`}/>
 
-            <div className="space-y-2">
+          </div>
 
-              <label className="text-sm text-gray-400">
-                Sprachkanal
-              </label>
+          {/* Sprachkanal */}
 
-              <input
-              placeholder="z.B. Discord: Bewerbungsgespräch"
-              value={channel}
-              onChange={e=>setChannel(e.target.value)}
-              className="w-full bg-gray-800 p-2 rounded"/>
+          <div className="space-y-1">
 
-            </div>
+            <label className="text-sm text-gray-400">
+              Sprachkanal
+            </label>
 
-            <div className="flex gap-2 pt-2">
+            <input
+            placeholder="z.B. Discord Bewerbungsgespräch"
+            value={channel}
+            onChange={e=>{
+              setChannel(e.target.value)
+              setErrors({...errors,channel:false})
+            }}
+            className={`w-full p-2 rounded bg-gray-800 border ${
+              errors.channel ? "border-red-500" : "border-gray-700"
+            }`}/>
 
-              <button
-              onClick={invite}
-              className="flex-1 bg-purple-600 hover:bg-purple-700 p-2 rounded">
-                Einladung senden
-              </button>
+          </div>
 
-              <button
-              onClick={()=>setInviteOpen(false)}
-              className="flex-1 bg-gray-700 hover:bg-gray-600 p-2 rounded">
-                Abbrechen
-              </button>
+          {/* Buttons */}
 
-            </div>
+          <div className="flex gap-2 pt-2">
 
-          </motion.div>
+            <button
+            onClick={invite}
+            className="flex-1 bg-purple-600 hover:bg-purple-700 p-2 rounded text-sm">
+              Einladung senden
+            </button>
+
+            <button
+            onClick={()=>setInviteOpen(false)}
+            className="flex-1 bg-gray-700 hover:bg-gray-600 p-2 rounded text-sm">
+              Abbrechen
+            </button>
+
+          </div>
 
         </motion.div>
 
-      )}
+      </motion.div>
 
-      </AnimatePresence>
+    )}
 
-    </motion.div>
+    </AnimatePresence>
+
+    </>
 
   )
 
