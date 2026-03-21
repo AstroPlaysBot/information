@@ -132,6 +132,26 @@ export default function ApplicationCard({ app, reload }: any) {
 
       </div>
 
+      {/* Interview Infos */}
+
+      {app.status === "INTERVIEW" && app.interviewDate && (
+        <div className="mt-3 text-sm text-gray-300">
+
+          <div>
+            📅 {new Date(app.interviewDate).toLocaleDateString()}
+          </div>
+
+          <div>
+            ⏰ {new Date(app.interviewDate).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}
+          </div>
+
+          <div>
+            🎤 {app.interviewPlace}
+          </div>
+
+        </div>
+      )}
+
       {/* Toggle */}
 
       <button
