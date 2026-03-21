@@ -18,6 +18,23 @@ export default function ApplicationCard({ app, reload }: any) {
     channel:false
   })
 
+  const status = app.status || "PENDING"
+
+  function statusBadge(){
+
+    if(status === "INTERVIEW")
+      return <span className="text-xs bg-purple-600 px-2 py-1 rounded">Eingeladen</span>
+
+    if(status === "ACCEPTED")
+      return <span className="text-xs bg-green-600 px-2 py-1 rounded">Angenommen</span>
+
+    if(status === "REJECTED")
+      return <span className="text-xs bg-red-600 px-2 py-1 rounded">Abgelehnt</span>
+
+    return <span className="text-xs bg-yellow-600 px-2 py-1 rounded">Neu</span>
+
+  }
+
   async function invite(){
 
     const newErrors = {
@@ -41,9 +58,17 @@ export default function ApplicationCard({ app, reload }: any) {
     })
 
     setInviteOpen(false)
-    setDate("")
-    setTime("")
-    setChannel("")
+    reload()
+
+  }
+
+  async function hire(){
+
+    await fetch('/api/adminboard/hire',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id:app.id})
+    })
 
     reload()
 
@@ -82,24 +107,40 @@ export default function ApplicationCard({ app, reload }: any) {
   return (
 
     <>
-    
+
     <motion.div
     whileHover={{scale:1.03}}
     className="bg-gradient-to-br from-gray-900 to-gray-950 border border-gray-800 rounded-2xl p-6 shadow-xl">
 
-      <h2 className="text-lg font-semibold text-white">
-        {app.name}
-      </h2>
+      {/* Header */}
 
-      <p className="text-sm text-purple-400">
-        Bewerbung für {app.role}
-      </p>
+      <div className="flex justify-between items-start">
+
+        <div>
+
+          <h2 className="text-lg font-semibold text-white">
+            {app.name}
+          </h2>
+
+          <p className="text-sm text-purple-400">
+            Bewerbung für {app.role}
+          </p>
+
+        </div>
+
+        {statusBadge()}
+
+      </div>
+
+      {/* Toggle */}
 
       <button
       onClick={()=>setOpen(!open)}
       className="text-purple-400 text-sm mt-4 hover:underline">
         {open ? "Antworten verbergen" : "Antworten anzeigen"}
       </button>
+
+      {/* Antworten */}
 
       <AnimatePresence>
 
@@ -112,6 +153,7 @@ export default function ApplicationCard({ app, reload }: any) {
         className="mt-4 border-t border-gray-800 pt-4 space-y-3">
 
           {answers.map(([question,answer]:any,index)=>(
+
             <div key={index}>
 
               <p className="text-xs text-gray-500">
@@ -123,6 +165,7 @@ export default function ApplicationCard({ app, reload }: any) {
               </p>
 
             </div>
+
           ))}
 
         </motion.div>
@@ -131,25 +174,59 @@ export default function ApplicationCard({ app, reload }: any) {
 
       </AnimatePresence>
 
+      {/* Buttons */}
+
       <div className="flex gap-2 mt-6">
 
-        <button
-        onClick={()=>setInviteOpen(true)}
-        className="flex-1 bg-purple-600 hover:bg-purple-700 p-2 rounded-lg text-sm transition">
-          Einladen
-        </button>
+        {status === "PENDING" && (
+          <>
+            <button
+            onClick={()=>setInviteOpen(true)}
+            className="flex-1 bg-purple-600 hover:bg-purple-700 p-2 rounded-lg text-sm">
+              Einladen
+            </button>
 
-        <button
-        onClick={reject}
-        className="flex-1 bg-yellow-600 hover:bg-yellow-700 p-2 rounded-lg text-sm transition">
-          Ablehnen
-        </button>
+            <button
+            onClick={reject}
+            className="flex-1 bg-yellow-600 hover:bg-yellow-700 p-2 rounded-lg text-sm">
+              Ablehnen
+            </button>
 
-        <button
-        onClick={remove}
-        className="flex-1 bg-red-600 hover:bg-red-700 p-2 rounded-lg text-sm transition">
-          Löschen
-        </button>
+            <button
+            onClick={remove}
+            className="flex-1 bg-red-600 hover:bg-red-700 p-2 rounded-lg text-sm">
+              Löschen
+            </button>
+          </>
+        )}
+
+        {status === "INTERVIEW" && (
+          <>
+            <button
+            onClick={hire}
+            className="flex-1 bg-green-600 hover:bg-green-700 p-2 rounded-lg text-sm">
+              Einstellen
+            </button>
+
+            <button
+            onClick={reject}
+            className="flex-1 bg-yellow-600 hover:bg-yellow-700 p-2 rounded-lg text-sm">
+              Ablehnen
+            </button>
+          </>
+        )}
+
+        {status === "ACCEPTED" && (
+          <div className="w-full text-center bg-green-700 p-2 rounded text-sm">
+            Mitarbeiter eingestellt
+          </div>
+        )}
+
+        {status === "REJECTED" && (
+          <div className="w-full text-center bg-red-700 p-2 rounded text-sm">
+            Bewerbung abgelehnt
+          </div>
+        )}
 
       </div>
 
@@ -178,8 +255,6 @@ export default function ApplicationCard({ app, reload }: any) {
             Vorstellungsgespräch planen
           </h3>
 
-          {/* Datum */}
-
           <div className="space-y-1">
 
             <label className="text-sm text-gray-400">
@@ -195,11 +270,10 @@ export default function ApplicationCard({ app, reload }: any) {
             }}
             className={`w-full p-2 rounded bg-gray-800 border ${
               errors.date ? "border-red-500" : "border-gray-700"
-            }`}/>
+            }`}
+            />
 
           </div>
-
-          {/* Uhrzeit */}
 
           <div className="space-y-1">
 
@@ -216,11 +290,10 @@ export default function ApplicationCard({ app, reload }: any) {
             }}
             className={`w-full p-2 rounded bg-gray-800 border ${
               errors.time ? "border-red-500" : "border-gray-700"
-            }`}/>
+            }`}
+            />
 
           </div>
-
-          {/* Sprachkanal */}
 
           <div className="space-y-1">
 
@@ -237,23 +310,22 @@ export default function ApplicationCard({ app, reload }: any) {
             }}
             className={`w-full p-2 rounded bg-gray-800 border ${
               errors.channel ? "border-red-500" : "border-gray-700"
-            }`}/>
+            }`}
+            />
 
           </div>
-
-          {/* Buttons */}
 
           <div className="flex gap-2 pt-2">
 
             <button
             onClick={invite}
-            className="flex-1 bg-purple-600 hover:bg-purple-700 p-2 rounded text-sm">
+            className="flex-1 bg-purple-600 hover:bg-purple-700 p-2 rounded">
               Einladung senden
             </button>
 
             <button
             onClick={()=>setInviteOpen(false)}
-            className="flex-1 bg-gray-700 hover:bg-gray-600 p-2 rounded text-sm">
+            className="flex-1 bg-gray-700 hover:bg-gray-600 p-2 rounded">
               Abbrechen
             </button>
 
