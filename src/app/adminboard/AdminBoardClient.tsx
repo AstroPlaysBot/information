@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import ApplicationCard from './components/ApplicationCard'
-import Topbar from './components/topbar'
+import Topbar from './components/Topbar'
 
 interface Application{
   id:string
