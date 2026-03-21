@@ -47,7 +47,7 @@ export default function ApplicationCard({ app, reload }: any) {
 
     if(newErrors.date || newErrors.time || newErrors.channel) return
 
-    await fetch('/api/adminboard/accept',{
+    await fetch('/api/adminboard/invite',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
