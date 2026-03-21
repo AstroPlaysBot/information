@@ -1,17 +1,23 @@
-// src/app/api/adminboard/accept/route.ts
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 
 export async function POST(req: Request) {
+
   const body = await req.json();
 
-  // Update Bewerbung in DB
+  if (!body.id || !body.date || !body.place) {
+    return NextResponse.json({ success:false, error:"Missing data" });
+  }
+
+  const interviewDate = new Date(body.date);
+
+  // Bewerbung auf Interview setzen
   const app = await prisma.application.update({
     where: { id: body.id },
     data: {
-      status: "ACCEPTED",
-      interviewDate: new Date(body.date),
+      status: "INTERVIEW",
+      interviewDate,
       interviewPlace: body.place,
     },
   });
@@ -19,34 +25,76 @@ export async function POST(req: Request) {
   let mailError: string | null = null;
 
   try {
+
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
       port: 587,
-      secure: false, // STARTTLS
+      secure: false,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
     });
 
+    const date = interviewDate.toLocaleDateString("de-DE");
+    const time = interviewDate.toLocaleTimeString("de-DE", {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+
     await transporter.sendMail({
       from: `"Team AstroPlays" <${process.env.SMTP_USER}>`,
       to: app.email,
-      subject: `Deine Bewerbung für ${app.role} wurde angenommen!`,
+      subject: `Einladung zum Vorstellungsgespräch – ${app.role}`,
       html: `
-        <div style="font-family:sans-serif; line-height:1.5; color:#111">
-          <h2 style="color:#4b5563;">Herzlichen Glückwunsch, ${app.name}!</h2>
-          <p>Deine Bewerbung für <strong>${app.role}</strong> wurde angenommen.</p>
-          <p><strong>Interview-Termin:</strong> ${new Date(body.date).toLocaleString()}</p>
-          <p><strong>Ort:</strong> ${body.place}</p>
-          <p>Viele Grüße,<br>Team AstroPlays</p>
+        <div style="font-family:sans-serif; line-height:1.6; color:#111">
+
+          <h2 style="color:#4f46e5;">Hallo ${app.name},</h2>
+
+          <p>
+            vielen Dank für deine Bewerbung als <strong>${app.role}</strong>.
+          </p>
+
+          <p>
+            Wir möchten dich gerne zu einem kurzen
+            <strong>Vorstellungsgespräch</strong> einladen.
+          </p>
+
+          <hr style="margin:20px 0"/>
+
+          <p><strong>Datum:</strong> ${date}</p>
+          <p><strong>Uhrzeit:</strong> ${time}</p>
+          <p><strong>Sprachkanal:</strong> ${body.place}</p>
+
+          <hr style="margin:20px 0"/>
+
+          <p>
+            Bitte erscheine pünktlich zum Termin im angegebenen Sprachkanal.
+          </p>
+
+          <p>
+            Wir freuen uns auf das Gespräch mit dir!
+          </p>
+
+          <p style="margin-top:20px">
+            Viele Grüße<br/>
+            <strong>Team AstroPlays</strong>
+          </p>
+
         </div>
       `,
     });
-  } catch (e: any) {
+
+  } catch (e:any) {
+
     console.error("E-Mail Fehler:", e);
     mailError = "E-Mail konnte nicht gesendet werden!";
+
   }
 
-  return NextResponse.json({ success: true, mailError });
+  return NextResponse.json({
+    success: true,
+    mailError
+  });
+
 }
