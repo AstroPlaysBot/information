@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import ApplicationCard from './components/ApplicationCard'
-import Topbar from './components/Topbar'
 
 interface Application{
   id:string
@@ -16,10 +15,14 @@ interface Application{
   interviewPlace?: string
 }
 
-export default function AdminBoardClient({setApplicationCount}: any){
+interface Props {
+  setApplicationCount: (count: number) => void
+  filter: string
+}
+
+export default function AdminBoardClient({ setApplicationCount, filter }: Props) {
 
   const [applications, setApplications] = useState<Application[]>([])
-  const [filter, setFilter] = useState("Alle")
 
   useEffect(() => {
     load()
@@ -43,22 +46,14 @@ export default function AdminBoardClient({setApplicationCount}: any){
   })
 
   return (
-    <div className="flex flex-col gap-6">
-
-      {/* Topbar mit Filter */}
-      <Topbar view="applications" filter={filter} setFilter={setFilter} />
-
-      {/* Application Grid */}
-      <div className="p-10 grid md:grid-cols-2 xl:grid-cols-3 gap-7">
-        {filteredApplications.map(app => (
-          <ApplicationCard
-            key={app.id}
-            app={app}
-            reload={load}
-          />
-        ))}
-      </div>
-
+    <div className="p-10 grid md:grid-cols-2 xl:grid-cols-3 gap-7">
+      {filteredApplications.map(app => (
+        <ApplicationCard
+          key={app.id}
+          app={app}
+          reload={load}
+        />
+      ))}
     </div>
   )
 }
