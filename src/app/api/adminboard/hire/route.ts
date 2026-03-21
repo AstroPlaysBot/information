@@ -42,14 +42,6 @@ export async function POST(req: Request) {
         angenommen wurdest.
         </p>
 
-        <h3>Interview Informationen</h3>
-
-        <p>
-        <strong>Datum:</strong> ${app.interviewDate?.toLocaleString()}
-        <br/>
-        <strong>Ort:</strong> ${app.interviewPlace}
-        </p>
-
         <h3>AdminBoard Zugriff</h3>
 
         <p>
@@ -57,6 +49,15 @@ export async function POST(req: Request) {
         Dort kannst du Bewerbungen verwalten und Teamaufgaben übernehmen.
         </p>
 
+        <h3>Beginn deiner Arbeit</h3>
+
+        <p>
+        Bitte melde dich bei ... um eine Einführung zu erhalten.
+        Anschließend erhälst du erste Aufgaben und hast 3 Tage Zeit dich einzufinden.
+
+        Solltest du erkranken, ausfallen oder beurlaubt sein, melde dies bitte unverzüglich deinem Ansprechpartner.
+        </p>
+        
         <p>
         Falls du Fragen hast, melde dich jederzeit bei uns.
         </p>
