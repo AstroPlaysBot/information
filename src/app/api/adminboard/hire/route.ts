@@ -9,7 +9,9 @@ export async function POST(req: Request) {
   const app = await prisma.application.update({
     where: { id: body.id },
     data: {
-      status: "ACCEPTED"
+      status: "ACCEPTED",
+      updatedAt:new Date(),
+      updatedBy:body.admin || "Admin"
     }
   });
 
