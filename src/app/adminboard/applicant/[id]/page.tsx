@@ -5,22 +5,38 @@ import { useEffect, useState } from "react"
 
 export default function ApplicantPage(){
 
-  const {id} = useParams()
+  const params = useParams()
+  const id = params?.id as string
+
   const router = useRouter()
 
   const [app,setApp] = useState<any>(null)
   const [note,setNote] = useState("")
+  const [loading,setLoading] = useState(true)
 
   useEffect(()=>{
-    load()
-  },[])
+    if(id) load()
+  },[id])
 
   async function load(){
 
-    const res = await fetch(`/api/adminboard/${id}`)
-    const data = await res.json()
+    try{
 
-    setApp(data)
+      const res = await fetch(`/api/adminboard/${id}`)
+
+      if(!res.ok){
+        console.error("API Fehler:", res.status)
+        return
+      }
+
+      const data = await res.json()
+      setApp(data)
+
+    }catch(e){
+      console.error("Fetch Fehler:",e)
+    }
+
+    setLoading(false)
 
   }
 
@@ -40,7 +56,21 @@ export default function ApplicantPage(){
 
   }
 
-  if(!app) return null
+  if(loading){
+    return (
+      <div className="p-10 text-gray-400">
+        Lade Bewerbung...
+      </div>
+    )
+  }
+
+  if(!app){
+    return (
+      <div className="p-10 text-red-400">
+        Bewerbung konnte nicht geladen werden.
+      </div>
+    )
+  }
 
   return (
 
@@ -60,7 +90,7 @@ export default function ApplicantPage(){
 
       <div className="space-y-3">
 
-        {Object.entries(app.answers).map(([q,a]:any,i)=>(
+        {Object.entries(app.answers || {}).map(([q,a]:any,i)=>(
           <div key={i}>
             <p className="text-gray-500 text-sm">{q}</p>
             <p className="text-gray-200">{a}</p>
@@ -86,9 +116,9 @@ export default function ApplicantPage(){
 
         <h3 className="text-purple-400">Admin Notizen</h3>
 
-        {app.notes?.map((n:any,i:number)=>(
+        {Array.isArray(app.notes) && app.notes.map((n:any,i:number)=>(
           <div key={i} className="text-sm text-gray-300">
-            {n}
+            {typeof n === "string" ? n : JSON.stringify(n)}
           </div>
         ))}
 
