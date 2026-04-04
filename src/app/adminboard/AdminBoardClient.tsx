@@ -13,6 +13,8 @@ interface Application{
   status?: string
   interviewDate?: string
   interviewPlace?: string
+  updatedAt?: string
+  updatedBy?: string
 }
 
 interface Props {
@@ -36,7 +38,6 @@ export default function AdminBoardClient({ setApplicationCount, filter }: Props)
     setApplicationCount((data.applications || []).length)
   }
 
-  // Gefilterte Anwendungen
   const filteredApplications = applications.filter(app => {
     if(filter === "Alle") return true
     if(filter === "Offen") return app.status === "PENDING"
