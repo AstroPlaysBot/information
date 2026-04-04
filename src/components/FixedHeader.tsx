@@ -35,27 +35,6 @@ const FixedHeader = () => {
     setMenuOpen(false);
   };
 
-  // ===== Discord OAuth =====
-  const startDiscordAuth = () => {
-    const CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
-    const REDIRECT_URI = encodeURIComponent(
-      `${process.env.NEXT_PUBLIC_APP_URL}/api/discord-auth`
-    );
-    const SCOPE = encodeURIComponent('identify guilds guilds.members.read');
-    const RESPONSE_TYPE = 'code';
-
-    if (!CLIENT_ID || !REDIRECT_URI) {
-      alert('Discord Client ID oder App URL fehlt!');
-      return;
-    }
-
-    const discordOAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=${RESPONSE_TYPE}&scope=${SCOPE}`;
-
-    // Browser redirect
-    window.location.href = discordOAuthUrl;
-    setMenuOpen(false);
-  };
-
   // Smooth Scroll zu Section mit Header-Offset
   const goSection = (id: string) => {
     setMenuOpen(false);
@@ -75,6 +54,26 @@ const FixedHeader = () => {
     } else {
       scrollToSection();
     }
+  };
+
+  // ===== Discord OAuth =====
+  const startDiscordAuth = () => {
+    const CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
+    const REDIRECT_URI = encodeURIComponent(
+      `${process.env.NEXT_PUBLIC_APP_URL}/api/discord-auth`
+    );
+    const SCOPE = encodeURIComponent('identify guilds guilds.members.read');
+    const RESPONSE_TYPE = 'code';
+
+    if (!CLIENT_ID || !REDIRECT_URI) {
+      alert('Discord Client ID oder App URL fehlt!');
+      return;
+    }
+
+    const discordOAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=${RESPONSE_TYPE}&scope=${SCOPE}`;
+
+    window.location.href = discordOAuthUrl;
+    setMenuOpen(false);
   };
 
   return (
@@ -119,6 +118,7 @@ const FixedHeader = () => {
             <button onClick={() => goSection('astro-moderation')} className="hover:text-white transition">Module</button>
             <button onClick={() => goSection('support')} className="hover:text-white transition">Support</button>
             <button onClick={() => goSection('apply')} className="hover:text-white transition">Bewerben</button>
+            <button onClick={() => goSection('team')} className="hover:text-white transition">Team</button>
             <button onClick={startDiscordAuth} className="hover:text-white transition">Einloggen</button>
           </nav>
 
@@ -148,6 +148,7 @@ const FixedHeader = () => {
               <li><button onClick={() => goSection('astro-moderation')}>Module</button></li>
               <li><button onClick={() => goSection('support')}>Support</button></li>
               <li><button onClick={() => goSection('apply')}>Bewerben</button></li>
+              <li><button onClick={() => goSection('team')}>Team</button></li>
               <li><button onClick={startDiscordAuth}>Einloggen</button></li>
             </ul>
           </div>
