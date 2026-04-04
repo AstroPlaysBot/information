@@ -48,11 +48,13 @@ export default function ApplicantPage() {
   }
 
   async function saveNote() {
-    await fetch('/api/adminboard/note',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ id, note })
-    })
+    if (!note) return alert("Notiz darf nicht leer sein!");
+
+    await fetch("/api/adminboard/note", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, note, admin: session?.user?.name || "Admin" })
+    });
     setNote("")
     load()
   }
