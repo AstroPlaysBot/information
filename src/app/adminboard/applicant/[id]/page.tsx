@@ -57,7 +57,7 @@ export default function ApplicantPage() {
     const adminName = session.user?.name || "Admin"
 
     try {
-      const res = await fetch("/api/adminboard/note", {
+      const res = await fetch("/adminboard/note", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, note, admin: adminName })
