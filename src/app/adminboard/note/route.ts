@@ -19,7 +19,7 @@ export async function POST(req: Request) {
   const newNote = {
     text: body.note,
     author: "Admin",
-    date: new Date()
+    date: new Date().toISOString() // <- hier als String speichern
   }
 
   notes.push(newNote)
