@@ -62,8 +62,8 @@ export default function ApplicantPage() {
       const data = await res.json()
       if (!data.success) return alert("Notiz konnte nicht gespeichert werden: " + (data.error || ""))
 
-      setNote("") // Textfeld leeren
-      load()      // Bewerbung neu laden
+      setNote("")
+      load()
     } catch(err) {
       console.error("Fehler beim Speichern der Notiz:", err)
       alert("Fehler beim Speichern der Notiz")
@@ -141,8 +141,12 @@ export default function ApplicantPage() {
             </button>
           </>}
 
-          {app.status === "INVITED" && !interviewPassed && (
-            <p>Gespräch ausstehend</p>
+          {app.status === "INVITED" && !interviewTime && (
+            <p>Vorstellungsgespräch ausstehend</p>
+          )}
+
+          {app.status === "INVITED" && interviewTime && !interviewPassed && (
+            <p>Vorstellungsgespräch ausstehend</p>
           )}
 
           {app.status === "INVITED" && interviewPassed && <>
@@ -173,9 +177,7 @@ export default function ApplicantPage() {
         {/* Aktuell */}
         <div className="bg-gray-900 p-6 rounded space-y-3">
           <h2 className="text-lg font-bold">Aktuell:</h2>
-          {app.status === "PENDING" && <p>Bewerber</p>}
-          {app.status === "INVITED" && !interviewPassed && <p>Interview Phase</p>}
-          {app.status === "INVITED" && interviewPassed && <p>Nach Interview</p>}
+          {app.status !== "HIRED" && <p>Bewerber</p>}
           {app.status === "HIRED" && <p>{app.role}</p>}
         </div>
 
@@ -221,16 +223,14 @@ export default function ApplicantPage() {
       {/* Notizen */}
       <div className="bg-gray-900 p-6 rounded space-y-4">
         <h2 className="text-lg font-bold">Notizen</h2>
-        {(Array.isArray(app.notes) ? app.notes : []).map((n:any,i:number)=>(
-          <div key={i} className="border-b border-gray-700 pb-2">
-            {typeof n === "string" ? <p>{n}</p> : <>
-              <p>{n.text}</p>
-              <p className="text-xs text-gray-500">
-                von {n.author || "[discordname]"} am {new Date(n.date).toLocaleString()}
-              </p>
-            </>}
-          </div>
-        ))}
+        {(Array.isArray(app.notes) ? app.notes : []).map((n:any,i:number)=>(<div key={i} className="border-b border-gray-700 pb-2">
+          {typeof n === "string" ? <p>{n}</p> : <>
+            <p>{n.text}</p>
+            <p className="text-xs text-gray-500">
+              von {n.author || "[discordname]"} am {new Date(n.date).toLocaleString()}
+            </p>
+          </>}
+        </div>))}
         <textarea
           value={note}
           onChange={e=>setNote(e.target.value)}
