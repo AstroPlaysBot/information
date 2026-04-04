@@ -19,6 +19,8 @@ export async function POST(req: Request) {
       status: "INTERVIEW",
       interviewDate,
       interviewPlace: body.place,
+      updatedAt:new Date(),
+      updatedBy:body.admin || "Admin"
     },
   });
 
