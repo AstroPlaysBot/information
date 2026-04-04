@@ -156,6 +156,26 @@ export default function HomePage() {
         </a>
       </section>
 
+      {/* TEAM SECTION */}
+      <section 
+        id="team"
+        className="relative px-8 max-w-7xl mx-auto mt-48 mb-48 text-center">
+        <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-6">Unser Team</h2>
+        <p className="text-gray-300 max-w-2xl mx-auto mb-10 text-lg">
+          Lerne die Hauptpersonen hinter AstroPlays kennen – ihr Engagement, ihre Rollen und Visionen.
+        </p>
+
+        <a
+          href="/team"
+          className="inline-flex items-center justify-center
+                     rounded-xl bg-indigo-600 hover:bg-indigo-500
+                     transition text-white font-semibold
+                     px-10 py-4 text-lg shadow-xl hover:shadow-2xl"
+        >
+          Zum Team →
+        </a>
+      </section>
+
       <style jsx global>{`
         @keyframes gradientMove {
           0% { background-position: 0% 50%; }
