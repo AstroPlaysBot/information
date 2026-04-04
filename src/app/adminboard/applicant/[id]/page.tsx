@@ -190,7 +190,7 @@ export default function ApplicantPage() {
             ) : (
               <>
                 <p>{n.text}</p>
-                <p className="text-xs text-gray-500">von {n.by} am {new Date(n.date).toLocaleString()}</p>
+                <p className="text-xs text-gray-500">von {n.author} am {new Date(n.date).toLocaleString()}</p>
               </>
             )}
           </div>
