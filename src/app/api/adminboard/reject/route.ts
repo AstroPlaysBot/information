@@ -9,9 +9,11 @@ export async function POST(req: Request) {
   // Bewerbung auf "REJECTED" setzen
   const app = await prisma.application.update({
     where: { id: body.id },
-    data: { status: "REJECTED" },
-    updatedAt:new Date(),
-    updatedBy:body.admin || "Admin"
+    data: { 
+      status: "REJECTED" },
+      updatedAt:new Date(),
+      updatedBy:body.admin || "Admin"
+    },
   });
 
   let mailError: string | null = null;
