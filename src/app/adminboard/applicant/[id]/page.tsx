@@ -7,16 +7,32 @@ export default function ApplicantPage(){
 
   const params = useParams()
   const id = params?.id as string
-
   const router = useRouter()
 
   const [app,setApp] = useState<any>(null)
   const [note,setNote] = useState("")
   const [loading,setLoading] = useState(true)
 
+  const [session,setSession] = useState<any>(null)
+
+  const canFire = session?.discordId === "1462891063202156807"
+
   useEffect(()=>{
+    window.scrollTo(0,0)
+  },[])
+
+  useEffect(()=>{
+    loadSession()
     if(id) load()
   },[id])
+
+  async function loadSession(){
+    try{
+      const res = await fetch("/api/check-auth")
+      const data = await res.json()
+      setSession(data)
+    }catch{}
+  }
 
   async function load(){
 
@@ -42,9 +58,7 @@ export default function ApplicantPage(){
 
   async function saveNote(){
 
-    if(!note.trim()) return
-
-    await fetch('/adminboard/note',{
+    await fetch('/api/adminboard/note',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
@@ -76,102 +90,116 @@ export default function ApplicantPage(){
 
   return (
 
-    <div className="min-h-screen p-10 text-white">
+    <div className="p-10 max-w-7xl mx-auto space-y-10 text-white">
 
       <button
       onClick={()=>router.push('/adminboard')}
-      className="mb-6 bg-blue-600 px-4 py-2 rounded">
+      className="bg-blue-600 px-4 py-2 rounded">
 
-        ← zurück
+        ← Zurück
 
       </button>
 
       <div className="grid grid-cols-4 gap-6">
 
         {/* Angaben */}
-        <div className="bg-gray-800 p-4 rounded space-y-3">
+        <div className="bg-gray-900 p-6 rounded space-y-3">
 
-          <h3 className="font-semibold text-lg">
-            Angaben:
-          </h3>
+          <h2 className="text-lg font-bold">Angaben:</h2>
 
           {Object.entries(app.answers || {}).map(([q,a]:any,i)=>(
-
             <div key={i}>
-
-              <p className="text-gray-400 text-sm">
-                {q}
-              </p>
-
-              <p>
-                {a}
-              </p>
-
+              <p className="text-gray-400 text-sm">{q}</p>
+              <p>{a}</p>
             </div>
-
           ))}
 
         </div>
 
 
         {/* Interview */}
-        <div className="bg-gray-800 p-4 rounded space-y-3">
+        <div className="bg-gray-900 p-6 rounded space-y-3">
 
-          <h3 className="font-semibold text-lg">
-            Interview:
-          </h3>
+          <h2 className="text-lg font-bold">Interview:</h2>
 
-          {app.interviewDate ? (
-
-            <>
-              <p>
-                {new Date(app.interviewDate).toLocaleString()}
-              </p>
-
-              <p>
-                {app.interviewPlace}
-              </p>
-            </>
-
-          ) : (
-
+          {!app.interviewDate && (
             <p className="text-gray-400">
               Noch kein Interview geplant
             </p>
+          )}
 
+          {app.interviewDate && (
+            <>
+              <p>{new Date(app.interviewDate).toLocaleString()}</p>
+              <p>{app.interviewPlace}</p>
+            </>
           )}
 
         </div>
 
 
         {/* Verwalten */}
-        <div className="bg-gray-800 p-4 rounded space-y-3">
+        <div className="bg-gray-900 p-6 rounded space-y-3">
 
-          <h3 className="font-semibold text-lg">
-            Verwalten
-          </h3>
+          <h2 className="text-lg font-bold">Verwalten</h2>
 
-          <button className="w-full bg-purple-600 py-2 rounded">
-            Einladen
-          </button>
+          {app.status === "PENDING" && (
+            <>
+              <button className="bg-green-600 w-full py-2 rounded">
+                Einladen
+              </button>
 
-          <button className="w-full bg-red-600 py-2 rounded">
-            Ablehnen
-          </button>
+              <button className="bg-red-600 w-full py-2 rounded">
+                Ablehnen
+              </button>
+            </>
+          )}
+
+          {app.status === "INVITED" && (
+            <>
+              <button className="bg-green-600 w-full py-2 rounded">
+                Einstellen
+              </button>
+
+              <button className="bg-red-600 w-full py-2 rounded">
+                Ablehnen
+              </button>
+            </>
+          )}
+
+          {app.status === "HIRED" && (
+
+            <button
+            disabled={!canFire}
+            className={`w-full py-2 rounded ${
+              canFire ? "bg-red-700" : "bg-gray-700 cursor-not-allowed"
+            }`}>
+
+              {canFire ? "Kündigen" : "🔒 Kündigen"}
+
+            </button>
+
+          )}
 
         </div>
 
 
         {/* Aktuell */}
-        <div className="bg-gray-800 p-4 rounded">
+        <div className="bg-gray-900 p-6 rounded space-y-3">
 
-          <h3 className="font-semibold text-lg mb-2">
-            Aktuell:
-          </h3>
+          <h2 className="text-lg font-bold">Aktuell:</h2>
 
-          <p>
-            {app.role || "Bewerber"}
-          </p>
+          {app.status === "PENDING" && (
+            <p>Bewerber</p>
+          )}
+
+          {app.status === "INVITED" && (
+            <p>Interview Phase</p>
+          )}
+
+          {app.status === "HIRED" && (
+            <p>{app.role}</p>
+          )}
 
         </div>
 
@@ -179,42 +207,30 @@ export default function ApplicantPage(){
 
 
       {/* Notizen */}
+      <div className="bg-gray-900 p-6 rounded space-y-4">
 
-      <div className="mt-10 space-y-4">
+        <h2 className="text-lg font-bold">Notizen</h2>
 
-        <h3 className="text-lg font-semibold">
-          Notizen:
-        </h3>
+        {Array.isArray(app.notes) && app.notes.map((n:any,i:number)=>(
 
-        <div className="space-y-2">
+          <div
+          key={i}
+          className="border-b border-gray-700 pb-2">
 
-          {Array.isArray(app.notes) && app.notes.map((n:any,i:number)=>(
+            {typeof n === "string" ? (
+              <p>{n}</p>
+            ) : (
+              <>
+                <p>{n.text}</p>
+                <p className="text-xs text-gray-500">
+                  von {n.by}
+                </p>
+              </>
+            )}
 
-            <div key={i} className="bg-gray-800 p-3 rounded">
+          </div>
 
-              {typeof n === "object" ? (
-
-                <>
-                  <p className="text-sm text-purple-400">
-                    {n.author} • {new Date(n.date).toLocaleString()}
-                  </p>
-
-                  <p>
-                    {n.text}
-                  </p>
-                </>
-
-              ) : (
-
-                <p>{n}</p>
-
-              )}
-
-            </div>
-
-          ))}
-
-        </div>
+        ))}
 
         <textarea
         value={note}
