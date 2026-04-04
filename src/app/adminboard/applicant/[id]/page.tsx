@@ -47,16 +47,31 @@ export default function ApplicantPage() {
     setLoading(false)
   }
 
+  // ================================
+  // Notiz speichern
+  // ================================
   async function saveNote() {
     if (!note) return alert("Notiz darf nicht leer sein!");
+    if (!session) return alert("Session konnte nicht geladen werden!");
 
-    await fetch("/api/adminboard/note", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, note, admin: session?.user?.name || "Admin" })
-    });
-    setNote("")
-    load()
+    const adminName = session.user?.name || "Admin"
+
+    try {
+      const res = await fetch("/api/adminboard/note", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, note, admin: adminName })
+      })
+
+      const data = await res.json()
+      if (!data.success) return alert("Notiz konnte nicht gespeichert werden: " + (data.error || ""))
+
+      setNote("") // Textfeld leeren
+      load()      // Bewerbung neu laden
+    } catch(err) {
+      console.error("Fehler beim Speichern der Notiz:", err)
+      alert("Fehler beim Speichern der Notiz")
+    }
   }
 
   async function sendInvite() {
@@ -185,18 +200,23 @@ export default function ApplicantPage() {
       {/* Notizen */}
       <div className="bg-gray-900 p-6 rounded space-y-4">
         <h2 className="text-lg font-bold">Notizen</h2>
-        {Array.isArray(app.notes) && app.notes.map((n:any,i:number)=>(
+
+        {/* Notizen mit Default-Array */}
+        {(Array.isArray(app.notes) ? app.notes : []).map((n:any,i:number)=>(
           <div key={i} className="border-b border-gray-700 pb-2">
             {typeof n === "string" ? (
               <p>{n}</p>
             ) : (
               <>
                 <p>{n.text}</p>
-                <p className="text-xs text-gray-500">von {n.author} am {new Date(n.date).toLocaleString()}</p>
+                <p className="text-xs text-gray-500">
+                  von {n.author} am {new Date(n.date).toLocaleString()}
+                </p>
               </>
             )}
           </div>
         ))}
+
         <textarea
           value={note}
           onChange={e=>setNote(e.target.value)}
