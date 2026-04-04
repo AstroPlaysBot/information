@@ -13,7 +13,7 @@ export async function POST(req: Request) {
       status: "REJECTED" },
       updatedAt:new Date(),
       updatedBy:body.admin || "Admin"
-    },
+    }
   });
 
   let mailError: string | null = null;
