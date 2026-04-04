@@ -42,7 +42,9 @@ export default function ApplicantPage(){
 
   async function saveNote(){
 
-    await fetch('/api/adminboard/note',{
+    if(!note.trim()) return
+
+    await fetch('/adminboard/note',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
@@ -74,58 +76,150 @@ export default function ApplicantPage(){
 
   return (
 
-    <div className="p-10 max-w-3xl mx-auto space-y-8">
+    <div className="min-h-screen p-10 text-white">
 
       <button
       onClick={()=>router.push('/adminboard')}
-      className="text-purple-400 flex gap-2 items-center">
+      className="mb-6 bg-blue-600 px-4 py-2 rounded">
 
-        ← Zurück
+        ← zurück
 
       </button>
 
-      <h1 className="text-2xl font-bold text-white">
-        {app.name}
-      </h1>
+      <div className="grid grid-cols-4 gap-6">
 
-      <div className="space-y-3">
+        {/* Angaben */}
+        <div className="bg-gray-800 p-4 rounded space-y-3">
 
-        {Object.entries(app.answers || {}).map(([q,a]:any,i)=>(
-          <div key={i}>
-            <p className="text-gray-500 text-sm">{q}</p>
-            <p className="text-gray-200">{a}</p>
-          </div>
-        ))}
+          <h3 className="font-semibold text-lg">
+            Angaben:
+          </h3>
 
-      </div>
+          {Object.entries(app.answers || {}).map(([q,a]:any,i)=>(
 
-      {app.interviewDate && (
+            <div key={i}>
 
-        <div className="bg-gray-900 p-4 rounded">
+              <p className="text-gray-400 text-sm">
+                {q}
+              </p>
 
-          <h3 className="text-purple-400 mb-2">Interview</h3>
+              <p>
+                {a}
+              </p>
 
-          <p>{new Date(app.interviewDate).toLocaleString()}</p>
-          <p>{app.interviewPlace}</p>
+            </div>
+
+          ))}
 
         </div>
 
-      )}
 
-      <div className="bg-gray-900 p-4 rounded space-y-3">
+        {/* Interview */}
+        <div className="bg-gray-800 p-4 rounded space-y-3">
 
-        <h3 className="text-purple-400">Admin Notizen</h3>
+          <h3 className="font-semibold text-lg">
+            Interview:
+          </h3>
 
-        {Array.isArray(app.notes) && app.notes.map((n:any,i:number)=>(
-          <div key={i} className="text-sm text-gray-300">
-            {typeof n === "string" ? n : JSON.stringify(n)}
-          </div>
-        ))}
+          {app.interviewDate ? (
+
+            <>
+              <p>
+                {new Date(app.interviewDate).toLocaleString()}
+              </p>
+
+              <p>
+                {app.interviewPlace}
+              </p>
+            </>
+
+          ) : (
+
+            <p className="text-gray-400">
+              Noch kein Interview geplant
+            </p>
+
+          )}
+
+        </div>
+
+
+        {/* Verwalten */}
+        <div className="bg-gray-800 p-4 rounded space-y-3">
+
+          <h3 className="font-semibold text-lg">
+            Verwalten
+          </h3>
+
+          <button className="w-full bg-purple-600 py-2 rounded">
+            Einladen
+          </button>
+
+          <button className="w-full bg-red-600 py-2 rounded">
+            Ablehnen
+          </button>
+
+        </div>
+
+
+        {/* Aktuell */}
+        <div className="bg-gray-800 p-4 rounded">
+
+          <h3 className="font-semibold text-lg mb-2">
+            Aktuell:
+          </h3>
+
+          <p>
+            {app.role || "Bewerber"}
+          </p>
+
+        </div>
+
+      </div>
+
+
+      {/* Notizen */}
+
+      <div className="mt-10 space-y-4">
+
+        <h3 className="text-lg font-semibold">
+          Notizen:
+        </h3>
+
+        <div className="space-y-2">
+
+          {Array.isArray(app.notes) && app.notes.map((n:any,i:number)=>(
+
+            <div key={i} className="bg-gray-800 p-3 rounded">
+
+              {typeof n === "object" ? (
+
+                <>
+                  <p className="text-sm text-purple-400">
+                    {n.author} • {new Date(n.date).toLocaleString()}
+                  </p>
+
+                  <p>
+                    {n.text}
+                  </p>
+                </>
+
+              ) : (
+
+                <p>{n}</p>
+
+              )}
+
+            </div>
+
+          ))}
+
+        </div>
 
         <textarea
         value={note}
         onChange={e=>setNote(e.target.value)}
-        className="w-full bg-gray-800 p-2 rounded"
+        className="w-full bg-gray-800 p-3 rounded"
         placeholder="Neue Notiz..."
         />
 
