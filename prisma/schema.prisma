@@ -32,6 +32,9 @@ model Application {
 
   interviewDate   DateTime?
   interviewPlace  String?
+
+  updatedAt      DateTime @updatedAt
+  updatedBy      String?
 }
 
 // ======================
