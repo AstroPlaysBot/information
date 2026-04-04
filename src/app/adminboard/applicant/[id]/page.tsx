@@ -75,7 +75,10 @@ export default function ApplicantPage() {
   if(loading) return <div className="p-10 text-gray-400">Lade Bewerbung...</div>
   if(!app) return <div className="p-10 text-red-400">Bewerbung konnte nicht geladen werden.</div>
 
-  const answerKeys = app.answersOrder || Object.keys(app.answers || {}) // Reihenfolge wie im roles-Objekt
+  const answerKeys = app.answersOrder || Object.keys(app.answers || {})
+  const now = new Date()
+  const interviewTime = app.interviewDate ? new Date(app.interviewDate) : null
+  const interviewPassed = interviewTime ? now >= interviewTime : false
 
   return (
     <div className="p-10 max-w-7xl mx-auto space-y-10 text-white">
@@ -87,80 +90,74 @@ export default function ApplicantPage() {
         {/* Angaben */}
         <div className="bg-gray-900 p-6 rounded space-y-3">
           <h2 className="text-lg font-bold">Angaben:</h2>
-          {answerKeys.map((key:any,i:number)=>(
-            <div key={i}>
-              <p className="text-gray-400 text-sm">{key}</p>
-              <p>{app.answers[key]}</p>
-            </div>
-          ))}
+          {answerKeys.map((key:any,i:number)=>(<div key={i}>
+            <p className="text-gray-400 text-sm">{key}</p>
+            <p>{app.answers[key]}</p>
+          </div>))}
         </div>
 
         {/* Interview */}
         <div className="bg-gray-900 p-6 rounded space-y-3">
           <h2 className="text-lg font-bold">Interview:</h2>
-          {app.interviewDate ? (
-            <>
-              <p>{new Date(app.interviewDate).toLocaleString()}</p>
-              <p>{app.interviewPlace}</p>
-            </>
-          ) : (
-            <p className="text-gray-400">Noch kein Interview geplant</p>
-          )}
+          {app.interviewDate ? <>
+            <p>{new Date(app.interviewDate).toLocaleString()}</p>
+            <p>{app.interviewPlace}</p>
+          </> : <p className="text-gray-400">Noch kein Interview geplant</p>}
         </div>
 
         {/* Verwalten */}
         <div className="bg-gray-900 p-6 rounded space-y-3">
           <h2 className="text-lg font-bold">Verwalten</h2>
 
-          {app.status === "PENDING" && (
-            <>
-              {/* Invite Formular */}
-              <input
-                type="datetime-local"
-                value={inviteData.date}
-                onChange={e=>setInviteData({...inviteData, date:e.target.value})}
-                className="w-full p-2 rounded bg-gray-800"
-              />
-              <input
-                type="text"
-                placeholder="Sprachkanal"
-                value={inviteData.place}
-                onChange={e=>setInviteData({...inviteData, place:e.target.value})}
-                className="w-full p-2 rounded bg-gray-800"
-              />
-              <button
-                onClick={sendInvite}
-                disabled={sendingInvite}
-                className="bg-green-600 w-full py-2 rounded mt-2"
-              >
-                {sendingInvite ? "Sende Einladung..." : "Einladen"}
-              </button>
+          {app.status === "PENDING" && <>
+            {/* Invite Formular */}
+            <input
+              type="datetime-local"
+              value={inviteData.date}
+              onChange={e=>setInviteData({...inviteData, date:e.target.value})}
+              className="w-full p-2 rounded bg-gray-800"
+            />
+            <input
+              type="text"
+              placeholder="Sprachkanal"
+              value={inviteData.place}
+              onChange={e=>setInviteData({...inviteData, place:e.target.value})}
+              className="w-full p-2 rounded bg-gray-800"
+            />
+            <button
+              onClick={sendInvite}
+              disabled={sendingInvite}
+              className="bg-green-600 w-full py-2 rounded mt-2"
+            >
+              {sendingInvite ? "Sende Einladung..." : "Einladen"}
+            </button>
 
-              <button
-                onClick={async()=>{await fetch('/api/adminboard/reject',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,admin:session?.user?.name})}); load()}}
-                className="bg-red-600 w-full py-2 rounded mt-2"
-              >
-                Ablehnen
-              </button>
-            </>
+            <button
+              onClick={async()=>{await fetch('/api/adminboard/reject',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,admin:session?.user?.name})}); load()}}
+              className="bg-red-600 w-full py-2 rounded mt-2"
+            >
+              Ablehnen
+            </button>
+          </>}
+
+          {app.status === "INVITED" && !interviewPassed && (
+            <p>Gespräch ausstehend</p>
           )}
 
-          {app.status === "INVITED" && (
-            <>
-              <button
-                onClick={async()=>{await fetch('/api/adminboard/hire',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,admin:session?.user?.name})}); load()}}
-                className="bg-green-600 w-full py-2 rounded mt-2"
-              >
-                Einstellen
-              </button>
-              <button
-                onClick={async()=>{await fetch('/api/adminboard/reject',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,admin:session?.user?.name})}); load()}}
-                className="bg-red-600 w-full py-2 rounded mt-2"
-              >
-                Ablehnen
-              </button>
-            </>
-          )}
+          {app.status === "INVITED" && interviewPassed && <>
+            <button
+              onClick={async()=>{await fetch('/api/adminboard/hire',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,admin:session?.user?.name})}); load()}}
+              className="bg-green-600 w-full py-2 rounded mt-2"
+            >
+              Einstellen
+            </button>
+            <button
+              onClick={async()=>{await fetch('/api/adminboard/reject',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,admin:session?.user?.name})}); load()}}
+              className="bg-red-600 w-full py-2 rounded mt-2"
+            >
+              Ablehnen
+            </button>
+          </>}
 
           {app.status === "HIRED" && (
             <button
@@ -176,7 +173,8 @@ export default function ApplicantPage() {
         <div className="bg-gray-900 p-6 rounded space-y-3">
           <h2 className="text-lg font-bold">Aktuell:</h2>
           {app.status === "PENDING" && <p>Bewerber</p>}
-          {app.status === "INVITED" && <p>Interview Phase</p>}
+          {app.status === "INVITED" && !interviewPassed && <p>Interview Phase</p>}
+          {app.status === "INVITED" && interviewPassed && <p>Nach Interview</p>}
           {app.status === "HIRED" && <p>{app.role}</p>}
         </div>
 
