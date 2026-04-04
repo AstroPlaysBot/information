@@ -33,6 +33,8 @@ model Application {
   interviewDate   DateTime?
   interviewPlace  String?
 
+  notes          Json?
+
   updatedAt      DateTime @updatedAt
   updatedBy      String?
 }
