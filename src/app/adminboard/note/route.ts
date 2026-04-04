@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { Prisma, JsonArray } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -10,11 +10,14 @@ export async function POST(req: Request) {
   });
 
   if (!app) {
-    return NextResponse.json({ success: false, error: "Application not found" }, { status: 404 });
+    return NextResponse.json(
+      { success: false, error: "Application not found" },
+      { status: 404 }
+    );
   }
 
   // Sicherstellen, dass notes ein Array ist
-  const notes: JsonArray = Array.isArray(app.notes) ? app.notes : [];
+  const notes: Prisma.JsonArray = Array.isArray(app.notes) ? app.notes : [];
 
   notes.push(body.note);
 
