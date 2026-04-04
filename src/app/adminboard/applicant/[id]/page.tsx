@@ -15,12 +15,11 @@ export default function ApplicantPage() {
 
   const [inviteData, setInviteData] = useState({ date: "", place: "" })
   const [sendingInvite, setSendingInvite] = useState(false)
+  const [showInviteModal, setShowInviteModal] = useState(false)
 
   const canFire = session?.discordId === "1462891063202156807"
 
-  useEffect(() => {
-    window.scrollTo(0,0)
-  },[])
+  useEffect(() => { window.scrollTo(0,0) }, [])
 
   useEffect(() => {
     loadSession()
@@ -54,15 +53,12 @@ export default function ApplicantPage() {
     if (!note) return alert("Notiz darf nicht leer sein!");
     if (!session) return alert("Session konnte nicht geladen werden!");
 
-    const adminName = session.user?.name || "Admin"
-
     try {
       const res = await fetch("/adminboard/note", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, note, admin: adminName })
+        body: JSON.stringify({ id, note, author: session.user?.name || "[discordname]" })
       })
-
       const data = await res.json()
       if (!data.success) return alert("Notiz konnte nicht gespeichert werden: " + (data.error || ""))
 
@@ -75,16 +71,20 @@ export default function ApplicantPage() {
   }
 
   async function sendInvite() {
-    if(!inviteData.date || !inviteData.place) return alert("Datum & Sprachkanal angeben!")
+    if(!inviteData.date || !inviteData.place) return
     setSendingInvite(true)
     try {
       const res = await fetch('/api/adminboard/invite',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({ id, date: inviteData.date, place: inviteData.place, admin: session?.user?.name || "Admin" })
+        body:JSON.stringify({ id, date: inviteData.date, place: inviteData.place, admin: session?.user?.name || "[discordname]" })
       })
       const data = await res.json()
-      if(data.success) load()
+      if(data.success) {
+        load()
+        setShowInviteModal(false)
+        setInviteData({ date: "", place: "" })
+      }
     } catch(e) { console.error(e) }
     setSendingInvite(false)
   }
@@ -127,28 +127,12 @@ export default function ApplicantPage() {
           <h2 className="text-lg font-bold">Verwalten</h2>
 
           {app.status === "PENDING" && <>
-            {/* Invite Formular */}
-            <input
-              type="datetime-local"
-              value={inviteData.date}
-              onChange={e=>setInviteData({...inviteData, date:e.target.value})}
-              className="w-full p-2 rounded bg-gray-800"
-            />
-            <input
-              type="text"
-              placeholder="Sprachkanal"
-              value={inviteData.place}
-              onChange={e=>setInviteData({...inviteData, place:e.target.value})}
-              className="w-full p-2 rounded bg-gray-800"
-            />
             <button
-              onClick={sendInvite}
-              disabled={sendingInvite}
+              onClick={()=>setShowInviteModal(true)}
               className="bg-green-600 w-full py-2 rounded mt-2"
             >
-              {sendingInvite ? "Sende Einladung..." : "Einladen"}
+              Einladung planen
             </button>
-
             <button
               onClick={async()=>{await fetch('/api/adminboard/reject',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,admin:session?.user?.name})}); load()}}
               className="bg-red-600 w-full py-2 rounded mt-2"
@@ -197,26 +181,56 @@ export default function ApplicantPage() {
 
       </div>
 
+      {/* Invite Modal */}
+      {showInviteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+          <div className="bg-gray-900 p-6 rounded w-96 space-y-4">
+            <h2 className="text-lg font-bold">Interview Einladung</h2>
+            <input
+              type="datetime-local"
+              value={inviteData.date}
+              onChange={e=>setInviteData({...inviteData, date:e.target.value})}
+              className="w-full p-2 rounded bg-gray-800"
+            />
+            <input
+              type="text"
+              placeholder="Ort / Sprachkanal"
+              value={inviteData.place}
+              onChange={e=>setInviteData({...inviteData, place:e.target.value})}
+              className="w-full p-2 rounded bg-gray-800"
+            />
+            <div className="flex justify-between mt-2">
+              <button
+                onClick={()=>setShowInviteModal(false)}
+                className="bg-gray-700 px-4 py-2 rounded"
+              >
+                Abbrechen
+              </button>
+              <button
+                onClick={sendInvite}
+                disabled={!inviteData.date || !inviteData.place || sendingInvite}
+                className={`px-4 py-2 rounded ${inviteData.date && inviteData.place ? "bg-green-600" : "bg-gray-700 cursor-not-allowed"}`}
+              >
+                {sendingInvite ? "Sende..." : "Einladen"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Notizen */}
       <div className="bg-gray-900 p-6 rounded space-y-4">
         <h2 className="text-lg font-bold">Notizen</h2>
-
-        {/* Notizen mit Default-Array */}
         {(Array.isArray(app.notes) ? app.notes : []).map((n:any,i:number)=>(
           <div key={i} className="border-b border-gray-700 pb-2">
-            {typeof n === "string" ? (
-              <p>{n}</p>
-            ) : (
-              <>
-                <p>{n.text}</p>
-                <p className="text-xs text-gray-500">
-                  von {n.author} am {new Date(n.date).toLocaleString()}
-                </p>
-              </>
-            )}
+            {typeof n === "string" ? <p>{n}</p> : <>
+              <p>{n.text}</p>
+              <p className="text-xs text-gray-500">
+                von {n.author || "[discordname]"} am {new Date(n.date).toLocaleString()}
+              </p>
+            </>}
           </div>
         ))}
-
         <textarea
           value={note}
           onChange={e=>setNote(e.target.value)}
