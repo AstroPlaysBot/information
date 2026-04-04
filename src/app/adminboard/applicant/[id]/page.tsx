@@ -74,10 +74,14 @@ export default function ApplicantPage() {
     if(!inviteData.date || !inviteData.place) return
     setSendingInvite(true)
     try {
+      // Zeitzonen-korrigierter ISO-String: lokale Zeit bleibt erhalten
+      const localDate = new Date(inviteData.date)
+      const isoDate = new Date(localDate.getTime() - localDate.getTimezoneOffset()*60000).toISOString()
+
       const res = await fetch('/api/adminboard/invite',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({ id, date: inviteData.date, place: inviteData.place, admin: session?.user?.name || "[discordname]" })
+        body:JSON.stringify({ id, date: isoDate, place: inviteData.place, admin: session?.user?.name || "[discordname]" })
       })
       const data = await res.json()
       if(data.success) {
@@ -94,7 +98,13 @@ export default function ApplicantPage() {
 
   const answerKeys = app.answersOrder || Object.keys(app.answers || {})
   const now = new Date()
-  const interviewTime = app.interviewDate ? new Date(app.interviewDate) : null
+
+  // Zeitzonen-korrigierte Anzeige: datetime-local → lokal interpretiert
+  let interviewTime: Date | null = null
+  if(app.interviewDate) {
+    const t = new Date(app.interviewDate)
+    interviewTime = new Date(t.getTime() + t.getTimezoneOffset()*60000)
+  }
   const interviewPassed = interviewTime ? now >= interviewTime : false
 
   return (
@@ -117,7 +127,7 @@ export default function ApplicantPage() {
         <div className="bg-gray-900 p-6 rounded space-y-3">
           <h2 className="text-lg font-bold">Interview:</h2>
           {app.interviewDate ? <>
-            <p>{new Date(app.interviewDate).toLocaleString()}</p>
+            <p>{interviewTime?.toLocaleString()}</p>
             <p>{app.interviewPlace}</p>
           </> : <p className="text-gray-400">Noch kein Interview geplant</p>}
         </div>
@@ -141,15 +151,9 @@ export default function ApplicantPage() {
             </button>
           </>}
 
-          {app.status === "INVITED" && !interviewTime && (
-            <p>Vorstellungsgespräch ausstehend</p>
-          )}
-
-          {app.status === "INVITED" && interviewTime && !interviewPassed && (
-            <p>Vorstellungsgespräch ausstehend</p>
-          )}
-
-          {app.status === "INVITED" && interviewPassed && <>
+          {app.status === "INVITED" && !interviewTime && <p>Vorstellungsgespräch ausstehend</p>}
+          {app.status === "INVITED" && interviewTime && !interviewPassed && <p>Vorstellungsgespräch ausstehend</p>}
+          {app.status === "INVITED" && interviewTime && interviewPassed && <>
             <button
               onClick={async()=>{await fetch('/api/adminboard/hire',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,admin:session?.user?.name})}); load()}}
               className="bg-green-600 w-full py-2 rounded mt-2"
