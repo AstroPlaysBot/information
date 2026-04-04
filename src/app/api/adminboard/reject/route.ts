@@ -6,13 +6,12 @@ import nodemailer from "nodemailer";
 export async function POST(req: Request) {
   const body = await req.json();
 
-  // Bewerbung auf "REJECTED" setzen
   const app = await prisma.application.update({
     where: { id: body.id },
     data: { 
-      status: "REJECTED" },
-      updatedAt:new Date(),
-      updatedBy:body.admin || "Admin"
+      status: "REJECTED",
+      updatedAt: new Date(),
+      updatedBy: body.admin || "Admin"
     }
   });
 
@@ -22,7 +21,7 @@ export async function POST(req: Request) {
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
       port: 587,
-      secure: false, // STARTTLS
+      secure: false,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
@@ -42,6 +41,7 @@ export async function POST(req: Request) {
         </div>
       `,
     });
+
   } catch (e: any) {
     console.error("E-Mail Fehler:", e);
     mailError = "E-Mail konnte nicht gesendet werden!";
