@@ -12,49 +12,47 @@ export default function AdminAnimation({ onFinish }: AdminAnimationProps) {
   useEffect(() => {
     const timer = setTimeout(() => {
       onFinish?.()
-    }, 6000)
+    }, 3000) // schnelleres Ende nach 3 Sekunden
 
     return () => clearTimeout(timer)
   }, [onFinish])
 
+  const circles = [0, 1, 2, 3, 4]
+
   return (
-    <div className="w-full h-screen bg-black flex items-center justify-center relative overflow-hidden">
-
-      <motion.h1
-        className="text-6xl md:text-8xl font-bold flex gap-3"
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 1.2 }}
-      >
-
-        <motion.span
-          className="text-white"
-          initial={{ x: -120, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 1 }}
-        >
-          ASTRO
-        </motion.span>
-
-        <motion.span
-          className="text-purple-500"
-          initial={{ x: 120, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 1 }}
-        >
-          PLAYS
-        </motion.span>
-
-      </motion.h1>
+    <div className="w-full h-screen bg-black flex flex-col items-center justify-center relative overflow-hidden">
 
       <motion.div
-        className="absolute text-white text-2xl top-20 font-semibold"
+        className="flex gap-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 2 }}
+        transition={{ duration: 0.5 }}
       >
-        Willkommen bei
+        {circles.map((i) => (
+          <motion.div
+            key={i}
+            className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-white"
+            initial={{ scale: 0 }}
+            animate={{ scale: [0, 1.5, 1], rotate: [0, 360] }}
+            transition={{ 
+              duration: 1, 
+              delay: i * 0.1, 
+              repeat: Infinity, 
+              repeatType: "loop", 
+              ease: "easeInOut" 
+            }}
+          />
+        ))}
       </motion.div>
+
+      <motion.h1
+        className="text-4xl md:text-6xl font-bold text-white mt-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1, duration: 0.8 }}
+      >
+        ASTRO<span className="text-purple-500">PLAYS</span>
+      </motion.h1>
 
       <button
         onClick={() => onFinish?.()}
