@@ -2,7 +2,7 @@
 'use client';
 
 import React from 'react';
-import Background from '../components/Background';
+import Background from '@/components/Background';
 
 interface TeamMember {
   name: string;
