@@ -31,7 +31,7 @@ const FixedHeader = () => {
 
   // ===== Navigation Helpers =====
   const goHome = () => {
-    router.push('/');
+    router.push('/home');
     setMenuOpen(false);
   };
 
@@ -42,15 +42,23 @@ const FixedHeader = () => {
     const scrollToSection = () => {
       const element = document.getElementById(id);
       if (!element) return;
+
       const headerHeight = 80;
-      const elementPosition = element.getBoundingClientRect().top + window.scrollY;
+      const elementPosition =
+        element.getBoundingClientRect().top + window.scrollY;
+
       const offsetPosition = elementPosition - headerHeight - 8;
-      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth',
+      });
     };
 
-    if (pathname !== '/') {
-      router.push('/');
-      setTimeout(scrollToSection, 100);
+    // immer zuerst zu /home
+    if (pathname !== '/home') {
+      router.push('/home');
+      setTimeout(scrollToSection, 150);
     } else {
       scrollToSection();
     }
@@ -59,9 +67,11 @@ const FixedHeader = () => {
   // ===== Discord OAuth =====
   const startDiscordAuth = () => {
     const CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
+
     const REDIRECT_URI = encodeURIComponent(
       `${process.env.NEXT_PUBLIC_APP_URL}/api/discord-auth`
     );
+
     const SCOPE = encodeURIComponent('identify guilds guilds.members.read');
     const RESPONSE_TYPE = 'code';
 
@@ -70,7 +80,11 @@ const FixedHeader = () => {
       return;
     }
 
-    const discordOAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=${RESPONSE_TYPE}&scope=${SCOPE}`;
+    const discordOAuthUrl =
+      `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}` +
+      `&redirect_uri=${REDIRECT_URI}` +
+      `&response_type=${RESPONSE_TYPE}` +
+      `&scope=${SCOPE}`;
 
     window.location.href = discordOAuthUrl;
     setMenuOpen(false);
@@ -98,7 +112,10 @@ const FixedHeader = () => {
           `}
         >
           {/* LOGO */}
-          <div className="flex items-center gap-3 cursor-pointer" onClick={goHome}>
+          <div
+            className="flex items-center gap-3 cursor-pointer"
+            onClick={goHome}
+          >
             <Image
               src="/astroplays.PNG"
               alt="AstroPlays Logo"
@@ -114,17 +131,52 @@ const FixedHeader = () => {
 
           {/* DESKTOP NAV */}
           <nav className="hidden md:flex items-center gap-6 text-sm text-gray-300">
-            <button onClick={goHome} className="hover:text-white transition">Home</button>
-            <button onClick={() => goSection('astro-moderation')} className="hover:text-white transition">Module</button>
-            <button onClick={() => goSection('support')} className="hover:text-white transition">Support</button>
-            <button onClick={() => goSection('apply')} className="hover:text-white transition">Bewerben</button>
-            <button onClick={() => goSection('team')} className="hover:text-white transition">Team</button>
-            <button onClick={startDiscordAuth} className="hover:text-white transition">Einloggen</button>
+            <button onClick={goHome} className="hover:text-white transition">
+              Home
+            </button>
+
+            <button
+              onClick={() => goSection('astro-moderation')}
+              className="hover:text-white transition"
+            >
+              Module
+            </button>
+
+            <button
+              onClick={() => goSection('support')}
+              className="hover:text-white transition"
+            >
+              Support
+            </button>
+
+            <button
+              onClick={() => goSection('apply')}
+              className="hover:text-white transition"
+            >
+              Bewerben
+            </button>
+
+            <button
+              onClick={() => goSection('team')}
+              className="hover:text-white transition"
+            >
+              Team
+            </button>
+
+            <button
+              onClick={startDiscordAuth}
+              className="hover:text-white transition"
+            >
+              Einloggen
+            </button>
           </nav>
 
           {/* MOBILE BUTTON */}
           <div className="md:hidden">
-            <button onClick={() => setMenuOpen(!menuOpen)} className="text-white text-2xl">
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="text-white text-2xl"
+            >
               {menuOpen ? <HiX /> : <HiMenu />}
             </button>
           </div>
@@ -133,23 +185,57 @@ const FixedHeader = () => {
 
       {/* MOBILE MENU */}
       {menuOpen && (
-        <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)}>
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setMenuOpen(false)}
+        >
           <div className="absolute inset-0 bg-black/50" />
+
           <div
             className="absolute top-0 right-0 h-full w-3/4 max-w-xs bg-neutral-900 text-white p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <button onClick={() => setMenuOpen(false)} className="mb-6 text-2xl">
+            <button
+              onClick={() => setMenuOpen(false)}
+              className="mb-6 text-2xl"
+            >
               <HiX />
             </button>
 
             <ul className="flex flex-col gap-5 text-lg">
-              <li><button onClick={goHome}>Home</button></li>
-              <li><button onClick={() => goSection('astro-moderation')}>Module</button></li>
-              <li><button onClick={() => goSection('support')}>Support</button></li>
-              <li><button onClick={() => goSection('apply')}>Bewerben</button></li>
-              <li><button onClick={() => goSection('team')}>Team</button></li>
-              <li><button onClick={startDiscordAuth}>Einloggen</button></li>
+              <li>
+                <button onClick={goHome}>Home</button>
+              </li>
+
+              <li>
+                <button onClick={() => goSection('astro-moderation')}>
+                  Module
+                </button>
+              </li>
+
+              <li>
+                <button onClick={() => goSection('support')}>
+                  Support
+                </button>
+              </li>
+
+              <li>
+                <button onClick={() => goSection('apply')}>
+                  Bewerben
+                </button>
+              </li>
+
+              <li>
+                <button onClick={() => goSection('team')}>
+                  Team
+                </button>
+              </li>
+
+              <li>
+                <button onClick={startDiscordAuth}>
+                  Einloggen
+                </button>
+              </li>
             </ul>
           </div>
         </div>
