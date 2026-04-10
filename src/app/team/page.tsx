@@ -14,7 +14,7 @@ interface TeamMember {
 }
 
 const founder: TeamMember = {
-  name: "Dein Name",
+  name: "Florian",
   role: "Gründer",
   department: "Projektleitung",
   bio: "Gründer von AstroPlays und verantwortlich für Vision, Entwicklung und Strategie des Projekts.",
@@ -43,7 +43,7 @@ const teamMembers: TeamMember[] = [
   },
   {
     name: "Mia Marketing",
-    role: "Promotion Manager",
+    role: "Senior Promotion Manager",
     department: "Promotion",
     bio: "Sorgt für Reichweite, Community Wachstum und Social Media.",
   }
