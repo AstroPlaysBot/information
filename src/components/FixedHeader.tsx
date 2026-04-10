@@ -30,6 +30,7 @@ const FixedHeader = () => {
   }, [menuOpen]);
 
   // ===== Navigation Helpers =====
+
   const goHome = () => {
     router.push('/');
     setMenuOpen(false);
@@ -38,13 +39,17 @@ const FixedHeader = () => {
   const goSection = (id: string) => {
     setMenuOpen(false);
 
-    // Wenn wir nicht auf der Homepage sind → gehe zu /#section
+    // Wenn wir nicht auf der Homepage sind
     if (pathname !== '/') {
-      router.push(`/#${id}`);
+      sessionStorage.setItem('scrollToSection', id);
+      router.push('/');
       return;
     }
 
-    // Wenn wir schon auf /
+    scrollToSection(id);
+  };
+
+  const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     if (!element) return;
 
@@ -61,6 +66,7 @@ const FixedHeader = () => {
   };
 
   // ===== Discord OAuth =====
+
   const startDiscordAuth = () => {
     const CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
     const REDIRECT_URI = encodeURIComponent(
