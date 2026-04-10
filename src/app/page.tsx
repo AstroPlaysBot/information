@@ -1,10 +1,34 @@
 // src/app/page.tsx
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Background from '../components/Background';
 
 export default function HomePage() {
+
+  useEffect(() => {
+    const section = sessionStorage.getItem('scrollToSection');
+
+    if (section) {
+      sessionStorage.removeItem('scrollToSection');
+
+      setTimeout(() => {
+        const element = document.getElementById(section);
+        if (!element) return;
+
+        const headerHeight = 80;
+        const elementPosition =
+          element.getBoundingClientRect().top + window.scrollY;
+
+        const offsetPosition = elementPosition - headerHeight - 8;
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth',
+        });
+      }, 200);
+    }
+  }, []);
   // === MODULE DATA ===
   const modules = [
     {
