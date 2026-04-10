@@ -24,25 +24,25 @@ const founder: TeamMember = {
 
 const teamMembers: TeamMember[] = [
   {
-    name: "Max Beispiel",
+    name: "Unbesetzt",
     role: "Senior Moderator",
     department: "Moderation",
     bio: "Leitet das Moderationsteam und sorgt für Ordnung und Sicherheit im Discord.",
   },
   {
-    name: "Lisa Dev",
+    name: "Unbesetzt",
     role: "Lead Frontend Developer",
     department: "Frontend Development",
     bio: "Verantwortlich für Webinterface, Dashboards und UI Entwicklung.",
   },
   {
-    name: "Jonas Code",
+    name: "Unbesetzt",
     role: "Lead Backend Developer",
     department: "Backend Development",
     bio: "Entwickelt APIs, Datenbanken und die gesamte Bot-Logik.",
   },
   {
-    name: "Mia Marketing",
+    name: "Unbesetzt",
     role: "Senior Promotion Manager",
     department: "Promotion",
     bio: "Sorgt für Reichweite, Community Wachstum und Social Media.",
