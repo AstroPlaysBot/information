@@ -159,6 +159,7 @@ export default function ApplicantPage() {
             >
               Einladung planen
             </button>
+
             <button
               onClick={async()=>{
                 await fetch('/api/adminboard/reject',{
@@ -177,14 +178,17 @@ export default function ApplicantPage() {
           {app.status === "INVITED" && (
             <>
               <p>Vorstellungsgespräch ausstehend</p>
-
-              <button
-                onClick={()=>setShowRescheduleModal(true)}
-                className="bg-yellow-600 w-full py-2 rounded mt-2"
-              >
-                Gespräch verschieben
-              </button>
             </>
+          )}
+
+          {/* ✅ FIX: Termin verschieben IMMER sichtbar nach Einladung */}
+          {app.status !== "HIRED" && app.interviewDate && (
+            <button
+              onClick={()=>setShowRescheduleModal(true)}
+              className="bg-yellow-600 w-full py-2 rounded mt-2"
+            >
+              Termin verschieben
+            </button>
           )}
 
           {app.status === "INVITED" && interviewPassed && <>
@@ -201,6 +205,7 @@ export default function ApplicantPage() {
             >
               Einstellen
             </button>
+
             <button
               onClick={async()=>{
                 await fetch('/api/adminboard/reject',{
