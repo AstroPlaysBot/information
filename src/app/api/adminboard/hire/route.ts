@@ -9,9 +9,26 @@ export async function POST(req: Request) {
   const app = await prisma.application.update({
     where: { id: body.id },
     data: {
-      status: "ACCEPTED",
-      updatedAt:new Date(),
-      updatedBy:body.admin || "Admin"
+      status: "HIRED",
+      updatedAt: new Date(),
+      updatedBy: body.admin || "Admin"
+    }
+  });
+
+  // 👇 NEU: Team Eintrag erstellen/aktualisieren
+  await prisma.adminBoardMember.upsert({
+    where: {
+      discordId: app.discord_id
+    },
+    update: {
+      discordName: app.name,
+      position: app.role
+    },
+    create: {
+      discordId: app.discord_id,
+      discordName: app.name,
+      position: app.role,
+      role: "VIEWER"
     }
   });
 
