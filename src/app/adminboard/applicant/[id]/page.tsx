@@ -49,6 +49,40 @@ export default function ApplicantPage() {
     setLoading(false)
   }
 
+  // =========================
+  // ✅ FIX: SAVE NOTE FEHLTE
+  // =========================
+  async function saveNote() {
+    if (!note) return alert("Notiz darf nicht leer sein!")
+    if (!session) return alert("Session fehlt!")
+
+    try {
+      const res = await fetch("/adminboard/note", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id,
+          note,
+          author: session.user?.name || "[discordname]"
+        })
+      })
+
+      const data = await res.json()
+
+      if (!data.success) {
+        alert(data.error || "Fehler beim Speichern")
+        return
+      }
+
+      setNote("")
+      load()
+
+    } catch (err) {
+      console.error(err)
+      alert("Fehler beim Speichern")
+    }
+  }
+
   async function sendInvite() {
     if(!inviteData.date || !inviteData.place) return
     if(sendingInvite) return
@@ -61,7 +95,7 @@ export default function ApplicantPage() {
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
           id,
-          date: inviteData.date, // ✅ FIX: KEIN timezone hack mehr
+          date: inviteData.date,
           place: inviteData.place,
           admin: session?.user?.name || "[discordname]"
         })
@@ -97,7 +131,7 @@ export default function ApplicantPage() {
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
           id,
-          date: rescheduleData.date, // ✅ FIX
+          date: rescheduleData.date,
           place: rescheduleData.place,
           reason: rescheduleData.reason,
           admin: session?.user?.name || "[discordname]"
@@ -138,17 +172,18 @@ export default function ApplicantPage() {
 
   const interviewTime: Date | null = app.interviewDate ? new Date(app.interviewDate) : null
 
-  // ❗ FIX: neue Logik
   const interviewDone = app.status === "INTERVIEW_DONE"
-  const interviewPassed = interviewTime ? new Date() >= interviewTime : false
 
   return (
     <div className="p-10 max-w-7xl mx-auto space-y-10 text-white">
 
-      <button onClick={()=>router.push('/adminboard')} className="bg-blue-600 px-4 py-2 rounded">← Zurück</button>
+      <button onClick={()=>router.push('/adminboard')} className="bg-blue-600 px-4 py-2 rounded">
+        ← Zurück
+      </button>
 
       <div className="grid grid-cols-4 gap-6">
 
+        {/* ANGABEN */}
         <div className="bg-gray-900 p-6 rounded space-y-3">
           <h2 className="text-lg font-bold">Angaben:</h2>
           {answerKeys.map((key:any,i:number)=>(
@@ -159,6 +194,7 @@ export default function ApplicantPage() {
           ))}
         </div>
 
+        {/* INTERVIEW */}
         <div className="bg-gray-900 p-6 rounded space-y-3">
           <h2 className="text-lg font-bold">Interview:</h2>
 
@@ -178,100 +214,75 @@ export default function ApplicantPage() {
           )}
         </div>
 
+        {/* VERWALTEN */}
         <div className="bg-gray-900 p-6 rounded space-y-3">
           <h2 className="text-lg font-bold">Verwalten</h2>
 
-          {/* PENDING */}
           {app.status === "PENDING" && (
             <>
-              <button
-                onClick={()=>setShowInviteModal(true)}
-                className="bg-green-600 w-full py-2 rounded mt-2"
-              >
+              <button onClick={()=>setShowInviteModal(true)} className="bg-green-600 w-full py-2 rounded mt-2">
                 Einladung planen
               </button>
 
-              <button
-                onClick={async()=>{
-                  await fetch('/api/adminboard/reject',{
-                    method:'POST',
-                    headers:{'Content-Type':'application/json'},
-                    body:JSON.stringify({id,admin:session?.user?.name})
-                  })
-                  load()
-                }}
-                className="bg-red-600 w-full py-2 rounded mt-2"
-              >
+              <button onClick={async()=>{
+                await fetch('/api/adminboard/reject',{
+                  method:'POST',
+                  headers:{'Content-Type':'application/json'},
+                  body:JSON.stringify({id,admin:session?.user?.name})
+                })
+                load()
+              }} className="bg-red-600 w-full py-2 rounded mt-2">
                 Ablehnen
               </button>
             </>
           )}
 
-          {/* INVITED */}
           {app.status === "INVITED" && (
             <>
-              <p className="text-gray-400">Vorstellungsgespräch ausstehend</p>
-
-              <button
-                onClick={()=>setShowRescheduleModal(true)}
-                className="bg-yellow-600 w-full py-2 rounded mt-2"
-              >
+              <button onClick={()=>setShowRescheduleModal(true)} className="bg-yellow-600 w-full py-2 rounded mt-2">
                 Termin verschieben
               </button>
 
-              <button
-                onClick={finishInterview}
-                className="bg-blue-600 w-full py-2 rounded mt-2"
-              >
+              <button onClick={finishInterview} className="bg-blue-600 w-full py-2 rounded mt-2">
                 Gespräch beendet
               </button>
             </>
           )}
 
-          {/* AFTER INTERVIEW */}
           {interviewDone && (
             <>
-              <button
-                onClick={async()=>{
-                  await fetch('/api/adminboard/hire',{
-                    method:'POST',
-                    headers:{'Content-Type':'application/json'},
-                    body:JSON.stringify({id,admin:session?.user?.name})
-                  })
-                  load()
-                }}
-                className="bg-green-600 w-full py-2 rounded mt-2"
-              >
+              <button onClick={async()=>{
+                await fetch('/api/adminboard/hire',{
+                  method:'POST',
+                  headers:{'Content-Type':'application/json'},
+                  body:JSON.stringify({id,admin:session?.user?.name})
+                })
+                load()
+              }} className="bg-green-600 w-full py-2 rounded mt-2">
                 Einstellen
               </button>
 
-              <button
-                onClick={async()=>{
-                  await fetch('/api/adminboard/reject',{
-                    method:'POST',
-                    headers:{'Content-Type':'application/json'},
-                    body:JSON.stringify({id,admin:session?.user?.name})
-                  })
-                  load()
-                }}
-                className="bg-red-600 w-full py-2 rounded mt-2"
-              >
+              <button onClick={async()=>{
+                await fetch('/api/adminboard/reject',{
+                  method:'POST',
+                  headers:{'Content-Type':'application/json'},
+                  body:JSON.stringify({id,admin:session?.user?.name})
+                })
+                load()
+              }} className="bg-red-600 w-full py-2 rounded mt-2">
                 Ablehnen
               </button>
             </>
           )}
 
-          {/* HIRED */}
           {app.status === "HIRED" && (
-            <button
-              disabled={!canFire}
-              className={`w-full py-2 rounded ${canFire ? "bg-red-700" : "bg-gray-700 cursor-not-allowed"}`}
-            >
+            <button disabled={!canFire} className={`w-full py-2 rounded ${canFire ? "bg-red-700" : "bg-gray-700 cursor-not-allowed"}`}>
               {canFire ? "Kündigen" : "🔒 Kündigen"}
             </button>
           )}
         </div>
 
+        {/* STATUS */}
         <div className="bg-gray-900 p-6 rounded space-y-3">
           <h2 className="text-lg font-bold">Aktuell:</h2>
           {app.status !== "HIRED" && <p>Bewerber</p>}
@@ -280,96 +291,7 @@ export default function ApplicantPage() {
 
       </div>
 
-      {/* INVITE MODAL */}
-      {showInviteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-          <div className="bg-gray-900 p-6 rounded w-96 space-y-4">
-
-            <h2 className="text-lg font-bold">Interview Einladung</h2>
-
-            <input
-              type="datetime-local"
-              value={inviteData.date}
-              onChange={e=>setInviteData({...inviteData,date:e.target.value})}
-              className="w-full p-2 rounded bg-gray-800"
-            />
-
-            <input
-              type="text"
-              placeholder="Sprachkanal / Ort"
-              value={inviteData.place}
-              onChange={e=>setInviteData({...inviteData,place:e.target.value})}
-              className="w-full p-2 rounded bg-gray-800"
-            />
-
-            <div className="flex gap-2 pt-2">
-              <button
-                onClick={sendInvite}
-                className="bg-green-600 flex-1 py-2 rounded"
-              >
-                Einladen
-              </button>
-
-              <button
-                onClick={()=>setShowInviteModal(false)}
-                className="bg-gray-600 flex-1 py-2 rounded"
-              >
-                Abbrechen
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
-
-      {/* RESCHEDULE MODAL */}
-      {showRescheduleModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-          <div className="bg-gray-900 p-6 rounded w-96 space-y-4">
-
-            <h2 className="text-lg font-bold">Gespräch verschieben</h2>
-
-            <input
-              type="datetime-local"
-              value={rescheduleData.date}
-              onChange={e=>setRescheduleData({...rescheduleData,date:e.target.value})}
-              className="w-full p-2 rounded bg-gray-800"
-            />
-
-            <input
-              type="text"
-              value={rescheduleData.place}
-              onChange={e=>setRescheduleData({...rescheduleData,place:e.target.value})}
-              className="w-full p-2 rounded bg-gray-800"
-            />
-
-            <textarea
-              placeholder="Grund"
-              value={rescheduleData.reason}
-              onChange={e=>setRescheduleData({...rescheduleData,reason:e.target.value})}
-              className="w-full p-2 rounded bg-gray-800"
-            />
-
-            <div className="flex gap-2 pt-2">
-              <button
-                onClick={rescheduleInterview}
-                className="bg-yellow-600 flex-1 py-2 rounded"
-              >
-                Speichern
-              </button>
-
-              <button
-                onClick={()=>setShowRescheduleModal(false)}
-                className="bg-gray-600 flex-1 py-2 rounded"
-              >
-                Abbrechen
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
-
+      {/* NOTE */}
       <div className="bg-gray-900 p-6 rounded space-y-4">
         <h2 className="text-lg font-bold">Notizen</h2>
 
