@@ -101,9 +101,17 @@ export default function ApplicantPage() {
       const data = await res.json()
 
       if(data.success) {
-        load()
+        // 🔥 FIX: UI sofort updaten, damit "Verwalten" direkt INVITED ist
+        setApp((prev:any) => ({
+          ...prev,
+          status: "INVITED",
+          interviewDate: inviteData.date,
+          interviewPlace: inviteData.place
+        }))
+
         setShowInviteModal(false)
         setInviteData({ date:"", place:"" })
+        load()
       } else {
         alert(data.error || "Fehler beim Einladen")
       }
@@ -296,7 +304,7 @@ export default function ApplicantPage() {
         </button>
       </div>
 
-      {/* INVITE MODAL */}
+      {/* INVITE MODAL bleibt 1:1 */}
       {showInviteModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
           <div className="bg-gray-900 p-6 rounded w-[400px] space-y-4">
@@ -334,7 +342,7 @@ export default function ApplicantPage() {
         </div>
       )}
 
-      {/* RESCHEDULE MODAL */}
+      {/* RESCHEDULE MODAL bleibt 1:1 */}
       {showRescheduleModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
           <div className="bg-gray-900 p-6 rounded w-[400px] space-y-4">
