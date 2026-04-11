@@ -80,6 +80,7 @@ export default function ApplicantPage() {
     }
   }
 
+  // 🔥 FIX 1
   async function sendInvite() {
     if(!inviteData.date || !inviteData.place) return
     if(sendingInvite) return
@@ -101,7 +102,7 @@ export default function ApplicantPage() {
       const data = await res.json()
 
       if(data.success) {
-        // 🔥 FIX: UI sofort updaten, damit "Verwalten" direkt INVITED ist
+
         setApp((prev:any) => ({
           ...prev,
           status: "INVITED",
@@ -111,7 +112,10 @@ export default function ApplicantPage() {
 
         setShowInviteModal(false)
         setInviteData({ date:"", place:"" })
-        load()
+
+        // statt sofort reload → stabil
+        setTimeout(() => load(), 400)
+
       } else {
         alert(data.error || "Fehler beim Einladen")
       }
@@ -161,13 +165,25 @@ export default function ApplicantPage() {
     setSendingInvite(false)
   }
 
+  // 🔥 FIX 2
   async function finishInterview() {
-    await fetch('/api/adminboard/interview-done',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({id, admin: session?.user?.name})
-    })
-    load()
+    try {
+      await fetch('/api/adminboard/interview-done',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({id, admin: session?.user?.name})
+      })
+
+      setApp((prev:any) => ({
+        ...prev,
+        status: "INTERVIEW_DONE"
+      }))
+
+      setTimeout(() => load(), 400)
+
+    } catch(e) {
+      console.error(e)
+    }
   }
 
   if(loading) return <div className="p-10 text-gray-400">Lade Bewerbung...</div>
@@ -304,7 +320,7 @@ export default function ApplicantPage() {
         </button>
       </div>
 
-      {/* INVITE MODAL bleibt 1:1 */}
+      {/* MODALS 1:1 unverändert */}
       {showInviteModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
           <div className="bg-gray-900 p-6 rounded w-[400px] space-y-4">
@@ -342,7 +358,6 @@ export default function ApplicantPage() {
         </div>
       )}
 
-      {/* RESCHEDULE MODAL bleibt 1:1 */}
       {showRescheduleModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
           <div className="bg-gray-900 p-6 rounded w-[400px] space-y-4">
