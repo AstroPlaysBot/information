@@ -80,7 +80,6 @@ export default function ApplicantPage() {
     }
   }
 
-  // 🔥 FIX 1
   async function sendInvite() {
     if(!inviteData.date || !inviteData.place) return
     if(sendingInvite) return
@@ -115,7 +114,6 @@ export default function ApplicantPage() {
         setShowInviteModal(false)
         setInviteData({ date:"", place:"" })
 
-        // 🔥 FIX: reload verzögert (sonst überschreibt DB kurz UI)
         setTimeout(() => load(), 800)
 
       } else {
@@ -152,9 +150,9 @@ export default function ApplicantPage() {
       const data = await res.json()
 
       if(data.success) {
-        load()
         setShowRescheduleModal(false)
         setRescheduleData({ date:"", place:"", reason:"" })
+        load()
       } else {
         alert(data.error || "Fehler beim Verschieben")
       }
@@ -167,24 +165,29 @@ export default function ApplicantPage() {
     setSendingInvite(false)
   }
 
-  // 🔥 FIX 2
   async function finishInterview() {
     try {
-      await fetch('/api/adminboard/interview-done',{
+      const res = await fetch('/api/adminboard/interview-done',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({id, admin: session?.user?.name})
       })
+
+      const data = await res.json()
+
+      if(!data.success){
+        alert(data.error || "Fehler beim Beenden des Gesprächs")
+        return
+      }
 
       setApp((prev:any) => ({
         ...prev,
         status: "INTERVIEW_DONE"
       }))
 
-      setTimeout(() => load(), 800)
-
     } catch(e) {
       console.error(e)
+      alert("Fehler beim Beenden des Gesprächs")
     }
   }
 
@@ -194,8 +197,7 @@ export default function ApplicantPage() {
   const answerKeys = app.answersOrder || Object.keys(app.answers || {})
   const interviewTime: Date | null = app.interviewDate ? new Date(app.interviewDate) : null
 
-  // 🔥 FIX: robust statt nur "INTERVIEW_DONE"
-  const isInvited = app.status === "INVITED" || app.interviewDate
+  const isInvited = app.status === "INVITED"
   const interviewDone = app.status === "INTERVIEW_DONE"
 
   return (
@@ -258,7 +260,6 @@ export default function ApplicantPage() {
             </>
           )}
 
-          {/* 🔥 FIX: statt nur INVITED */}
           {isInvited && (
             <>
               <button onClick={()=>setShowRescheduleModal(true)} className="bg-yellow-600 w-full py-2 rounded mt-2">
@@ -311,103 +312,3 @@ export default function ApplicantPage() {
         </div>
 
       </div>
-
-      <div className="bg-gray-900 p-6 rounded space-y-4">
-        <h2 className="text-lg font-bold">Notizen</h2>
-
-        <textarea
-          value={note}
-          onChange={e=>setNote(e.target.value)}
-          className="w-full bg-gray-800 p-3 rounded"
-        />
-
-        <button onClick={saveNote} className="bg-purple-600 px-4 py-2 rounded">
-          Notiz speichern
-        </button>
-      </div>
-
-      {/* MODALS bleiben 1:1 */}
-      {showInviteModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
-          <div className="bg-gray-900 p-6 rounded w-[400px] space-y-4">
-            <h2 className="text-lg font-bold">Einladung zum Gespräch</h2>
-
-            <input
-              type="datetime-local"
-              value={inviteData.date}
-              onChange={(e)=>setInviteData({...inviteData, date:e.target.value})}
-              className="w-full bg-gray-800 p-2 rounded"
-            />
-
-            <input
-              type="text"
-              placeholder="Ort / Sprachkanal"
-              value={inviteData.place}
-              onChange={(e)=>setInviteData({...inviteData, place:e.target.value})}
-              className="w-full bg-gray-800 p-2 rounded"
-            />
-
-            <div className="flex gap-2">
-              <button onClick={()=>setShowInviteModal(false)} className="bg-gray-700 w-full py-2 rounded">
-                Abbrechen
-              </button>
-
-              <button
-                onClick={sendInvite}
-                disabled={!inviteData.date || !inviteData.place || sendingInvite}
-                className="bg-green-600 w-full py-2 rounded disabled:opacity-50"
-              >
-                Einladen
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showRescheduleModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
-          <div className="bg-gray-900 p-6 rounded w-[400px] space-y-4">
-            <h2 className="text-lg font-bold">Termin verschieben</h2>
-
-            <input
-              type="datetime-local"
-              value={rescheduleData.date}
-              onChange={(e)=>setRescheduleData({...rescheduleData, date:e.target.value})}
-              className="w-full bg-gray-800 p-2 rounded"
-            />
-
-            <input
-              type="text"
-              placeholder="Ort / Sprachkanal"
-              value={rescheduleData.place}
-              onChange={(e)=>setRescheduleData({...rescheduleData, place:e.target.value})}
-              className="w-full bg-gray-800 p-2 rounded"
-            />
-
-            <textarea
-              placeholder="Grund"
-              value={rescheduleData.reason}
-              onChange={(e)=>setRescheduleData({...rescheduleData, reason:e.target.value})}
-              className="w-full bg-gray-800 p-2 rounded"
-            />
-
-            <div className="flex gap-2">
-              <button onClick={()=>setShowRescheduleModal(false)} className="bg-gray-700 w-full py-2 rounded">
-                Abbrechen
-              </button>
-
-              <button
-                onClick={rescheduleInterview}
-                disabled={!rescheduleData.date || !rescheduleData.place || sendingInvite}
-                className="bg-yellow-600 w-full py-2 rounded disabled:opacity-50"
-              >
-                Verschieben
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-    </div>
-  )
-}
