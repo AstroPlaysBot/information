@@ -38,7 +38,7 @@ model Application {
   interviewFinishedBy String?
   interviewFinishedAt DateTime?
 
-  notes          Json?
+  notes Json @default("[]")
 
   updatedAt      DateTime @updatedAt
   updatedBy      String?
