@@ -21,7 +21,8 @@ export default function ApplicantPage() {
 
   const [rescheduleData, setRescheduleData] = useState({ date: "", place: "", reason: "" })
 
-  const canFire = session?.discordId === "1462891063202156807"
+  const discordId = session?.discordId || session?.user?.discordId
+  const canFire = discordId === "1462891063202156807"
 
   useEffect(() => { window.scrollTo(0,0) }, [])
 
@@ -101,21 +102,9 @@ export default function ApplicantPage() {
       const data = await res.json()
 
       if(data.success) {
-
-        const updated = {
-          ...app,
-          status: "INVITED",
-          interviewDate: inviteData.date,
-          interviewPlace: inviteData.place
-        }
-
-        setApp(updated)
-
         setShowInviteModal(false)
         setInviteData({ date:"", place:"" })
-
-        setTimeout(() => load(), 800)
-
+        load()
       } else {
         alert(data.error || "Fehler beim Einladen")
       }
@@ -123,43 +112,6 @@ export default function ApplicantPage() {
     } catch(e) {
       console.error(e)
       alert("Fehler beim Einladen")
-    }
-
-    setSendingInvite(false)
-  }
-
-  async function rescheduleInterview() {
-    if(!rescheduleData.date || !rescheduleData.place) return
-    if(sendingInvite) return
-
-    setSendingInvite(true)
-
-    try {
-      const res = await fetch('/api/adminboard/reschedule',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          id,
-          date: rescheduleData.date,
-          place: rescheduleData.place,
-          reason: rescheduleData.reason,
-          admin: session?.user?.name || "[discordname]"
-        })
-      })
-
-      const data = await res.json()
-
-      if(data.success) {
-        setShowRescheduleModal(false)
-        setRescheduleData({ date:"", place:"", reason:"" })
-        load()
-      } else {
-        alert(data.error || "Fehler beim Verschieben")
-      }
-
-    } catch(e) {
-      console.error(e)
-      alert("Fehler beim Verschieben")
     }
 
     setSendingInvite(false)
@@ -194,7 +146,13 @@ export default function ApplicantPage() {
   if(loading) return <div className="p-10 text-gray-400">Lade Bewerbung...</div>
   if(!app) return <div className="p-10 text-red-400">Bewerbung konnte nicht geladen werden.</div>
 
-  const answerKeys = app.answersOrder || Object.keys(app.answers || {})
+  const answers =
+    typeof app.answers === "string"
+      ? JSON.parse(app.answers)
+      : app.answers || {}
+
+  const answerKeys = app.answersOrder || Object.keys(answers)
+
   const interviewTime: Date | null = app.interviewDate ? new Date(app.interviewDate) : null
 
   const isInvited = app.status === "INVITED"
@@ -209,16 +167,19 @@ export default function ApplicantPage() {
 
       <div className="grid grid-cols-4 gap-6">
 
+        {/* ANGABEN */}
         <div className="bg-gray-900 p-6 rounded space-y-3">
           <h2 className="text-lg font-bold">Angaben:</h2>
+
           {answerKeys.map((key:any,i:number)=>(
             <div key={i}>
               <p className="text-gray-400 text-sm">{key}</p>
-              <p>{app.answers[key]}</p>
+              <p>{answers[key]}</p>
             </div>
           ))}
         </div>
 
+        {/* INTERVIEW */}
         <div className="bg-gray-900 p-6 rounded space-y-3">
           <h2 className="text-lg font-bold">Interview:</h2>
 
@@ -238,6 +199,7 @@ export default function ApplicantPage() {
           )}
         </div>
 
+        {/* VERWALTEN */}
         <div className="bg-gray-900 p-6 rounded space-y-3">
           <h2 className="text-lg font-bold">Verwalten</h2>
 
@@ -262,10 +224,6 @@ export default function ApplicantPage() {
 
           {isInvited && (
             <>
-              <button onClick={()=>setShowRescheduleModal(true)} className="bg-yellow-600 w-full py-2 rounded mt-2">
-                Termin verschieben
-              </button>
-
               <button onClick={finishInterview} className="bg-blue-600 w-full py-2 rounded mt-2">
                 Gespräch beendet
               </button>
@@ -274,25 +232,11 @@ export default function ApplicantPage() {
 
           {interviewDone && (
             <>
-              <button onClick={async()=>{
-                await fetch('/api/adminboard/hire',{
-                  method:'POST',
-                  headers:{'Content-Type':'application/json'},
-                  body:JSON.stringify({id,admin:session?.user?.name})
-                })
-                load()
-              }} className="bg-green-600 w-full py-2 rounded mt-2">
+              <button className="bg-green-600 w-full py-2 rounded mt-2">
                 Einstellen
               </button>
 
-              <button onClick={async()=>{
-                await fetch('/api/adminboard/reject',{
-                  method:'POST',
-                  headers:{'Content-Type':'application/json'},
-                  body:JSON.stringify({id,admin:session?.user?.name})
-                })
-                load()
-              }} className="bg-red-600 w-full py-2 rounded mt-2">
+              <button className="bg-red-600 w-full py-2 rounded mt-2">
                 Ablehnen
               </button>
             </>
@@ -305,14 +249,41 @@ export default function ApplicantPage() {
           )}
         </div>
 
+        {/* STATUS */}
         <div className="bg-gray-900 p-6 rounded space-y-3">
           <h2 className="text-lg font-bold">Aktuell:</h2>
           {app.status !== "HIRED" && <p>Bewerber</p>}
           {app.status === "HIRED" && <p>{app.role}</p>}
         </div>
 
-      </div>
+        {/* ✅ NOTES (FEHLTE KOMPLETT) */}
+        <div className="bg-gray-900 p-6 rounded space-y-3 col-span-4">
+          <h2 className="text-lg font-bold">Notizen</h2>
 
-   </div>
+          <div className="space-y-2 max-h-60 overflow-y-auto">
+            {app.notes?.map((n:any, i:number) => (
+              <div key={i} className="bg-gray-800 p-2 rounded">
+                <p className="text-sm text-gray-300">{n.text}</p>
+                <p className="text-xs text-gray-500">
+                  {n.author} – {new Date(n.date).toLocaleString()}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            className="w-full p-2 bg-gray-800 rounded"
+            placeholder="Notiz schreiben..."
+          />
+
+          <button onClick={saveNote} className="bg-blue-600 w-full py-2 rounded">
+            Notiz speichern
+          </button>
+        </div>
+
+      </div>
+    </div>
   )
 }
