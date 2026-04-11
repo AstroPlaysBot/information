@@ -146,10 +146,36 @@ model ServerModule {
 }
 
 // ======================
-// Rollen
+// Dashboard Rollen
 // ======================
 enum Role {
   OWNER
   CO_OWNER
   PARTNER
+}
+
+// ======================
+// AdminBoard
+// ======================
+model AdminBoardMember {
+  id            String   @id @default(cuid())
+
+  discordId     String   @unique
+  discordName   String
+
+  position      String   // z.B. Moderator, Support, etc.
+
+  role          AdminBoardRole @default(VIEWER)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ======================
+// AdminBoard Rollen
+// ======================
+enum AdminBoardRole {
+  OWNER
+  PERSONAL_MANAGER
+  VIEWER
 }
