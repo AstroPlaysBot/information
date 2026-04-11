@@ -103,18 +103,20 @@ export default function ApplicantPage() {
 
       if(data.success) {
 
-        setApp((prev:any) => ({
-          ...prev,
+        const updated = {
+          ...app,
           status: "INVITED",
           interviewDate: inviteData.date,
           interviewPlace: inviteData.place
-        }))
+        }
+
+        setApp(updated)
 
         setShowInviteModal(false)
         setInviteData({ date:"", place:"" })
 
-        // statt sofort reload → stabil
-        setTimeout(() => load(), 400)
+        // 🔥 FIX: reload verzögert (sonst überschreibt DB kurz UI)
+        setTimeout(() => load(), 800)
 
       } else {
         alert(data.error || "Fehler beim Einladen")
@@ -179,7 +181,7 @@ export default function ApplicantPage() {
         status: "INTERVIEW_DONE"
       }))
 
-      setTimeout(() => load(), 400)
+      setTimeout(() => load(), 800)
 
     } catch(e) {
       console.error(e)
@@ -191,6 +193,9 @@ export default function ApplicantPage() {
 
   const answerKeys = app.answersOrder || Object.keys(app.answers || {})
   const interviewTime: Date | null = app.interviewDate ? new Date(app.interviewDate) : null
+
+  // 🔥 FIX: robust statt nur "INTERVIEW_DONE"
+  const isInvited = app.status === "INVITED" || app.interviewDate
   const interviewDone = app.status === "INTERVIEW_DONE"
 
   return (
@@ -253,7 +258,8 @@ export default function ApplicantPage() {
             </>
           )}
 
-          {app.status === "INVITED" && (
+          {/* 🔥 FIX: statt nur INVITED */}
+          {isInvited && (
             <>
               <button onClick={()=>setShowRescheduleModal(true)} className="bg-yellow-600 w-full py-2 rounded mt-2">
                 Termin verschieben
@@ -320,7 +326,7 @@ export default function ApplicantPage() {
         </button>
       </div>
 
-      {/* MODALS 1:1 unverändert */}
+      {/* MODALS bleiben 1:1 */}
       {showInviteModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
           <div className="bg-gray-900 p-6 rounded w-[400px] space-y-4">
