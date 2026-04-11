@@ -16,16 +16,22 @@ export async function POST(req: Request) {
   });
 
   // 👇 NEU: Team Eintrag erstellen/aktualisieren
+  const discordId = app.discord_id;
+
+  if (!discordId) {
+    throw new Error("discord_id fehlt in Bewerbung");
+  }
+
   await prisma.adminBoardMember.upsert({
     where: {
-      discordId: app.discord_id
+      discordId: discordId
     },
     update: {
       discordName: app.name,
       position: app.role
     },
     create: {
-      discordId: app.discord_id,
+      discordId: discordId,
       discordName: app.name,
       position: app.role,
       role: "VIEWER"
