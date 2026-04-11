@@ -35,6 +35,9 @@ model Application {
 
   oldInterviews Json? @default("[]")
 
+  interviewFinishedBy String?
+  interviewFinishedAt DateTime?
+
   notes          Json?
 
   updatedAt      DateTime @updatedAt
