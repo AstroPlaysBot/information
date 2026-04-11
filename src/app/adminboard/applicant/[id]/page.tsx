@@ -49,9 +49,6 @@ export default function ApplicantPage() {
     setLoading(false)
   }
 
-  // =========================
-  // ✅ FIX: SAVE NOTE FEHLTE
-  // =========================
   async function saveNote() {
     if (!note) return alert("Notiz darf nicht leer sein!")
     if (!session) return alert("Session fehlt!")
@@ -169,9 +166,7 @@ export default function ApplicantPage() {
   if(!app) return <div className="p-10 text-red-400">Bewerbung konnte nicht geladen werden.</div>
 
   const answerKeys = app.answersOrder || Object.keys(app.answers || {})
-
   const interviewTime: Date | null = app.interviewDate ? new Date(app.interviewDate) : null
-
   const interviewDone = app.status === "INTERVIEW_DONE"
 
   return (
@@ -183,7 +178,6 @@ export default function ApplicantPage() {
 
       <div className="grid grid-cols-4 gap-6">
 
-        {/* ANGABEN */}
         <div className="bg-gray-900 p-6 rounded space-y-3">
           <h2 className="text-lg font-bold">Angaben:</h2>
           {answerKeys.map((key:any,i:number)=>(
@@ -194,7 +188,6 @@ export default function ApplicantPage() {
           ))}
         </div>
 
-        {/* INTERVIEW */}
         <div className="bg-gray-900 p-6 rounded space-y-3">
           <h2 className="text-lg font-bold">Interview:</h2>
 
@@ -214,7 +207,6 @@ export default function ApplicantPage() {
           )}
         </div>
 
-        {/* VERWALTEN */}
         <div className="bg-gray-900 p-6 rounded space-y-3">
           <h2 className="text-lg font-bold">Verwalten</h2>
 
@@ -282,7 +274,6 @@ export default function ApplicantPage() {
           )}
         </div>
 
-        {/* STATUS */}
         <div className="bg-gray-900 p-6 rounded space-y-3">
           <h2 className="text-lg font-bold">Aktuell:</h2>
           {app.status !== "HIRED" && <p>Bewerber</p>}
@@ -291,7 +282,6 @@ export default function ApplicantPage() {
 
       </div>
 
-      {/* NOTE */}
       <div className="bg-gray-900 p-6 rounded space-y-4">
         <h2 className="text-lg font-bold">Notizen</h2>
 
@@ -305,6 +295,89 @@ export default function ApplicantPage() {
           Notiz speichern
         </button>
       </div>
+
+      {/* INVITE MODAL */}
+      {showInviteModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
+          <div className="bg-gray-900 p-6 rounded w-[400px] space-y-4">
+            <h2 className="text-lg font-bold">Einladung zum Gespräch</h2>
+
+            <input
+              type="datetime-local"
+              value={inviteData.date}
+              onChange={(e)=>setInviteData({...inviteData, date:e.target.value})}
+              className="w-full bg-gray-800 p-2 rounded"
+            />
+
+            <input
+              type="text"
+              placeholder="Ort / Sprachkanal"
+              value={inviteData.place}
+              onChange={(e)=>setInviteData({...inviteData, place:e.target.value})}
+              className="w-full bg-gray-800 p-2 rounded"
+            />
+
+            <div className="flex gap-2">
+              <button onClick={()=>setShowInviteModal(false)} className="bg-gray-700 w-full py-2 rounded">
+                Abbrechen
+              </button>
+
+              <button
+                onClick={sendInvite}
+                disabled={!inviteData.date || !inviteData.place || sendingInvite}
+                className="bg-green-600 w-full py-2 rounded disabled:opacity-50"
+              >
+                Einladen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* RESCHEDULE MODAL */}
+      {showRescheduleModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
+          <div className="bg-gray-900 p-6 rounded w-[400px] space-y-4">
+            <h2 className="text-lg font-bold">Termin verschieben</h2>
+
+            <input
+              type="datetime-local"
+              value={rescheduleData.date}
+              onChange={(e)=>setRescheduleData({...rescheduleData, date:e.target.value})}
+              className="w-full bg-gray-800 p-2 rounded"
+            />
+
+            <input
+              type="text"
+              placeholder="Ort / Sprachkanal"
+              value={rescheduleData.place}
+              onChange={(e)=>setRescheduleData({...rescheduleData, place:e.target.value})}
+              className="w-full bg-gray-800 p-2 rounded"
+            />
+
+            <textarea
+              placeholder="Grund"
+              value={rescheduleData.reason}
+              onChange={(e)=>setRescheduleData({...rescheduleData, reason:e.target.value})}
+              className="w-full bg-gray-800 p-2 rounded"
+            />
+
+            <div className="flex gap-2">
+              <button onClick={()=>setShowRescheduleModal(false)} className="bg-gray-700 w-full py-2 rounded">
+                Abbrechen
+              </button>
+
+              <button
+                onClick={rescheduleInterview}
+                disabled={!rescheduleData.date || !rescheduleData.place || sendingInvite}
+                className="bg-yellow-600 w-full py-2 rounded disabled:opacity-50"
+              >
+                Verschieben
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   )
