@@ -16,6 +16,7 @@ export default function ApplicantPage() {
   const [inviteData, setInviteData] = useState({ date: "", place: "" })
   const [sendingInvite, setSendingInvite] = useState(false)
   const [showInviteModal, setShowInviteModal] = useState(false)
+
   const [showRescheduleModal, setShowRescheduleModal] = useState(false)
   const [rescheduleData, setRescheduleData] = useState({ date: "", place: "", reason: "" })
 
@@ -69,47 +70,98 @@ export default function ApplicantPage() {
     }
   }
 
+  // ✅ UX FIX: Invite safer + better validation feedback
   async function sendInvite() {
-    if(!inviteData.date || !inviteData.place) return
+    const date = inviteData.date?.trim()
+    const place = inviteData.place?.trim()
+
+    if(!date || !place) {
+      alert("Bitte Datum und Ort/Sprachkanal ausfüllen!")
+      return
+    }
+
+    if (sendingInvite) return
+
     setSendingInvite(true)
+
     try {
-      const localDate = new Date(inviteData.date)
+      const localDate = new Date(date)
       const isoDate = new Date(localDate.getTime() - localDate.getTimezoneOffset()*60000).toISOString()
 
       const res = await fetch('/api/adminboard/invite',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({ id, date: isoDate, place: inviteData.place, admin: session?.user?.name || "[discordname]" })
+        body:JSON.stringify({
+          id,
+          date: isoDate,
+          place,
+          admin: session?.user?.name || "[discordname]"
+        })
       })
+
       const data = await res.json()
+
       if(data.success) {
         load()
         setShowInviteModal(false)
         setInviteData({ date: "", place: "" })
+      } else {
+        alert(data.error || "Einladung fehlgeschlagen")
       }
-    } catch(e) { console.error(e) }
+
+    } catch(e) {
+      console.error(e)
+      alert("Fehler beim Senden der Einladung")
+    }
+
     setSendingInvite(false)
   }
 
+  // ✅ UX FIX: Reschedule better validation + loading protection
   async function rescheduleInterview() {
-    if(!rescheduleData.date || !rescheduleData.place) return
+    const date = rescheduleData.date?.trim()
+    const place = rescheduleData.place?.trim()
+
+    if(!date || !place) {
+      alert("Datum und Ort müssen ausgefüllt sein!")
+      return
+    }
+
+    if (sendingInvite) return
+
     setSendingInvite(true)
+
     try {
-      const localDate = new Date(rescheduleData.date)
+      const localDate = new Date(date)
       const isoDate = new Date(localDate.getTime() - localDate.getTimezoneOffset()*60000).toISOString()
 
       const res = await fetch('/api/adminboard/reschedule',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({ id, date: isoDate, place: rescheduleData.place, reason: rescheduleData.reason, admin: session?.user?.name || "[discordname]" })
+        body:JSON.stringify({
+          id,
+          date: isoDate,
+          place,
+          reason: rescheduleData.reason,
+          admin: session?.user?.name || "[discordname]"
+        })
       })
+
       const data = await res.json()
+
       if(data.success) {
         load()
         setShowRescheduleModal(false)
         setRescheduleData({ date:"", place:"", reason:"" })
+      } else {
+        alert(data.error || "Verschieben fehlgeschlagen")
       }
-    } catch(e) { console.error(e) }
+
+    } catch(e) {
+      console.error(e)
+      alert("Fehler beim Verschieben")
+    }
+
     setSendingInvite(false)
   }
 
@@ -181,7 +233,6 @@ export default function ApplicantPage() {
             </>
           )}
 
-          {/* ✅ FIX: Termin verschieben IMMER sichtbar nach Einladung */}
           {app.status !== "HIRED" && app.interviewDate && (
             <button
               onClick={()=>setShowRescheduleModal(true)}
@@ -239,7 +290,7 @@ export default function ApplicantPage() {
 
       </div>
 
-      {/* INVITE MODAL */}
+      {/* INVITE MODAL UX IMPROVED */}
       {showInviteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
           <div className="bg-gray-900 p-6 rounded w-96 space-y-4">
@@ -260,13 +311,18 @@ export default function ApplicantPage() {
               className="w-full p-2 rounded bg-gray-800"
             />
 
+            {/* UX hint */}
+            <p className="text-xs text-gray-400">
+              Beide Felder sind erforderlich
+            </p>
+
             <div className="flex gap-2 pt-2">
               <button
                 disabled={!inviteData.date || !inviteData.place || sendingInvite}
                 onClick={sendInvite}
                 className="bg-green-600 flex-1 py-2 rounded disabled:opacity-50"
               >
-                Einladen
+                {sendingInvite ? "Sende..." : "Einladen"}
               </button>
 
               <button
@@ -283,7 +339,7 @@ export default function ApplicantPage() {
         </div>
       )}
 
-      {/* RESCHEDULE MODAL */}
+      {/* RESCHEDULE UX IMPROVED */}
       {showRescheduleModal && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
           <div className="bg-gray-900 p-6 rounded w-96 space-y-4">
@@ -305,19 +361,23 @@ export default function ApplicantPage() {
             />
 
             <textarea
-              placeholder="Grund"
+              placeholder="Grund (optional)"
               value={rescheduleData.reason}
               onChange={e=>setRescheduleData({...rescheduleData,reason:e.target.value})}
               className="w-full p-2 rounded bg-gray-800"
             />
 
+            <p className="text-xs text-gray-400">
+              Datum und Ort sind Pflichtfelder
+            </p>
+
             <div className="flex gap-2 pt-2">
               <button
-                disabled={!rescheduleData.date || !rescheduleData.place}
+                disabled={!rescheduleData.date || !rescheduleData.place || sendingInvite}
                 onClick={rescheduleInterview}
                 className="bg-yellow-600 flex-1 py-2 rounded disabled:opacity-50"
               >
-                Speichern
+                {sendingInvite ? "Speichere..." : "Speichern"}
               </button>
 
               <button
