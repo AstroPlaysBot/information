@@ -54,7 +54,7 @@ export default function ApplicantPage() {
     if (!session) return alert("Session fehlt!")
 
     try {
-      const res = await fetch("/adminboard/note", {
+      const res = await fetch("/api/adminboard/note", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
