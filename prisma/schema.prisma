@@ -17,7 +17,7 @@ model Application {
   role            String
   age             String?
   email           String?
-  answers         Json     @default("{}")
+  answers         Json     @default({})
   submittedAt     DateTime @default(now())
 
   // Discord-Daten
@@ -33,12 +33,12 @@ model Application {
   interviewDate   DateTime?
   interviewPlace  String?
 
-  oldInterviews Json? @default("[]")
+  oldInterviews Json @default([])
 
   interviewFinishedBy String?
   interviewFinishedAt DateTime?
 
-  notes Json @default("[]")
+  notes Json @default([])
 
   updatedAt      DateTime @updatedAt
   updatedBy      String?
