@@ -16,7 +16,7 @@ export async function POST(req: Request) {
   const app = await prisma.application.update({
     where: { id: body.id },
     data: {
-      status: "INTERVIEW",
+      status: "INVITED",
       interviewDate,
       interviewPlace: body.place,
       updatedAt:new Date(),
