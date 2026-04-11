@@ -118,7 +118,6 @@ export default function ApplicantPage() {
 
   const answerKeys = app.answersOrder || Object.keys(app.answers || {})
 
-  // ✅ FIX: Zeitlogik ohne Offset-Bug
   const interviewTime: Date | null = app.interviewDate ? new Date(app.interviewDate) : null
   const interviewPassed = interviewTime ? new Date() >= interviewTime : false
 
@@ -175,7 +174,6 @@ export default function ApplicantPage() {
             </button>
           </>}
 
-          {/* ✅ FIX: immer sichtbar */}
           {app.status === "INVITED" && (
             <>
               <p>Vorstellungsgespräch ausstehend</p>
@@ -236,34 +234,97 @@ export default function ApplicantPage() {
 
       </div>
 
-      {/* Modals bleiben 1:1 unverändert */}
+      {/* INVITE MODAL */}
       {showInviteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
           <div className="bg-gray-900 p-6 rounded w-96 space-y-4">
             <h2 className="text-lg font-bold">Interview Einladung</h2>
-            <input type="datetime-local" value={inviteData.date}
+
+            <input
+              type="datetime-local"
+              value={inviteData.date}
               onChange={e=>setInviteData({...inviteData,date:e.target.value})}
-              className="w-full p-2 rounded bg-gray-800"/>
-            <input type="text" value={inviteData.place}
+              className="w-full p-2 rounded bg-gray-800"
+            />
+
+            <input
+              type="text"
+              placeholder="Sprachkanal / Ort"
+              value={inviteData.place}
               onChange={e=>setInviteData({...inviteData,place:e.target.value})}
-              className="w-full p-2 rounded bg-gray-800"/>
+              className="w-full p-2 rounded bg-gray-800"
+            />
+
+            <div className="flex gap-2 pt-2">
+              <button
+                disabled={!inviteData.date || !inviteData.place || sendingInvite}
+                onClick={sendInvite}
+                className="bg-green-600 flex-1 py-2 rounded disabled:opacity-50"
+              >
+                Einladen
+              </button>
+
+              <button
+                onClick={()=>{
+                  setShowInviteModal(false)
+                  setInviteData({ date:"", place:"" })
+                }}
+                className="bg-gray-600 flex-1 py-2 rounded"
+              >
+                Abbrechen
+              </button>
+            </div>
           </div>
         </div>
       )}
 
+      {/* RESCHEDULE MODAL */}
       {showRescheduleModal && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
           <div className="bg-gray-900 p-6 rounded w-96 space-y-4">
             <h2 className="text-lg font-bold">Gespräch verschieben</h2>
-            <input type="datetime-local" value={rescheduleData.date}
+
+            <input
+              type="datetime-local"
+              value={rescheduleData.date}
               onChange={e=>setRescheduleData({...rescheduleData,date:e.target.value})}
-              className="w-full p-2 rounded bg-gray-800"/>
-            <input type="text" value={rescheduleData.place}
+              className="w-full p-2 rounded bg-gray-800"
+            />
+
+            <input
+              type="text"
+              placeholder="Sprachkanal / Ort"
+              value={rescheduleData.place}
               onChange={e=>setRescheduleData({...rescheduleData,place:e.target.value})}
-              className="w-full p-2 rounded bg-gray-800"/>
-            <textarea value={rescheduleData.reason}
+              className="w-full p-2 rounded bg-gray-800"
+            />
+
+            <textarea
+              placeholder="Grund"
+              value={rescheduleData.reason}
               onChange={e=>setRescheduleData({...rescheduleData,reason:e.target.value})}
-              className="w-full p-2 rounded bg-gray-800"/>
+              className="w-full p-2 rounded bg-gray-800"
+            />
+
+            <div className="flex gap-2 pt-2">
+              <button
+                disabled={!rescheduleData.date || !rescheduleData.place}
+                onClick={rescheduleInterview}
+                className="bg-yellow-600 flex-1 py-2 rounded disabled:opacity-50"
+              >
+                Speichern
+              </button>
+
+              <button
+                onClick={()=>{
+                  setShowRescheduleModal(false)
+                  setRescheduleData({ date:"", place:"", reason:"" })
+                }}
+                className="bg-gray-600 flex-1 py-2 rounded"
+              >
+                Abbrechen
+              </button>
+            </div>
           </div>
         </div>
       )}
