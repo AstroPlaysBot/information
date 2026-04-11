@@ -1,6 +1,5 @@
-// src/app/api/discord-auth/route.ts
 import { NextResponse } from 'next/server';
-import { ADMIN_USER_IDS } from '@/data/admins';
+import { isAdmin } from '@/data/admins';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,26 +29,32 @@ export async function GET(req: Request) {
     });
 
     const tokenData = await tokenRes.json();
-    if (!tokenData.access_token) return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
+    if (!tokenData.access_token)
+      return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
 
     // 2️⃣ User Infos holen
     const userRes = await fetch(DISCORD_USER_URL, {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
+
     const user = await userRes.json();
-    if (!user?.id) return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
+    if (!user?.id)
+      return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
 
-    const isAdmin = ADMIN_USER_IDS.includes(user.id);
+    // 🔥 NEU: DB + Cryptix Check
+    const adminCheck = await isAdmin(user.id);
 
-    const response = NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/login`);
+    const response = NextResponse.redirect(
+      `${process.env.NEXT_PUBLIC_APP_URL}/login`
+    );
 
-    // 3️⃣ Cookie setzen: jetzt enthält der Token
+    // 3️⃣ Cookie setzen
     response.cookies.set(
-      isAdmin ? 'admin_token' : 'user_token',
-      tokenData.access_token, // ⚠️ jetzt echter OAuth Token
+      adminCheck ? 'admin_token' : 'user_token',
+      tokenData.access_token,
       {
         httpOnly: true,
-        maxAge: 60 * 30, // 30 Minuten
+        maxAge: 60 * 30,
         path: '/',
       }
     );
