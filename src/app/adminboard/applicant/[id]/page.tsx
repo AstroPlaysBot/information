@@ -11,6 +11,7 @@ export default function ApplicantPage() {
   const [app, setApp] = useState<any>(null)
   const [note, setNote] = useState("")
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [session, setSession] = useState<any>(null)
 
   const [inviteData, setInviteData] = useState({ date: "", place: "" })
@@ -40,13 +41,27 @@ export default function ApplicantPage() {
   }
 
   async function load() {
+    setLoading(true)
+    setError(null)
+
     try {
       const res = await fetch(`/api/adminboard/${id}`)
       const data = await res.json()
+
+      if (!res.ok) {
+        setError(data?.error || "API Fehler beim Laden")
+        setApp(null)
+        return
+      }
+
       setApp(data)
+
     } catch(e) {
       console.error(e)
+      setError("Network Error / Server nicht erreichbar")
+      setApp(null)
     }
+
     setLoading(false)
   }
 
@@ -144,6 +159,30 @@ export default function ApplicantPage() {
   }
 
   if(loading) return <div className="p-10 text-gray-400">Lade Bewerbung...</div>
+
+  if(error) {
+    return (
+      <div className="p-10 text-red-400 space-y-3">
+        <h1 className="text-xl font-bold">Fehler beim Laden</h1>
+        <p>{error}</p>
+
+        <button
+          onClick={() => router.push('/adminboard')}
+          className="bg-blue-600 px-4 py-2 rounded"
+        >
+          ← Zurück
+        </button>
+
+        <button
+          onClick={load}
+          className="bg-gray-700 px-4 py-2 rounded ml-2"
+        >
+          Retry
+        </button>
+      </div>
+    )
+  }
+
   if(!app) return <div className="p-10 text-red-400">Bewerbung konnte nicht geladen werden.</div>
 
   const answers =
@@ -223,11 +262,9 @@ export default function ApplicantPage() {
           )}
 
           {isInvited && (
-            <>
-              <button onClick={finishInterview} className="bg-blue-600 w-full py-2 rounded mt-2">
-                Gespräch beendet
-              </button>
-            </>
+            <button onClick={finishInterview} className="bg-blue-600 w-full py-2 rounded mt-2">
+              Gespräch beendet
+            </button>
           )}
 
           {interviewDone && (
@@ -256,7 +293,7 @@ export default function ApplicantPage() {
           {app.status === "HIRED" && <p>{app.role}</p>}
         </div>
 
-        {/* ✅ NOTES (FEHLTE KOMPLETT) */}
+        {/* NOTES */}
         <div className="bg-gray-900 p-6 rounded space-y-3 col-span-4">
           <h2 className="text-lg font-bold">Notizen</h2>
 
