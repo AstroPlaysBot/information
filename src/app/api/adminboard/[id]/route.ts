@@ -25,7 +25,12 @@ export async function GET(
 
     if (!application) {
       return NextResponse.json(
-        { error: "Application not found" },
+        {
+          error: "Application not found",
+          debug: {
+            id: params.id
+          }
+        },
         { status: 404 }
       )
     }
@@ -36,11 +41,17 @@ export async function GET(
       oldInterviews: application.oldInterviews ?? []
     })
 
-  } catch (err) {
+  } catch (err: any) {
     console.error("ADMINBOARD LOAD ERROR:", err)
 
     return NextResponse.json(
-      { error: "Server error" },
+      {
+        error: "Server error",
+        debug: {
+          message: err?.message || String(err),
+          stack: err?.stack || null
+        }
+      },
       { status: 500 }
     )
   }
