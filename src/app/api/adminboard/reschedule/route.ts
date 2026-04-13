@@ -18,7 +18,10 @@ export async function POST(req: Request) {
     const app = await prisma.application.findUnique({ where: { id: body.id } });
     if(!app) return NextResponse.json({ success:false, error:"Bewerbung nicht gefunden" });
 
-    const oldInterviews = app.oldInterviews || [];
+    const oldInterviews = Array.isArray(app.oldInterviews)
+      ? [...(app.oldInterviews as any[])]
+      : [];
+
     if(app.interviewDate && app.interviewPlace){
       oldInterviews.push({
         date: app.interviewDate,
