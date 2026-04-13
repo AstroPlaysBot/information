@@ -1,3 +1,4 @@
+// middleware.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
@@ -7,27 +8,23 @@ export function middleware(req: NextRequest) {
   const userToken = req.cookies.get('user_token')?.value;
   const adminToken = req.cookies.get('admin_token')?.value;
 
-  // ✅ PUBLIC ROUTES (LOGIN MUSS IMMER GEHEN!)
-  if (
-    pathname === '/' ||
-    pathname.startsWith('/login') ||
-    pathname.startsWith('/api/discord-auth')
-  ) {
+  // Öffentlich zugänglich
+  if (pathname === '/' || pathname.startsWith('/api') || pathname.startsWith('/login')) {
     return NextResponse.next();
   }
 
-  // DASHBOARD (user oder admin)
+  // Dashboard → jeder eingeloggte User (User oder Admin)
   if (pathname.startsWith('/dashboard')) {
     if (!userToken && !adminToken) {
-      return NextResponse.redirect(new URL('/', req.url));
+      return NextResponse.redirect('/api/discord-auth');
     }
     return NextResponse.next();
   }
 
-  // ADMIN ONLY
+  // Adminboard → nur Admin
   if (pathname.startsWith('/adminboard')) {
     if (!adminToken) {
-      return NextResponse.redirect(new URL('/login', req.url));
+      return NextResponse.redirect('/api/discord-auth');
     }
     return NextResponse.next();
   }
@@ -35,6 +32,7 @@ export function middleware(req: NextRequest) {
   return NextResponse.next();
 }
 
+// Middleware wird nur auf relevante Pfade angewendet
 export const config = {
-  matcher: ['/dashboard/:path*', '/adminboard/:path*'],
+  matcher: ['/dashboard/:path*', '/adminboard/:path*', '/login', '/login/:path*'],
 };
