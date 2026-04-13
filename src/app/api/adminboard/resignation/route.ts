@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 
 export async function POST(req: Request) {
-
   const body = await req.json();
 
   if (!body.discordId) {
@@ -22,17 +21,19 @@ export async function POST(req: Request) {
 
   try {
 
-    // 🔥 1. Admin Exit Queue (48h)
+    // 🔥 1. EXIT QUEUE (48h freeze FIXED)
     await prisma.adminExitQueue.upsert({
       where: { discordId: body.discordId },
-      update: {},
+      update: {
+        deleteAt: new Date(now.getTime() + 48 * 60 * 60 * 1000)
+      },
       create: {
         discordId: body.discordId,
         deleteAt: new Date(now.getTime() + 48 * 60 * 60 * 1000)
       }
     });
 
-    // 🔥 2. Application Ban (30 Tage)
+    // 🔥 2. APPLICATION BAN (30 Tage)
     await prisma.applicationBan.upsert({
       where: { discordId: body.discordId },
       update: {
@@ -44,7 +45,7 @@ export async function POST(req: Request) {
       }
     });
 
-    // 🔥 3. DB Update (optional leave mark)
+    // 🔥 3. DB UPDATE (UNCHANGED)
     await prisma.adminBoardMember.update({
       where: { discordId: body.discordId },
       data: {
@@ -54,7 +55,6 @@ export async function POST(req: Request) {
       },
     });
 
-    // EMAIL bleibt 1:1
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
       port: 587,
@@ -74,14 +74,10 @@ export async function POST(req: Request) {
       html: `
         <div style="font-family:sans-serif; line-height:1.6; color:#111">
           <h2 style="color:#ef4444;">Hallo ${memberCheck.discordName},</h2>
-
           <p>deine Kündigung wurde verarbeitet.</p>
-
           <p><strong>Zeitpunkt:</strong> ${nowString}</p>
-
           <p>48h Admin-Daten Löschung aktiv.</p>
           <p>30 Tage Bewerbungssperre aktiv.</p>
-
         </div>
       `,
     });
