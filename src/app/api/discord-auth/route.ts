@@ -10,11 +10,19 @@ const DISCORD_USER_URL = 'https://discord.com/api/users/@me';
 export async function GET(req: Request) {
   try {
     const code = new URL(req.url).searchParams.get('code');
-    if (!code) return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
+
+    // 🔥 VISUAL DEBUG 1
+    if (!code) {
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_APP_URL}/debug-auth?step=no_code`
+      );
+    }
 
     const CLIENT_ID = process.env.DISCORD_CLIENT_ID!;
     const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET!;
     const REDIRECT_URI = `${process.env.NEXT_PUBLIC_APP_URL}/api/discord-auth`;
+
+    console.log("➡️ AUTH START");
 
     // 1️⃣ TOKEN
     const tokenRes = await fetch(DISCORD_TOKEN_URL, {
@@ -30,8 +38,15 @@ export async function GET(req: Request) {
     });
 
     const tokenData = await tokenRes.json();
-    if (!tokenData.access_token)
-      return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
+
+    // 🔥 VISUAL DEBUG 2
+    if (!tokenData.access_token) {
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_APP_URL}/debug-auth?step=no_token`
+      );
+    }
+
+    console.log("✅ TOKEN OK");
 
     // 2️⃣ USER
     const userRes = await fetch(DISCORD_USER_URL, {
@@ -39,8 +54,15 @@ export async function GET(req: Request) {
     });
 
     const user = await userRes.json();
-    if (!user?.id)
-      return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
+
+    // 🔥 VISUAL DEBUG 3
+    if (!user?.id) {
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_APP_URL}/debug-auth?step=no_user`
+      );
+    }
+
+    console.log("👤 USER OK:", user.id);
 
     // 🔥 CHECK: 30 Tage Admin Sperre
     const exitBan = await prisma.applicationBan.findUnique({
@@ -50,8 +72,12 @@ export async function GET(req: Request) {
     const isInBan =
       exitBan && new Date(exitBan.bannedUntil).getTime() > Date.now();
 
+    console.log("🚫 BAN CHECK:", isInBan);
+
     // 🔥 ADMIN LOGIC:
     const adminCheck = await isAdmin(user.id);
+
+    console.log("👑 ADMIN CHECK:", adminCheck);
 
     const target = adminCheck ? '/adminboard' : '/dashboard';
 
@@ -59,7 +85,7 @@ export async function GET(req: Request) {
       `${process.env.NEXT_PUBLIC_APP_URL}${target}`
     );
 
-    // 🟢 CASE 1: NORMAL USER (immer erlaubt)
+    // 🟢 CASE 1: NORMAL USER
     if (!adminCheck) {
       response.cookies.set('user_token', tokenData.access_token, {
         httpOnly: true,
@@ -81,7 +107,7 @@ export async function GET(req: Request) {
       return response;
     }
 
-    // 🟢 CASE 3: ECHTER ADMIN (nur wenn NICHT gebannt)
+    // 🟢 CASE 3: ECHTER ADMIN
     response.cookies.set('admin_token', tokenData.access_token, {
       httpOnly: true,
       maxAge: 60 * 30,
@@ -91,7 +117,10 @@ export async function GET(req: Request) {
     return response;
 
   } catch (err) {
-    console.error(err);
-    return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
+    console.error("❌ AUTH ERROR:", err);
+
+    return NextResponse.redirect(
+      `${process.env.NEXT_PUBLIC_APP_URL}/debug-auth?step=error`
+    );
   }
 }
