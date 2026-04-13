@@ -11,6 +11,12 @@ interface TopbarProps {
   setFilter: (filter: string) => void
 }
 
+// 🔥 optional: user aus API holen (wenn du kein global state hast)
+async function getUser() {
+  const res = await fetch('/api/me')
+  return res.json()
+}
+
 export default function Topbar({ view, filter, setFilter }: TopbarProps) {
   const [open, setOpen] = useState(false)
   const [confirmCancel, setConfirmCancel] = useState(false)
@@ -33,10 +39,13 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
 
   const handleSubmitCancel = async () => {
 
+    const user = await getUser()
+
     await fetch('/api/adminboard/resignation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        discordId: user.discordId,   // 🔥 WICHTIG (TEAM SYSTEM)
         reasonType,
         reasonText: cancelReason
       })
@@ -149,15 +158,13 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
 
               <div className="mb-4">
                 <h2 className="text-white text-lg font-semibold">
-                  Kündigung bei AstroPlays einreichen
+                  Kündigung im AdminBoard einreichen
                 </h2>
 
                 <p className="text-gray-400 text-sm mt-1">
                   Feedback ist freiwillig, hilft uns jedoch unser Team zu verbessern.
                 </p>
               </div>
-
-              {/* REASON DROPDOWN */}
 
               <select
                 value={reasonType}
@@ -173,8 +180,6 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
                 <option value="sonstiges">Sonstiges</option>
               </select>
 
-              {/* TEXTAREA */}
-
               <textarea
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
@@ -182,25 +187,16 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
                 className="w-full h-28 p-3 rounded-lg bg-gray-800 text-white text-sm outline-none border border-gray-700 focus:border-purple-500 resize-none"
               />
 
-              {/* INFO BOX */}
-
               <div className="mt-4 p-4 rounded-lg bg-gray-800 border border-gray-700 text-sm text-gray-300">
-
                 <p className="mb-2">
-                  Nach Einreichung der Kündigung werden alle personenbezogenen Daten,
-                  welche ausschließlich für administrative Zwecke im AdminBoard
-                  benötigt wurden, nach <span className="text-white font-semibold">48 Stunden</span> gelöscht.
+                  Nach Einreichung werden personenbezogene Admin-Daten nach
+                  <span className="text-white font-semibold"> 48 Stunden</span> gelöscht.
                 </p>
 
                 <p>
-                  Innerhalb dieser 48 Stunden hast du die Möglichkeit,
-                  der Kündigung zu widersprechen. In diesem Fall wirst du wieder
-                  im Team aktiviert und deine Daten bleiben bestehen.
+                  Widerspruch innerhalb dieser Zeit ist möglich.
                 </p>
-
               </div>
-
-              {/* CHECKBOX */}
 
               <label className="flex items-start gap-2 mt-4 text-sm text-gray-300">
 
@@ -212,9 +208,7 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
                 />
 
                 <span>
-                  Mir ist bewusst, dass ich nach einer Kündigung eine automatisierte
-                  Bewerbungssperre von <span className="text-white font-semibold">30 Tagen</span> erhalte
-                  und mich in diesem Zeitraum nicht erneut bewerben kann.
+                  Mir ist bewusst, dass ich eine 30 Tage Bewerbungssperre erhalte.
                 </span>
 
               </label>
