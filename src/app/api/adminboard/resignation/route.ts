@@ -1,42 +1,40 @@
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
-import { cookies } from "next/headers";
 
 export async function POST(req: Request) {
 
   const body = await req.json();
 
-  const cookieStore = cookies();
-  const discordId = cookieStore.get("discord_id")?.value;
-
-  if (!discordId) {
-    return NextResponse.json({ success:false, error:"Nicht eingeloggt" });
+  if (!body.id) {
+    return NextResponse.json({ success:false, error:"Missing data" });
   }
+
+  // Bewerbung holen + check
+  const appCheck = await prisma.application.findUnique({
+    where: { id: body.id }
+  });
+
+  if(!appCheck){
+    return NextResponse.json({ success:false, error:"User nicht gefunden" });
+  }
+
+  let mailError: string | null = null;
 
   try {
 
-    const app = await prisma.application.findFirst({
-      where: { discordId }
-    });
-
-    if(!app){
-      return NextResponse.json({ success:false, error:"User nicht gefunden" });
-    }
-
-    // Optional Feedback speichern
-    await prisma.application.update({
-      where: { id: app.id },
+    // Status setzen
+    const app = await prisma.application.update({
+      where: { id: body.id },
       data: {
         status: "RESIGNED",
         updatedAt: new Date(),
         updatedBy: "Self Resignation",
         resignationReason: body.reasonType || null,
         resignationText: body.reasonText || null
-      }
+      },
     });
 
-    // Mail Transporter
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
       port: 587,
@@ -66,16 +64,13 @@ export async function POST(req: Request) {
 
           <hr style="margin:20px 0"/>
 
-          <h3>Wichtige Informationen</h3>
-
           <p>
             • Deine administrativen personenbezogenen Daten werden nach
             <strong>48 Stunden</strong> automatisch gelöscht.
           </p>
 
           <p>
-            • Innerhalb dieser 48 Stunden kannst du der Kündigung widersprechen
-            und wieder im Team aktiviert werden.
+            • Innerhalb dieser 48 Stunden kannst du der Kündigung widersprechen.
           </p>
 
           <p>
@@ -85,31 +80,22 @@ export async function POST(req: Request) {
 
           <hr style="margin:20px 0"/>
 
-          <h3>Dein Feedback</h3>
-
           <p><strong>Grund:</strong> ${body.reasonType || "Kein Grund angegeben"}</p>
 
-          <p>
-            ${body.reasonText || "Kein zusätzliches Feedback angegeben."}
-          </p>
+          <p>${body.reasonText || "Kein Feedback angegeben."}</p>
 
           <hr style="margin:20px 0"/>
 
           <p style="color:#b91c1c;">
-            Falls du diese Kündigung <strong>nicht selbst durchgeführt</strong> hast,
-            wende dich bitte sofort an unseren Support.
+            Falls du diese Kündigung nicht selbst durchgeführt hast,
+            melde dich bitte sofort beim Support.
           </p>
 
           <p>
-            Support Kontakt:<br/>
-            <strong>support@astroplays.de</strong>
+            support@astroplays.de
           </p>
 
-          <p style="margin-top:25px">
-            Vielen Dank für deine Mitarbeit im Team.
-          </p>
-
-          <p>
+          <p style="margin-top:20px">
             Viele Grüße<br/>
             <strong>Team AstroPlays</strong>
           </p>
@@ -118,16 +104,16 @@ export async function POST(req: Request) {
       `,
     });
 
-    return NextResponse.json({ success:true });
+  } catch (e:any) {
 
-  } catch(e:any) {
+    console.error("E-Mail Fehler:", e);
+    mailError = "Fehler beim Kündigungsprozess";
 
-    console.error("Fehler Resignation API:", e);
-
-    return NextResponse.json({
-      success:false,
-      error:"Interner Fehler"
-    });
   }
+
+  return NextResponse.json({
+    success: true,
+    mailError
+  });
 
 }
