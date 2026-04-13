@@ -12,26 +12,25 @@ export async function POST(req: Request) {
       );
     }
 
-    // ✅ FIX: stabiler Cookie Parser (statt cookies() Next API)
-    const getToken = (req: Request) => {
-      const cookie = req.headers.get("cookie");
-      if (!cookie) return null;
+    // 🔥 ONLY ADMIN TOKEN
+    const cookie = req.headers.get("cookie") || "";
 
-      return cookie
-        .split("user_token=")[1]
+    const getCookie = (name: string) =>
+      cookie
+        .split(`${name}=`)[1]
         ?.split(";")[0];
-    };
 
-    const token = getToken(req);
+    const token = getCookie("admin_token");
 
+    // ❌ USER IST HIER KOMPLETT UNGÜLTIG
     if (!token) {
       return NextResponse.json(
-        { error: "Nicht eingeloggt" },
+        { error: "Nur Admins erlaubt" },
         { status: 401 }
       );
     }
 
-    // Discord User wirklich vom API holen
+    // Discord verify
     const discordRes = await fetch("https://discord.com/api/users/@me", {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -66,7 +65,7 @@ export async function POST(req: Request) {
 
     const newNote = {
       text: body.note,
-      author: displayName, // ✅ echter Discord Name
+      author: displayName,
       date: new Date().toISOString(),
     };
 
@@ -78,6 +77,7 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ success: true });
+
   } catch (err) {
     console.error("Error saving note:", err);
 
