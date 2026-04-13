@@ -26,9 +26,16 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
     setCancelReason("")
   }
 
+  // 🔥 FIX: prevent React #310 crash (safe navigation after state cleanup)
   const handleSubmitCancel = () => {
-    closeAll()
-    router.push('/')
+    setConfirmCancel(false)
+    setOpen(false)
+    setCancelReason("")
+
+    // allow React to finish state updates before navigation
+    setTimeout(() => {
+      router.push('/')
+    }, 50)
   }
 
   return (
