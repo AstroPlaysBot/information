@@ -37,6 +37,7 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        id: user.id,
         reasonType,
         reasonText: cancelReason
       })
