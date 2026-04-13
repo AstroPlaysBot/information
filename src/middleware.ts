@@ -8,7 +8,7 @@ export function middleware(req: NextRequest) {
   const userToken = req.cookies.get('user_token')?.value;
   const adminToken = req.cookies.get('admin_token')?.value;
 
-  // ❌ NICHT API komplett bypassen (nur Auth-Route erlauben!)
+  // ❌ Public Routes
   if (
     pathname === '/' ||
     pathname.startsWith('/login') ||
@@ -17,7 +17,7 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Dashboard → jeder eingeloggte User (User oder Admin)
+  // Dashboard → logged in users
   if (pathname.startsWith('/dashboard')) {
     if (!userToken && !adminToken) {
       return NextResponse.redirect(new URL('/api/discord-auth', req.url));
@@ -25,11 +25,12 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Adminboard → nur Admin
+  // 🔥 ADMINBOARD HARD BLOCK (no token = no access)
   if (pathname.startsWith('/adminboard')) {
     if (!adminToken) {
       return NextResponse.redirect(new URL('/api/discord-auth', req.url));
     }
+
     return NextResponse.next();
   }
 
