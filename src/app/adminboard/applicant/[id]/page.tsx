@@ -76,7 +76,6 @@ export default function ApplicantPage() {
         body: JSON.stringify({
           id,
           note,
-          admin: session.user?.name || "[discordname]"
         })
       })
 
@@ -110,7 +109,6 @@ export default function ApplicantPage() {
           id,
           date: inviteData.date,
           place: inviteData.place,
-          admin: session?.user?.name || "[discordname]"
         })
       })
 
@@ -137,7 +135,7 @@ export default function ApplicantPage() {
       const res = await fetch('/api/adminboard/interview-done',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({id, admin: session?.user?.name})
+        body:JSON.stringify({ id })
       })
 
       const data = await res.json()
