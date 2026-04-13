@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+import prisma from "@/lib/prisma";
 
 export const dynamic = 'force-dynamic';
 
@@ -9,7 +10,7 @@ function getDiscordCreationDate(id: string) {
 }
 
 export async function GET() {
-  const token = 
+  const token =
     cookies().get('user_token')?.value ||
     cookies().get('admin_token')?.value;
 
@@ -30,10 +31,17 @@ export async function GET() {
 
     const accountCreated = getDiscordCreationDate(user.id);
 
-    // 🔥 FIX: FULL AVATAR URL
     const avatarUrl = user.avatar
       ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${user.avatar.startsWith('a_') ? 'gif' : 'png'}`
       : null;
+
+    // 🔥 BAN CHECK ADDED
+    const ban = await prisma.applicationBan.findUnique({
+      where: { discordId: user.id }
+    });
+
+    const isBanned =
+      ban && new Date(ban.bannedUntil).getTime() > Date.now();
 
     return NextResponse.json({
       user: {
@@ -41,12 +49,15 @@ export async function GET() {
         username: user.username,
         global_name: user.global_name,
         discriminator: user.discriminator,
-
-        avatar: avatarUrl, // 👈 jetzt URL statt hash
-
+        avatar: avatarUrl,
         created_at: accountCreated,
+
+        // 🔥 NEW
+        banned: isBanned,
+        bannedUntil: ban?.bannedUntil || null
       },
     });
+
   } catch (err) {
     console.error(err);
     return NextResponse.json({ user: null }, { status: 500 });
