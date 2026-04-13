@@ -68,7 +68,8 @@ export async function GET(req: Request) {
 
     console.log("❄️ FREEZE:", isFrozen);
 
-    const target = adminCheck ? '/adminboard' : '/dashboard';
+    // 🔥 FIX: IMMER LOGIN PAGE
+    const target = '/login';
 
     const response = NextResponse.redirect(
       `${process.env.NEXT_PUBLIC_APP_URL}${target}`
