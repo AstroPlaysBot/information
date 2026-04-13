@@ -27,7 +27,7 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
   }
 
   const handleSubmitCancel = () => {
-    if (!cancelReason.trim()) return
+    closeAll()
     router.push('/')
   }
 
@@ -71,7 +71,7 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
       )}
 
       {/* SETTINGS */}
-      <div className="relative z-50">
+      <div className="relative z-[120]">
         <button
           onClick={() => setOpen(v => !v)}
           className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700"
@@ -85,7 +85,7 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="absolute right-0 mt-2 bg-gray-900 border border-gray-800 rounded-xl w-44 shadow-xl z-[100]"
+              className="absolute right-0 mt-2 bg-gray-900 border border-gray-800 rounded-xl w-44 shadow-xl z-[130]"
             >
               <button
                 onClick={() => window.location.href = '/'}
@@ -112,13 +112,24 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
       <AnimatePresence>
         {confirmCancel && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="fixed inset-0 flex items-center justify-center z-[200] pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 flex items-center justify-center z-[200]"
           >
-            {/* MODAL BOX */}
-            <div className="pointer-events-auto bg-gray-900 border border-gray-800 rounded-2xl p-6 w-[480px] shadow-2xl">
+            {/* BACKDROP */}
+            <div
+              onClick={closeAll}
+              className="absolute inset-0 bg-black/60"
+            />
+
+            {/* MODAL */}
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative bg-gray-900 border border-gray-800 rounded-2xl p-6 w-[520px] shadow-2xl z-10"
+            >
 
               {/* HEADER */}
               <div className="mb-4">
@@ -126,7 +137,7 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
                   Kündigung bei AstroPlays einreichen
                 </h2>
                 <p className="text-gray-400 text-sm mt-1">
-                  Bitte gib einen Kündigungsgrund an.
+                  Kündigungsgrund optional (für Feedback empfohlen).
                 </p>
               </div>
 
@@ -148,19 +159,14 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
                 </button>
 
                 <button
-                  disabled={!cancelReason.trim()}
                   onClick={handleSubmitCancel}
-                  className={`px-4 py-2 rounded-lg text-white transition
-                    ${cancelReason.trim()
-                      ? "bg-red-600 hover:bg-red-500"
-                      : "bg-red-900 cursor-not-allowed opacity-50"
-                    }`}
+                  className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white"
                 >
                   Einreichen
                 </button>
               </div>
 
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
