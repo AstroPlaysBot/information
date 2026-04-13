@@ -28,7 +28,6 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
 
   const handleSubmitCancel = () => {
     if (!cancelReason.trim()) return
-    // optional: hier später API call speichern
     router.push('/')
   }
 
@@ -43,7 +42,7 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={closeAll}
-            className="fixed inset-0 bg-black/60 z-40"
+            className="fixed inset-0 bg-black/60 z-[90]"
           />
         )}
       </AnimatePresence>
@@ -86,7 +85,7 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="absolute right-0 mt-2 bg-gray-900 border border-gray-800 rounded-xl w-44 shadow-xl z-50"
+              className="absolute right-0 mt-2 bg-gray-900 border border-gray-800 rounded-xl w-44 shadow-xl z-[100]"
             >
               <button
                 onClick={() => window.location.href = '/'}
@@ -116,30 +115,34 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="fixed inset-0 flex items-center justify-center z-60"
+            className="fixed inset-0 flex items-center justify-center z-[200] pointer-events-none"
           >
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 w-[360px] shadow-2xl">
+            {/* MODAL BOX */}
+            <div className="pointer-events-auto bg-gray-900 border border-gray-800 rounded-2xl p-6 w-[480px] shadow-2xl">
 
-              <h2 className="text-white text-lg font-semibold mb-2">
-                Kündigung bei AstroPlays einreichen
-              </h2>
+              {/* HEADER */}
+              <div className="mb-4">
+                <h2 className="text-white text-lg font-semibold">
+                  Kündigung bei AstroPlays einreichen
+                </h2>
+                <p className="text-gray-400 text-sm mt-1">
+                  Bitte gib einen Kündigungsgrund an.
+                </p>
+              </div>
 
-              <p className="text-gray-400 text-sm mb-4">
-                Bitte gib einen Kündigungsgrund an.
-              </p>
-
-              {/* INPUT */}
+              {/* TEXTAREA */}
               <textarea
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
                 placeholder="z.B. Kein Bedarf mehr / Budget / Wechsel zu ..."
-                className="w-full h-24 p-2 rounded bg-gray-800 text-white text-sm outline-none border border-gray-700 focus:border-purple-500"
+                className="w-full h-32 p-3 rounded-lg bg-gray-800 text-white text-sm outline-none border border-gray-700 focus:border-purple-500 resize-none"
               />
 
-              <div className="flex justify-end gap-2 mt-4">
+              {/* FOOTER */}
+              <div className="flex justify-end gap-2 mt-5">
                 <button
                   onClick={closeAll}
-                  className="px-3 py-1 rounded bg-gray-800 hover:bg-gray-700 text-white"
+                  className="px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-white"
                 >
                   Abbrechen
                 </button>
@@ -147,7 +150,7 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
                 <button
                   disabled={!cancelReason.trim()}
                   onClick={handleSubmitCancel}
-                  className={`px-3 py-1 rounded text-white transition
+                  className={`px-4 py-2 rounded-lg text-white transition
                     ${cancelReason.trim()
                       ? "bg-red-600 hover:bg-red-500"
                       : "bg-red-900 cursor-not-allowed opacity-50"
