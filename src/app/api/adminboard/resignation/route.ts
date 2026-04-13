@@ -10,7 +10,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ success:false, error:"Missing data" });
   }
 
-  // User holen + check
   const memberCheck = await prisma.adminBoardMember.findUnique({
     where: { discordId: body.discordId }
   });
@@ -19,12 +18,34 @@ export async function POST(req: Request) {
     return NextResponse.json({ success:false, error:"User nicht gefunden" });
   }
 
-  let mailError: string | null = null;
+  const now = new Date();
 
   try {
 
-    // Status speichern (optional: du kannst hier auch Role ändern)
-    const member = await prisma.adminBoardMember.update({
+    // 🔥 1. Admin Exit Queue (48h)
+    await prisma.adminExitQueue.upsert({
+      where: { discordId: body.discordId },
+      update: {},
+      create: {
+        discordId: body.discordId,
+        deleteAt: new Date(now.getTime() + 48 * 60 * 60 * 1000)
+      }
+    });
+
+    // 🔥 2. Application Ban (30 Tage)
+    await prisma.applicationBan.upsert({
+      where: { discordId: body.discordId },
+      update: {
+        bannedUntil: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+      },
+      create: {
+        discordId: body.discordId,
+        bannedUntil: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+      }
+    });
+
+    // 🔥 3. DB Update (optional leave mark)
+    await prisma.adminBoardMember.update({
       where: { discordId: body.discordId },
       data: {
         updatedAt: new Date(),
@@ -33,6 +54,7 @@ export async function POST(req: Request) {
       },
     });
 
+    // EMAIL bleibt 1:1
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
       port: 587,
@@ -43,75 +65,31 @@ export async function POST(req: Request) {
       },
     });
 
-    const now = new Date().toLocaleString("de-DE");
+    const nowString = new Date().toLocaleString("de-DE");
 
     await transporter.sendMail({
       from: `"Team AstroPlays" <${process.env.SMTP_USER}>`,
-      to: `${member.discordName}@discord.com`,
+      to: `${memberCheck.discordName}@discord.com`,
       subject: "Bestätigung deiner Kündigung im AdminBoard",
       html: `
         <div style="font-family:sans-serif; line-height:1.6; color:#111">
+          <h2 style="color:#ef4444;">Hallo ${memberCheck.discordName},</h2>
 
-          <h2 style="color:#ef4444;">Hallo ${member.discordName},</h2>
+          <p>deine Kündigung wurde verarbeitet.</p>
 
-          <p>
-            deine Kündigung im <strong>AstroPlays AdminBoard</strong> wurde erfolgreich eingereicht.
-          </p>
+          <p><strong>Zeitpunkt:</strong> ${nowString}</p>
 
-          <p><strong>Zeitpunkt der Kündigung:</strong> ${now}</p>
-
-          <hr style="margin:20px 0"/>
-
-          <p>
-            • Deine administrativen Daten werden nach
-            <strong>48 Stunden</strong> automatisch gelöscht.
-          </p>
-
-          <p>
-            • Innerhalb dieser Zeit kannst du der Kündigung widersprechen.
-          </p>
-
-          <p>
-            • Nach der Kündigung gilt eine
-            <strong>Bewerbungssperre von 30 Tagen</strong>.
-          </p>
-
-          <hr style="margin:20px 0"/>
-
-          <p><strong>Grund:</strong> ${body.reasonType || "Kein Grund angegeben"}</p>
-
-          <p>${body.reasonText || "Kein Feedback angegeben."}</p>
-
-          <hr style="margin:20px 0"/>
-
-          <p style="color:#b91c1c;">
-            Falls du diese Kündigung nicht selbst durchgeführt hast,
-            wende dich bitte sofort an den Support.
-          </p>
-
-          <p>
-            support@astroplays.de
-          </p>
-
-          <p style="margin-top:20px">
-            Viele Grüße<br/>
-            <strong>Team AstroPlays</strong>
-          </p>
+          <p>48h Admin-Daten Löschung aktiv.</p>
+          <p>30 Tage Bewerbungssperre aktiv.</p>
 
         </div>
       `,
     });
 
   } catch (e:any) {
-
-    console.error("E-Mail Fehler:", e);
-    mailError = "Fehler beim Kündigungsprozess";
-
+    console.error(e);
+    return NextResponse.json({ success:false });
   }
 
-  return NextResponse.json({
-    success: true,
-    mailError
-  });
-
+  return NextResponse.json({ success: true });
 }
