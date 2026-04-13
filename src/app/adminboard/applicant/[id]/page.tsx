@@ -76,7 +76,7 @@ export default function ApplicantPage() {
         body: JSON.stringify({
           id,
           note,
-          author: session.user?.name || "[discordname]"
+          admin: session.user?.name || "[discordname]"
         })
       })
 
