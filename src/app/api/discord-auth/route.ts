@@ -11,11 +11,8 @@ export async function GET(req: Request) {
   try {
     const code = new URL(req.url).searchParams.get('code');
 
-    // 🔥 VISUAL DEBUG 1
     if (!code) {
-      return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/debug-auth?step=no_code`
-      );
+      return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
     }
 
     const CLIENT_ID = process.env.DISCORD_CLIENT_ID!;
@@ -39,11 +36,8 @@ export async function GET(req: Request) {
 
     const tokenData = await tokenRes.json();
 
-    // 🔥 VISUAL DEBUG 2
     if (!tokenData.access_token) {
-      return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/debug-auth?step=no_token`
-      );
+      return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
     }
 
     console.log("✅ TOKEN OK");
@@ -55,16 +49,13 @@ export async function GET(req: Request) {
 
     const user = await userRes.json();
 
-    // 🔥 VISUAL DEBUG 3
     if (!user?.id) {
-      return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/debug-auth?step=no_user`
-      );
+      return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
     }
 
     console.log("👤 USER OK:", user.id);
 
-    // 🔥 CHECK: 30 Tage Admin Sperre
+    // 3️⃣ BAN CHECK
     const exitBan = await prisma.applicationBan.findUnique({
       where: { discordId: user.id }
     });
@@ -74,7 +65,7 @@ export async function GET(req: Request) {
 
     console.log("🚫 BAN CHECK:", isInBan);
 
-    // 🔥 ADMIN LOGIC:
+    // 4️⃣ ADMIN CHECK
     const adminCheck = await isAdmin(user.id);
 
     console.log("👑 ADMIN CHECK:", adminCheck);
@@ -85,7 +76,7 @@ export async function GET(req: Request) {
       `${process.env.NEXT_PUBLIC_APP_URL}${target}`
     );
 
-    // 🟢 CASE 1: NORMAL USER
+    // 🟢 USER
     if (!adminCheck) {
       response.cookies.set('user_token', tokenData.access_token, {
         httpOnly: true,
@@ -96,7 +87,7 @@ export async function GET(req: Request) {
       return response;
     }
 
-    // 🔴 CASE 2: ADMIN ABER IN 30 TAGE SPERRE
+    // 🔴 ADMIN aber BAN
     if (isInBan) {
       response.cookies.set('user_token', tokenData.access_token, {
         httpOnly: true,
@@ -107,7 +98,7 @@ export async function GET(req: Request) {
       return response;
     }
 
-    // 🟢 CASE 3: ECHTER ADMIN
+    // 🟢 ADMIN OK
     response.cookies.set('admin_token', tokenData.access_token, {
       httpOnly: true,
       maxAge: 60 * 30,
@@ -119,8 +110,6 @@ export async function GET(req: Request) {
   } catch (err) {
     console.error("❌ AUTH ERROR:", err);
 
-    return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/debug-auth?step=error`
-    );
+    return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
   }
 }
