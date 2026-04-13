@@ -7,25 +7,31 @@ export function middleware(req: NextRequest) {
   const userToken = req.cookies.get('user_token')?.value;
   const adminToken = req.cookies.get('admin_token')?.value;
 
-  // public routes
+  // =========================
+  // PUBLIC ROUTES (WICHTIG!)
+  // =========================
   if (
     pathname === '/' ||
     pathname.startsWith('/login') ||
     pathname.startsWith('/api/discord-auth') ||
-    pathname.startsWith('/api/discord-auth-apply') // ✅ FIX
+    pathname.startsWith('/api')
   ) {
     return NextResponse.next();
   }
 
-  // dashboard (user + admin)
+  // =========================
+  // DASHBOARD
+  // =========================
   if (pathname.startsWith('/dashboard')) {
     if (!userToken && !adminToken) {
-      return NextResponse.redirect(new URL('/api/discord-auth', req.url));
+      return NextResponse.redirect(new URL('/login', req.url));
     }
     return NextResponse.next();
   }
 
-  // adminboard (ONLY admin)
+  // =========================
+  // ADMINBOARD
+  // =========================
   if (pathname.startsWith('/adminboard')) {
     if (!adminToken) {
       return NextResponse.redirect(new URL('/login', req.url));
