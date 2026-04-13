@@ -1,5 +1,5 @@
 // src/app/api/discord-auth-apply/route.ts
-import { handleDiscordOAuth } from "@/lib/discord-oauth";
+import { handleDiscordOAuth } from "@/lib/discordOAuth";
 
 export async function GET(req: Request) {
   const APP_URL = process.env.NEXT_PUBLIC_APP_URL!;
