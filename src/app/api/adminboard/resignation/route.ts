@@ -6,16 +6,16 @@ export async function POST(req: Request) {
 
   const body = await req.json();
 
-  if (!body.id) {
+  if (!body.discordId) {
     return NextResponse.json({ success:false, error:"Missing data" });
   }
 
-  // Bewerbung holen + check
-  const appCheck = await prisma.application.findUnique({
-    where: { id: body.id }
+  // User holen + check
+  const memberCheck = await prisma.adminBoardMember.findUnique({
+    where: { discordId: body.discordId }
   });
 
-  if(!appCheck){
+  if(!memberCheck){
     return NextResponse.json({ success:false, error:"User nicht gefunden" });
   }
 
@@ -23,13 +23,11 @@ export async function POST(req: Request) {
 
   try {
 
-    // Status setzen
-    const app = await prisma.application.update({
-      where: { id: body.id },
+    // Status speichern (optional: du kannst hier auch Role ändern)
+    const member = await prisma.adminBoardMember.update({
+      where: { discordId: body.discordId },
       data: {
-        status: "RESIGNED",
         updatedAt: new Date(),
-        updatedBy: "Self Resignation",
         resignationReason: body.reasonType || null,
         resignationText: body.reasonText || null
       },
@@ -49,15 +47,15 @@ export async function POST(req: Request) {
 
     await transporter.sendMail({
       from: `"Team AstroPlays" <${process.env.SMTP_USER}>`,
-      to: app.email,
-      subject: "Bestätigung deiner Kündigung bei AstroPlays",
+      to: `${member.discordName}@discord.com`,
+      subject: "Bestätigung deiner Kündigung im AdminBoard",
       html: `
         <div style="font-family:sans-serif; line-height:1.6; color:#111">
 
-          <h2 style="color:#ef4444;">Hallo ${app.name},</h2>
+          <h2 style="color:#ef4444;">Hallo ${member.discordName},</h2>
 
           <p>
-            deine Kündigung bei <strong>AstroPlays</strong> wurde erfolgreich eingereicht.
+            deine Kündigung im <strong>AstroPlays AdminBoard</strong> wurde erfolgreich eingereicht.
           </p>
 
           <p><strong>Zeitpunkt der Kündigung:</strong> ${now}</p>
@@ -65,16 +63,16 @@ export async function POST(req: Request) {
           <hr style="margin:20px 0"/>
 
           <p>
-            • Deine administrativen personenbezogenen Daten werden nach
+            • Deine administrativen Daten werden nach
             <strong>48 Stunden</strong> automatisch gelöscht.
           </p>
 
           <p>
-            • Innerhalb dieser 48 Stunden kannst du der Kündigung widersprechen.
+            • Innerhalb dieser Zeit kannst du der Kündigung widersprechen.
           </p>
 
           <p>
-            • Nach der Kündigung erhältst du eine automatische
+            • Nach der Kündigung gilt eine
             <strong>Bewerbungssperre von 30 Tagen</strong>.
           </p>
 
@@ -88,7 +86,7 @@ export async function POST(req: Request) {
 
           <p style="color:#b91c1c;">
             Falls du diese Kündigung nicht selbst durchgeführt hast,
-            melde dich bitte sofort beim Support.
+            wende dich bitte sofort an den Support.
           </p>
 
           <p>
