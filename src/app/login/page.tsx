@@ -9,71 +9,110 @@ export default function LoginPage() {
   const adminToken = cookieStore.get('admin_token');
   const userToken = cookieStore.get('user_token');
 
-  // ❌ nur blocken wenn GAR KEIN Login vorhanden
-  if (!adminToken && !userToken) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-white bg-black">
-        Bitte einloggen...
-      </div>
-    );
-  }
-
   const isAdmin = !!adminToken;
   const isUser = !!userToken;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-tr from-purple-900 via-indigo-900 to-black px-4">
-      <h1 className="text-5xl md:text-6xl font-extrabold text-white text-center mb-12 animate-fadeIn">
-        Wohin möchtest du?
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-black via-indigo-950 to-purple-950 px-6 relative overflow-hidden">
+
+      {/* Background Glow */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-20 left-20 w-72 h-72 bg-indigo-500 rounded-full blur-[120px]" />
+        <div className="absolute bottom-20 right-20 w-72 h-72 bg-purple-500 rounded-full blur-[120px]" />
+      </div>
+
+      {/* Title */}
+      <h1 className="relative text-4xl md:text-6xl font-extrabold text-white text-center mb-14 tracking-tight">
+        Wähle deinen Bereich
+        <p className="text-sm md:text-base text-white/60 font-normal mt-3">
+          Login erkannt – Zugriff wird automatisch angepasst
+        </p>
       </h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full max-w-4xl">
+      {/* Cards */}
+      <div className="relative grid grid-cols-1 md:grid-cols-2 gap-10 w-full max-w-5xl">
 
-        {/* DASHBOARD (für USER + ADMIN) */}
+        {/* DASHBOARD */}
         <a
           href="/dashboard"
-          className={`group relative flex flex-col items-center justify-center p-12 rounded-3xl shadow-2xl text-white font-bold text-2xl transition-transform hover:scale-105 hover:shadow-3xl
+          className={`
+            group relative p-10 rounded-3xl border border-white/10
+            backdrop-blur-xl shadow-2xl transition-all duration-300
+            hover:scale-[1.03] hover:shadow-indigo-500/30
             ${isUser || isAdmin
-              ? 'bg-gradient-to-br from-indigo-500 to-indigo-700'
-              : 'bg-gray-600 opacity-60 cursor-not-allowed'
-            }`}
+              ? 'bg-white/5 hover:bg-white/10'
+              : 'bg-white/5 opacity-50 cursor-not-allowed'
+            }
+          `}
         >
-          <HiViewGrid className="text-6xl mb-4 transition-transform group-hover:rotate-12" />
-          Dashboard
-          <p className="mt-2 text-sm text-white/80 font-medium text-center">
-            Alle deine Server verwalten
-          </p>
+          <div className="flex flex-col items-center text-center text-white">
+
+            <div className="p-4 rounded-2xl bg-indigo-500/20 mb-5 group-hover:bg-indigo-500/30 transition">
+              <HiViewGrid className="text-5xl" />
+            </div>
+
+            <h2 className="text-2xl font-bold">Dashboard</h2>
+
+            <p className="text-sm text-white/60 mt-2">
+              Server verwalten, Statistiken & Tools
+            </p>
+
+            {!isUser && !isAdmin && (
+              <span className="mt-4 text-xs text-red-300">
+                Kein Zugriff
+              </span>
+            )}
+
+          </div>
         </a>
 
-        {/* ADMINBOARD (nur ADMIN) */}
+        {/* ADMINBOARD */}
         <a
           href={isAdmin ? '/adminboard' : undefined}
           onClick={(e) => {
             if (!isAdmin) e.preventDefault();
           }}
-          className={`group relative flex flex-col items-center justify-center p-12 rounded-3xl shadow-2xl text-white font-bold text-2xl transition-transform
+          className={`
+            group relative p-10 rounded-3xl border border-white/10
+            backdrop-blur-xl shadow-2xl transition-all duration-300
+            hover:scale-[1.03]
             ${isAdmin
-              ? 'bg-gradient-to-br from-green-500 to-green-700 hover:scale-105 hover:shadow-3xl'
-              : 'bg-gray-600 opacity-60 cursor-not-allowed'
-            }`}
+              ? 'bg-white/5 hover:bg-emerald-500/10 hover:shadow-emerald-500/30'
+              : 'bg-white/5 opacity-50 cursor-not-allowed'
+            }
+          `}
         >
-          {isAdmin ? (
-            <>
-              <FaUserShield className="text-6xl mb-4 transition-transform group-hover:rotate-12" />
+          <div className="flex flex-col items-center text-center text-white">
+
+            <div className={`
+              p-4 rounded-2xl mb-5 transition
+              ${isAdmin
+                ? 'bg-emerald-500/20 group-hover:bg-emerald-500/30'
+                : 'bg-white/10'
+              }
+            `}>
+              {isAdmin ? (
+                <FaUserShield className="text-5xl" />
+              ) : (
+                <HiLockClosed className="text-5xl" />
+              )}
+            </div>
+
+            <h2 className="text-2xl font-bold">
               Adminboard
-              <p className="mt-2 text-sm text-white/80 font-medium text-center">
-                Bewerbungen & Einstellungen
-              </p>
-            </>
-          ) : (
-            <>
-              <HiLockClosed className="text-6xl mb-4" />
-              🔒 Adminboard
-              <p className="mt-2 text-sm text-white/80 font-medium text-center">
-                Nur für Admins
-              </p>
-            </>
-          )}
+            </h2>
+
+            <p className="text-sm text-white/60 mt-2">
+              Bewerbungen & System Einstellungen
+            </p>
+
+            {!isAdmin && (
+              <span className="mt-4 text-xs text-gray-400">
+                Nur für Administratoren
+              </span>
+            )}
+
+          </div>
         </a>
 
       </div>
