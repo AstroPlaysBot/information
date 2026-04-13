@@ -8,7 +8,12 @@ export default function ApplicationCard({ app, reload }: any) {
   const router = useRouter()
   const status = app.status || "PENDING"
 
-  const avatar = app.avatar || `https://cdn.discordapp.com/embed/avatars/0.png`
+  const avatar =
+    app.avatar?.startsWith("http")
+      ? app.avatar
+      : app.avatar
+        ? `https://cdn.discordapp.com/avatars/${app.discord_id}/${app.avatar}.png`
+        : `https://cdn.discordapp.com/embed/avatars/0.png`
 
   function statusBadge() {
 
