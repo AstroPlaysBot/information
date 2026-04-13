@@ -193,7 +193,7 @@ export default function ApplyRole() {
       {user && (
         <div className="flex items-center gap-4 mb-8 max-w-3xl mx-auto">
           <img
-            src={user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : '/default-avatar.png'}
+            src={user.avatar ?? '/default-avatar.png'}
             alt="Avatar"
             className="w-16 h-16 rounded-full"
           />
