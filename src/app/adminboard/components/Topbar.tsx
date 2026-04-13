@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Settings, LogOut } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -11,14 +12,41 @@ interface TopbarProps {
 }
 
 export default function Topbar({ view, filter, setFilter }: TopbarProps) {
-
   const [open, setOpen] = useState(false)
+  const [confirmCancel, setConfirmCancel] = useState(false)
+  const [cancelReason, setCancelReason] = useState("")
 
-  // 🔥 FIX: "Alle" nach rechts
+  const router = useRouter()
+
   const filters = ["Offen", "Eingeladen", "Eingestellt", "Abgelehnt", "Alle"]
 
+  const closeAll = () => {
+    setOpen(false)
+    setConfirmCancel(false)
+    setCancelReason("")
+  }
+
+  const handleSubmitCancel = () => {
+    if (!cancelReason.trim()) return
+    // optional: hier später API call speichern
+    router.push('/')
+  }
+
   return (
-    <div className="flex justify-between items-center h-16 border-b border-gray-800 px-6">
+    <div className="flex justify-between items-center h-16 border-b border-gray-800 px-6 relative">
+
+      {/* OVERLAY */}
+      <AnimatePresence>
+        {(open || confirmCancel) && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={closeAll}
+            className="fixed inset-0 bg-black/60 z-40"
+          />
+        )}
+      </AnimatePresence>
 
       {/* LEFT */}
       <div className="font-bold text-white text-lg">
@@ -33,8 +61,8 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
               key={f}
               onClick={() => setFilter(f)}
               className={`px-3 py-1 rounded-full text-sm font-medium transition
-                ${filter === f 
-                  ? "bg-purple-600 text-white" 
+                ${filter === f
+                  ? "bg-purple-600 text-white"
                   : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"}`}
             >
               {f}
@@ -44,41 +72,95 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
       )}
 
       {/* SETTINGS */}
-      <div className="relative">
+      <div className="relative z-50">
         <button
-          onClick={() => setOpen(!open)}
+          onClick={() => setOpen(v => !v)}
           className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700"
         >
-          <Settings size={18}/>
+          <Settings size={18} />
         </button>
 
         <AnimatePresence>
           {open && (
             <motion.div
-              initial={{opacity:0,y:-10}}
-              animate={{opacity:1,y:0}}
-              exit={{opacity:0,y:-10}}
-              className="absolute right-0 mt-2 bg-gray-900 border border-gray-800 rounded-xl w-44 shadow-xl"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="absolute right-0 mt-2 bg-gray-900 border border-gray-800 rounded-xl w-44 shadow-xl z-50"
             >
-
               <button
-                onClick={() => window.location.href='/'}
+                onClick={() => window.location.href = '/'}
                 className="flex items-center gap-2 w-full p-3 hover:bg-gray-800"
               >
-                <LogOut size={16}/> Ausloggen
+                <LogOut size={16} /> Ausloggen
               </button>
 
               <button
-                onClick={() => window.location.href='/'}
+                onClick={() => {
+                  setOpen(false)
+                  setConfirmCancel(true)
+                }}
                 className="flex items-center gap-2 w-full p-3 hover:bg-gray-800 text-red-400"
               >
                 Kündigen
               </button>
-
             </motion.div>
           )}
         </AnimatePresence>
       </div>
+
+      {/* CONFIRM MODAL */}
+      <AnimatePresence>
+        {confirmCancel && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="fixed inset-0 flex items-center justify-center z-60"
+          >
+            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 w-[360px] shadow-2xl">
+
+              <h2 className="text-white text-lg font-semibold mb-2">
+                Kündigung bei AstroPlays einreichen
+              </h2>
+
+              <p className="text-gray-400 text-sm mb-4">
+                Bitte gib einen Kündigungsgrund an.
+              </p>
+
+              {/* INPUT */}
+              <textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="z.B. Kein Bedarf mehr / Budget / Wechsel zu ..."
+                className="w-full h-24 p-2 rounded bg-gray-800 text-white text-sm outline-none border border-gray-700 focus:border-purple-500"
+              />
+
+              <div className="flex justify-end gap-2 mt-4">
+                <button
+                  onClick={closeAll}
+                  className="px-3 py-1 rounded bg-gray-800 hover:bg-gray-700 text-white"
+                >
+                  Abbrechen
+                </button>
+
+                <button
+                  disabled={!cancelReason.trim()}
+                  onClick={handleSubmitCancel}
+                  className={`px-3 py-1 rounded text-white transition
+                    ${cancelReason.trim()
+                      ? "bg-red-600 hover:bg-red-500"
+                      : "bg-red-900 cursor-not-allowed opacity-50"
+                    }`}
+                >
+                  Einreichen
+                </button>
+              </div>
+
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
