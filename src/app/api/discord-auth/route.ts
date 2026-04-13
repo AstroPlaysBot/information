@@ -19,7 +19,6 @@ export async function GET(req: Request) {
     const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET!;
     const REDIRECT_URI = `${process.env.NEXT_PUBLIC_APP_URL}/api/discord-auth`;
 
-    // 1. TOKEN
     const tokenRes = await fetch(DISCORD_TOKEN_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -38,7 +37,6 @@ export async function GET(req: Request) {
       return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
     }
 
-    // 2. USER
     const userRes = await fetch(DISCORD_USER_URL, {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
@@ -49,10 +47,8 @@ export async function GET(req: Request) {
       return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
     }
 
-    // 3. ADMIN CHECK (DB)
     const adminCheck = await isAdmin(user.id);
 
-    // 4. FREEZE CHECK
     const exitEntry = await prisma.adminExitQueue.findUnique({
       where: { discordId: user.id }
     });
@@ -60,39 +56,31 @@ export async function GET(req: Request) {
     const isFrozen =
       exitEntry && new Date(exitEntry.deleteAt).getTime() > Date.now();
 
-    // =========================
-    // FIX: IMMER LOGIN PAGE
-    // =========================
+    // 👉 IMMER LOGIN PAGE
     const response = NextResponse.redirect(
       `${process.env.NEXT_PUBLIC_APP_URL}/login`
     );
 
-    // USER TOKEN IMMER SETZEN (Login bestätigt)
+    // USER COOKIE IMMER
     response.cookies.set('user_token', tokenData.access_token, {
       httpOnly: true,
-      maxAge: 60 * 30,
       path: '/',
+      maxAge: 60 * 60,
     });
 
-    // ADMIN TOKEN NUR WENN:
+    // ADMIN COOKIE nur wenn wirklich admin + nicht frozen
     if (adminCheck && !isFrozen) {
       response.cookies.set('admin_token', tokenData.access_token, {
         httpOnly: true,
-        maxAge: 60 * 30,
         path: '/',
-      });
-    } else {
-      // cleanup (wichtig gegen alte states)
-      response.cookies.set('admin_token', '', {
-        path: '/',
-        maxAge: 0,
+        maxAge: 60 * 60,
       });
     }
 
     return response;
 
   } catch (err) {
-    console.error("❌ AUTH ERROR:", err);
+    console.error("AUTH ERROR:", err);
     return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
   }
 }
