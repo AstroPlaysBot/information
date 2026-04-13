@@ -36,7 +36,7 @@ export default function AdminBoardClient({ setApplicationCount, filter }: Props)
 
     setApplications(data.applications || [])
     setApplicationCount(
-      (data.applications || []).filter(app => app.status === "PENDING").length
+      (data.applications || []).filter((app: Application) => app.status === "PENDING").length
     )
   }
 
