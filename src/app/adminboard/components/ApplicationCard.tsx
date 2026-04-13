@@ -6,41 +6,62 @@ import { useRouter } from 'next/navigation'
 export default function ApplicationCard({ app, reload }: any) {
 
   const router = useRouter()
-
   const status = app.status || "PENDING"
 
-  function statusBadge(){
+  const avatar = app.avatar || `https://cdn.discordapp.com/embed/avatars/0.png`
 
-    if(status === "INTERVIEW")
-      return <span className="text-xs bg-purple-600 px-2 py-1 rounded">Eingeladen</span>
+  function statusBadge() {
 
-    if(status === "ACCEPTED")
-      return <span className="text-xs bg-green-600 px-2 py-1 rounded">Angenommen</span>
+    if (status === "INTERVIEW")
+      return <span className="text-xs bg-purple-600/20 text-purple-300 border border-purple-500/30 px-2 py-1 rounded-full">
+        Eingeladen
+      </span>
 
-    if(status === "REJECTED")
-      return <span className="text-xs bg-red-600 px-2 py-1 rounded">Abgelehnt</span>
+    if (status === "ACCEPTED")
+      return <span className="text-xs bg-green-600/20 text-green-300 border border-green-500/30 px-2 py-1 rounded-full">
+        Angenommen
+      </span>
 
-    return <span className="text-xs bg-yellow-600 px-2 py-1 rounded">Neu</span>
+    if (status === "REJECTED")
+      return <span className="text-xs bg-red-600/20 text-red-300 border border-red-500/30 px-2 py-1 rounded-full">
+        Abgelehnt
+      </span>
 
+    return <span className="text-xs bg-yellow-600/20 text-yellow-300 border border-yellow-500/30 px-2 py-1 rounded-full">
+      Neu
+    </span>
   }
 
   return (
 
     <motion.div
-    whileHover={{scale:1.03}}
-    className="bg-gradient-to-br from-gray-900 to-gray-950 border border-gray-800 rounded-2xl p-6 shadow-xl">
+      whileHover={{ scale: 1.03 }}
+      className="bg-gradient-to-br from-gray-900 via-gray-950 to-black border border-gray-800/60 rounded-2xl p-5 shadow-xl hover:shadow-purple-500/10 transition-all"
+    >
 
-      <div className="flex justify-between items-start">
+      {/* HEADER */}
+      <div className="flex items-center justify-between">
 
-        <div>
+        <div className="flex items-center gap-3">
 
-          <h2 className="text-lg font-semibold text-white">
-            {app.name}
-          </h2>
+          {/* AVATAR */}
+          <img
+            src={avatar}
+            alt="avatar"
+            className="w-11 h-11 rounded-full border border-gray-700 object-cover"
+          />
 
-          <p className="text-sm text-purple-400">
-            Bewerbung für {app.role}
-          </p>
+          <div>
+
+            <h2 className="text-md font-semibold text-white leading-tight">
+              {app.name}
+            </h2>
+
+            <p className="text-xs text-gray-400">
+              Bewerbung für <span className="text-purple-400">{app.role}</span>
+            </p>
+
+          </div>
 
         </div>
 
@@ -48,16 +69,19 @@ export default function ApplicationCard({ app, reload }: any) {
 
       </div>
 
-      <button
-      onClick={()=>router.push(`/adminboard/applicant/${app.id}`)}
-      className="text-purple-400 text-sm mt-4 hover:underline">
+      {/* FOOTER */}
+      <div className="mt-4 flex items-center justify-between">
 
-        Bewerber einsehen
+        <button
+          onClick={() => router.push(`/adminboard/applicant/${app.id}`)}
+          className="text-sm text-purple-400 hover:text-purple-300 transition"
+        >
+          Bewerber öffnen →
+        </button>
 
-      </button>
+      </div>
 
     </motion.div>
 
   )
-
 }
