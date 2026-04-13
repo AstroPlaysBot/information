@@ -187,3 +187,23 @@ enum AdminBoardRole {
   PERSONAL_MANAGER
   VIEWER
 }
+
+// ======================
+// AdminBoard Exit
+// ======================
+model AdminExitQueue {
+  id        String   @id @default(cuid())
+  discordId String   @unique
+  deleteAt  DateTime
+  createdAt DateTime @default(now())
+}
+
+// ======================
+// Admin Apply Ban
+// ======================
+model ApplicationBan {
+  id          String   @id @default(cuid())
+  discordId   String   @unique
+  bannedUntil DateTime
+  createdAt   DateTime @default(now())
+}
