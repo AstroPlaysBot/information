@@ -1,4 +1,3 @@
-// middleware.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
@@ -12,7 +11,8 @@ export function middleware(req: NextRequest) {
   if (
     pathname === '/' ||
     pathname.startsWith('/login') ||
-    pathname.startsWith('/api/discord-auth') // deckt APPLY + MAIN OAuth ab
+    pathname.startsWith('/api/discord-auth') ||
+    pathname.startsWith('/api/discord-auth-apply') // ✅ FIX
   ) {
     return NextResponse.next();
   }
@@ -25,7 +25,7 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // adminboard (ONLY real admin token)
+  // adminboard (ONLY admin)
   if (pathname.startsWith('/adminboard')) {
     if (!adminToken) {
       return NextResponse.redirect(new URL('/login', req.url));
