@@ -55,20 +55,18 @@ export async function GET(req: Request) {
 
     console.log("👤 USER OK:", user.id);
 
-    // 3️⃣ BAN CHECK
-    const exitBan = await prisma.applicationBan.findUnique({
+    // 3️⃣ ADMIN CHECK
+    const adminCheck = await isAdmin(user.id);
+
+    // 4️⃣ EXIT QUEUE CHECK (48h freeze)
+    const exitEntry = await prisma.adminExitQueue.findUnique({
       where: { discordId: user.id }
     });
 
-    const isInBan =
-      exitBan && new Date(exitBan.bannedUntil).getTime() > Date.now();
+    const isFrozen =
+      exitEntry && new Date(exitEntry.deleteAt).getTime() > Date.now();
 
-    console.log("🚫 BAN CHECK:", isInBan);
-
-    // 4️⃣ ADMIN CHECK
-    const adminCheck = await isAdmin(user.id);
-
-    console.log("👑 ADMIN CHECK:", adminCheck);
+    console.log("❄️ FREEZE:", isFrozen);
 
     const target = adminCheck ? '/adminboard' : '/dashboard';
 
@@ -76,7 +74,7 @@ export async function GET(req: Request) {
       `${process.env.NEXT_PUBLIC_APP_URL}${target}`
     );
 
-    // 🟢 USER
+    // 🟢 NORMAL USER
     if (!adminCheck) {
       response.cookies.set('user_token', tokenData.access_token, {
         httpOnly: true,
@@ -87,8 +85,8 @@ export async function GET(req: Request) {
       return response;
     }
 
-    // 🔴 ADMIN aber BAN
-    if (isInBan) {
+    // ❄️ ADMIN FROZEN → downgrade zu USER
+    if (isFrozen) {
       response.cookies.set('user_token', tokenData.access_token, {
         httpOnly: true,
         maxAge: 60 * 30,
@@ -98,7 +96,7 @@ export async function GET(req: Request) {
       return response;
     }
 
-    // 🟢 ADMIN OK
+    // 👑 ACTIVE ADMIN
     response.cookies.set('admin_token', tokenData.access_token, {
       httpOnly: true,
       maxAge: 60 * 30,
@@ -109,7 +107,6 @@ export async function GET(req: Request) {
 
   } catch (err) {
     console.error("❌ AUTH ERROR:", err);
-
     return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
   }
 }
