@@ -53,8 +53,10 @@ export async function GET(req: Request) {
     // 🔥 ADMIN LOGIC:
     const adminCheck = await isAdmin(user.id);
 
+    const target = adminCheck ? '/adminboard' : '/dashboard';
+
     const response = NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/login`
+      `${process.env.NEXT_PUBLIC_APP_URL}${target}`
     );
 
     // 🟢 CASE 1: NORMAL USER (immer erlaubt)
