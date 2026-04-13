@@ -10,15 +10,17 @@ function getDiscordCreationDate(id: string) {
 }
 
 export async function GET() {
-  const token =
-    cookies().get('user_token')?.value ||
-    cookies().get('admin_token')?.value;
-
-  if (!token) {
-    return NextResponse.json({ user: null }, { status: 401 });
-  }
-
   try {
+    const cookieStore = cookies();
+
+    const token =
+      cookieStore.get('user_token')?.value ||
+      cookieStore.get('admin_token')?.value;
+
+    if (!token) {
+      return NextResponse.json({ user: null }, { status: 401 });
+    }
+
     const res = await fetch('https://discord.com/api/users/@me', {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -29,19 +31,32 @@ export async function GET() {
 
     const user = await res.json();
 
+    if (!user?.id) {
+      return NextResponse.json({ user: null }, { status: 401 });
+    }
+
     const accountCreated = getDiscordCreationDate(user.id);
 
     const avatarUrl = user.avatar
       ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${user.avatar.startsWith('a_') ? 'gif' : 'png'}`
       : null;
 
-    // 🔥 BAN CHECK ADDED
-    const ban = await prisma.applicationBan.findUnique({
-      where: { discordId: user.id }
-    });
+    // 🔥 SAFE BAN CHECK (NO CRASH EVER)
+    let isBanned = false;
+    let bannedUntil = null;
 
-    const isBanned =
-      ban && new Date(ban.bannedUntil).getTime() > Date.now();
+    try {
+      const ban = await prisma.applicationBan.findUnique({
+        where: { discordId: user.id }
+      });
+
+      if (ban && new Date(ban.bannedUntil).getTime() > Date.now()) {
+        isBanned = true;
+        bannedUntil = ban.bannedUntil;
+      }
+    } catch (e) {
+      console.error("BAN CHECK ERROR:", e);
+    }
 
     return NextResponse.json({
       user: {
@@ -51,15 +66,18 @@ export async function GET() {
         discriminator: user.discriminator,
         avatar: avatarUrl,
         created_at: accountCreated,
-
-        // 🔥 NEW
         banned: isBanned,
-        bannedUntil: ban?.bannedUntil || null
+        bannedUntil
       },
     });
 
   } catch (err) {
-    console.error(err);
-    return NextResponse.json({ user: null }, { status: 500 });
+    console.error("API ME ERROR:", err);
+
+    // 🔥 WICHTIG: NIE 500 RETURNEN (verhindert Apply Crash Loop)
+    return NextResponse.json(
+      { user: null },
+      { status: 200 }
+    );
   }
 }
