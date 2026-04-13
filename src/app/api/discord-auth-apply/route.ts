@@ -1,11 +1,14 @@
-import { handleDiscordAuth } from "@/lib/discordOAuth";
+// src/app/api/discord-auth-apply/route.ts
+import { handleDiscordOAuth } from "@/lib/discord-oauth";
 
 export async function GET(req: Request) {
   const APP_URL = process.env.NEXT_PUBLIC_APP_URL!;
 
-  return handleDiscordAuth({
+  return handleDiscordOAuth({
     req,
-    redirectSuccess: `${APP_URL}/apply`,
-    redirectFail: `${APP_URL}/apply`,
+    redirectUri: `${APP_URL}/api/discord-auth-apply`,
+    successRedirect: `${APP_URL}/apply`,
+    failRedirect: `${APP_URL}/apply`,
+    mode: "apply",
   });
 }
