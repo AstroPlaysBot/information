@@ -35,7 +35,9 @@ export default function AdminBoardClient({ setApplicationCount, filter }: Props)
     const data = await res.json()
 
     setApplications(data.applications || [])
-    setApplicationCount((data.applications || []).length)
+    setApplicationCount(
+      (data.applications || []).filter(app => app.status === "PENDING").length
+    )
   }
 
   const filteredApplications = applications.filter(app => {
