@@ -1,23 +1,25 @@
-import prisma from "@/lib/prisma"
-import { NextResponse } from "next/server"
+import prisma from "@/lib/prisma";
+import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-  const { discordId } = await req.json()
+  const { discordId } = await req.json();
+
+  if (!discordId) {
+    return NextResponse.json({ blocked: false });
+  }
 
   const ban = await prisma.applicationBan.findUnique({
     where: { discordId }
-  })
+  });
 
   if (!ban) {
-    return NextResponse.json({ blocked: false })
+    return NextResponse.json({ blocked: false });
   }
 
-  if (new Date(ban.bannedUntil) > new Date()) {
-    return NextResponse.json({
-      blocked: true,
-      until: ban.bannedUntil
-    })
-  }
+  const isBlocked = new Date(ban.bannedUntil).getTime() > Date.now();
 
-  return NextResponse.json({ blocked: false })
+  return NextResponse.json({
+    blocked: isBlocked,
+    until: isBlocked ? ban.bannedUntil : null
+  });
 }
