@@ -1,19 +1,23 @@
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
+import { cookies } from "next/headers";
 
 export async function POST(req: Request) {
 
   const body = await req.json();
 
-  if (!body.id) {
-    return NextResponse.json({ success:false, error:"Missing data" });
+  const cookieStore = cookies();
+  const discordId = cookieStore.get("discord_id")?.value;
+
+  if (!discordId) {
+    return NextResponse.json({ success:false, error:"Nicht eingeloggt" });
   }
 
   try {
 
-    const app = await prisma.application.findUnique({
-      where: { id: body.id }
+    const app = await prisma.application.findFirst({
+      where: { discordId }
     });
 
     if(!app){
@@ -22,7 +26,7 @@ export async function POST(req: Request) {
 
     // Optional Feedback speichern
     await prisma.application.update({
-      where: { id: body.id },
+      where: { id: app.id },
       data: {
         status: "RESIGNED",
         updatedAt: new Date(),
