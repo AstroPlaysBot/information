@@ -1,3 +1,4 @@
+// middleware.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
@@ -7,11 +8,11 @@ export function middleware(req: NextRequest) {
   const userToken = req.cookies.get('user_token')?.value;
   const adminToken = req.cookies.get('admin_token')?.value;
 
-  // public
+  // public routes
   if (
     pathname === '/' ||
     pathname.startsWith('/login') ||
-    pathname.startsWith('/api/discord-auth')
+    pathname.startsWith('/api/discord-auth') // deckt APPLY + MAIN OAuth ab
   ) {
     return NextResponse.next();
   }
@@ -39,6 +40,7 @@ export const config = {
   matcher: [
     '/dashboard/:path*',
     '/adminboard/:path*',
-    '/login/:path*'
+    '/login/:path*',
+    '/apply/:path*'
   ],
 };
