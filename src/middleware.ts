@@ -7,31 +7,24 @@ export function middleware(req: NextRequest) {
   const userToken = req.cookies.get('user_token')?.value;
   const adminToken = req.cookies.get('admin_token')?.value;
 
-  // =========================
-  // PUBLIC ROUTES (WICHTIG!)
-  // =========================
+  // ✅ PUBLIC ROUTES (LOGIN MUSS IMMER GEHEN!)
   if (
     pathname === '/' ||
     pathname.startsWith('/login') ||
-    pathname.startsWith('/api/discord-auth') ||
-    pathname.startsWith('/api')
+    pathname.startsWith('/api/discord-auth')
   ) {
     return NextResponse.next();
   }
 
-  // =========================
-  // DASHBOARD
-  // =========================
+  // DASHBOARD (user oder admin)
   if (pathname.startsWith('/dashboard')) {
     if (!userToken && !adminToken) {
-      return NextResponse.redirect(new URL('/login', req.url));
+      return NextResponse.redirect(new URL('/', req.url));
     }
     return NextResponse.next();
   }
 
-  // =========================
-  // ADMINBOARD
-  // =========================
+  // ADMIN ONLY
   if (pathname.startsWith('/adminboard')) {
     if (!adminToken) {
       return NextResponse.redirect(new URL('/login', req.url));
@@ -43,10 +36,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/dashboard/:path*',
-    '/adminboard/:path*',
-    '/login/:path*',
-    '/apply/:path*'
-  ],
+  matcher: ['/dashboard/:path*', '/adminboard/:path*'],
 };
