@@ -1,11 +1,8 @@
-// src/app/api/me/route.ts
-// src/app/api/me/route.ts
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-// Discord Snowflake → Account Creation Date
 function getDiscordCreationDate(id: string) {
   const discordEpoch = 1420070400000;
   return new Date(Number(BigInt(id) >> 22n) + discordEpoch);
@@ -31,14 +28,21 @@ export async function GET() {
 
     const accountCreated = getDiscordCreationDate(user.id);
 
+    // 🔥 FIX: FULL AVATAR URL
+    const avatarUrl = user.avatar
+      ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
+      : null;
+
     return NextResponse.json({
       user: {
         id: user.id,
         username: user.username,
         global_name: user.global_name,
         discriminator: user.discriminator,
-        avatar: user.avatar,
-        created_at: accountCreated, // 👈 wichtig
+
+        avatar: avatarUrl, // 👈 jetzt URL statt hash
+
+        created_at: accountCreated,
       },
     });
   } catch (err) {
