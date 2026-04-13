@@ -9,7 +9,9 @@ function getDiscordCreationDate(id: string) {
 }
 
 export async function GET() {
-  const token = cookies().get('user_token')?.value;
+  const token = 
+    cookies().get('user_token')?.value ||
+    cookies().get('admin_token')?.value;
 
   if (!token) {
     return NextResponse.json({ user: null }, { status: 401 });
@@ -30,7 +32,7 @@ export async function GET() {
 
     // 🔥 FIX: FULL AVATAR URL
     const avatarUrl = user.avatar
-      ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
+      ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${user.avatar.startsWith('a_') ? 'gif' : 'png'}`
       : null;
 
     return NextResponse.json({
