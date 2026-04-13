@@ -64,6 +64,27 @@ export default function ApplyPage() {
     }
   }, []);
 
+  // 🔥 BAN CHECK ADDED
+  useEffect(() => {
+    const checkBan = async () => {
+      const res = await fetch('/api/me')
+      const data = await res.json()
+
+      if (data?.user?.banned) {
+        sessionStorage.setItem(
+          'apply_error_toast',
+          JSON.stringify({
+            message: `Du bist gesperrt bis ${new Date(data.user.bannedUntil).toLocaleDateString()}`
+          })
+        )
+
+        window.location.href = '/'
+      }
+    }
+
+    checkBan()
+  }, [])
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-950 text-white px-6 py-20">
       <div className="max-w-6xl mx-auto text-center mb-16">
