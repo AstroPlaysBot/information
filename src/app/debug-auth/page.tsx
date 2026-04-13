@@ -1,54 +1,139 @@
-'use client';
+import { NextResponse } from 'next/server';
+import { isAdmin } from '@/data/admins';
+import prisma from '@/lib/prisma';
 
-import { useSearchParams } from 'next/navigation';
+export const dynamic = 'force-dynamic';
 
-export default function DebugAuthPage() {
-  const params = useSearchParams();
+const DISCORD_TOKEN_URL = 'https://discord.com/api/oauth2/token';
+const DISCORD_USER_URL = 'https://discord.com/api/users/@me';
 
-  const step = params.get('step');
-  const msg = params.get('msg');
-  const raw = params.get('raw');
+function safeStringify(obj: any) {
+  try {
+    return JSON.stringify(obj, null, 2);
+  } catch {
+    return '❌ Cannot stringify';
+  }
+}
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-black text-white px-6">
-      <div className="p-6 border border-gray-700 rounded-xl w-full max-w-2xl">
+export async function GET(req: Request) {
+  const debug: any = {
+    step: 'start',
+    error: null,
+    message: null,
+    raw: {},
+  };
 
-        <h1 className="text-2xl font-bold mb-6">
-          🔥 Auth Debug Panel
-        </h1>
+  try {
+    const url = new URL(req.url);
+    const code = url.searchParams.get('code');
 
-        {/* STEP */}
-        <div className="mb-4">
-          <p className="text-gray-400 text-sm">Step</p>
-          <pre className="text-green-400 mt-1">
-            {step || 'none'}
-          </pre>
-        </div>
+    debug.step = 'check_code';
+    debug.raw.code = code;
 
-        {/* MESSAGE */}
-        <div className="mb-4">
-          <p className="text-gray-400 text-sm">Message</p>
-          <pre className="text-red-400 mt-1 whitespace-pre-wrap break-words">
-            {msg || 'no message'}
-          </pre>
-        </div>
+    if (!code) {
+      debug.step = 'no_code';
+      return NextResponse.json(debug);
+    }
 
-        {/* RAW ERROR */}
-        <div className="mb-4">
-          <p className="text-gray-400 text-sm">Raw Debug (optional)</p>
-          <pre className="text-yellow-300 mt-1 whitespace-pre-wrap break-words text-xs">
-            {raw || 'no raw data'}
-          </pre>
-        </div>
+    const CLIENT_ID = process.env.DISCORD_CLIENT_ID!;
+    const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET!;
+    const REDIRECT_URI = `${process.env.NEXT_PUBLIC_APP_URL}/api/discord-auth`;
 
-        {/* HINTS */}
-        <div className="mt-6 text-xs text-gray-500 space-y-1">
-          <p>• step=error → Crash im OAuth Flow</p>
-          <p>• msg leer → Server Error ohne serialisierbaren Inhalt</p>
-          <p>• raw hilft bei Prisma / Runtime Errors</p>
-        </div>
+    // 1️⃣ TOKEN
+    debug.step = 'token_request';
 
-      </div>
-    </div>
-  );
+    const tokenRes = await fetch(DISCORD_TOKEN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: REDIRECT_URI,
+      }),
+    });
+
+    const tokenData = await tokenRes.json();
+    debug.raw.tokenData = tokenData;
+
+    if (!tokenData.access_token) {
+      debug.step = 'token_failed';
+      debug.error = 'no_access_token';
+      return NextResponse.json(debug);
+    }
+
+    // 2️⃣ USER
+    debug.step = 'user_request';
+
+    const userRes = await fetch(DISCORD_USER_URL, {
+      headers: {
+        Authorization: `Bearer ${tokenData.access_token}`,
+      },
+    });
+
+    const user = await userRes.json();
+    debug.raw.user = user;
+
+    if (!user?.id) {
+      debug.step = 'user_failed';
+      debug.error = 'no_user_id';
+      return NextResponse.json(debug);
+    }
+
+    // 3️⃣ DB CHECK
+    debug.step = 'db_check';
+
+    let exitBan = null;
+    try {
+      exitBan = await prisma.applicationBan.findUnique({
+        where: { discordId: user.id },
+      });
+    } catch (e: any) {
+      debug.step = 'db_error';
+      debug.error = e.message;
+      return NextResponse.json(debug);
+    }
+
+    debug.raw.exitBan = exitBan;
+
+    const isInBan =
+      exitBan && new Date(exitBan.bannedUntil).getTime() > Date.now();
+
+    debug.raw.isInBan = isInBan;
+
+    // 4️⃣ ADMIN CHECK
+    debug.step = 'admin_check';
+
+    let adminCheck = false;
+    try {
+      adminCheck = await isAdmin(user.id);
+    } catch (e: any) {
+      debug.step = 'admin_error';
+      debug.error = e.message;
+      return NextResponse.json(debug);
+    }
+
+    debug.raw.adminCheck = adminCheck;
+
+    // 5️⃣ RESULT
+    debug.step = 'decision';
+
+    const target = adminCheck && !isInBan ? '/adminboard' : '/dashboard';
+
+    debug.raw.target = target;
+
+    const response = NextResponse.json(debug);
+
+    // ⚠️ KEIN REDIRECT im DEBUG
+    response.cookies.set('debug_token', tokenData.access_token);
+
+    return response;
+  } catch (err: any) {
+    debug.step = 'error';
+    debug.error = err?.message || 'unknown error';
+    debug.raw.full = safeStringify(err);
+
+    return NextResponse.json(debug);
+  }
 }
