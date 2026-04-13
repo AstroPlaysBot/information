@@ -1,5 +1,4 @@
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 import { HiLockClosed, HiViewGrid } from 'react-icons/hi';
 import { FaUserShield } from 'react-icons/fa';
 
@@ -10,12 +9,17 @@ export default function LoginPage() {
   const adminToken = cookieStore.get('admin_token');
   const userToken = cookieStore.get('user_token');
 
-  // ❌ FIX: nur redirect wenn bereits eingeloggt
-  if (adminToken || userToken) {
-    redirect('/dashboard');
+  // ❌ nur blocken wenn GAR KEIN Login vorhanden
+  if (!adminToken && !userToken) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white bg-black">
+        Bitte einloggen...
+      </div>
+    );
   }
 
   const isAdmin = !!adminToken;
+  const isUser = !!userToken;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-tr from-purple-900 via-indigo-900 to-black px-4">
@@ -25,32 +29,49 @@ export default function LoginPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full max-w-4xl">
 
+        {/* DASHBOARD (für USER + ADMIN) */}
         <a
           href="/dashboard"
-          className="group relative flex flex-col items-center justify-center p-12 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-3xl shadow-2xl text-white font-bold text-2xl transition-transform hover:scale-105 hover:shadow-3xl"
+          className={`group relative flex flex-col items-center justify-center p-12 rounded-3xl shadow-2xl text-white font-bold text-2xl transition-transform hover:scale-105 hover:shadow-3xl
+            ${isUser || isAdmin
+              ? 'bg-gradient-to-br from-indigo-500 to-indigo-700'
+              : 'bg-gray-600 opacity-60 cursor-not-allowed'
+            }`}
         >
           <HiViewGrid className="text-6xl mb-4 transition-transform group-hover:rotate-12" />
           Dashboard
+          <p className="mt-2 text-sm text-white/80 font-medium text-center">
+            Alle deine Server verwalten
+          </p>
         </a>
 
+        {/* ADMINBOARD (nur ADMIN) */}
         <a
           href={isAdmin ? '/adminboard' : undefined}
-          onClick={(e) => { if (!isAdmin) e.preventDefault(); }}
-          className={`group relative flex flex-col items-center justify-center p-12 rounded-3xl shadow-2xl text-white font-bold text-2xl transition-transform ${
-            isAdmin
-              ? 'bg-gradient-to-br from-green-500 to-green-700 hover:scale-105'
-              : 'bg-gray-600 cursor-not-allowed opacity-60'
-          }`}
+          onClick={(e) => {
+            if (!isAdmin) e.preventDefault();
+          }}
+          className={`group relative flex flex-col items-center justify-center p-12 rounded-3xl shadow-2xl text-white font-bold text-2xl transition-transform
+            ${isAdmin
+              ? 'bg-gradient-to-br from-green-500 to-green-700 hover:scale-105 hover:shadow-3xl'
+              : 'bg-gray-600 opacity-60 cursor-not-allowed'
+            }`}
         >
           {isAdmin ? (
             <>
-              <FaUserShield className="text-6xl mb-4" />
+              <FaUserShield className="text-6xl mb-4 transition-transform group-hover:rotate-12" />
               Adminboard
+              <p className="mt-2 text-sm text-white/80 font-medium text-center">
+                Bewerbungen & Einstellungen
+              </p>
             </>
           ) : (
             <>
               <HiLockClosed className="text-6xl mb-4" />
               🔒 Adminboard
+              <p className="mt-2 text-sm text-white/80 font-medium text-center">
+                Nur für Admins
+              </p>
             </>
           )}
         </a>
