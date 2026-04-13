@@ -19,6 +19,7 @@ export async function GET(req: Request) {
     const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET!;
     const REDIRECT_URI = `${process.env.NEXT_PUBLIC_APP_URL}/api/discord-auth`;
 
+    // 1. TOKEN
     const tokenRes = await fetch(DISCORD_TOKEN_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -37,6 +38,7 @@ export async function GET(req: Request) {
       return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
     }
 
+    // 2. USER
     const userRes = await fetch(DISCORD_USER_URL, {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
@@ -47,8 +49,10 @@ export async function GET(req: Request) {
       return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
     }
 
+    // 3. ADMIN CHECK (DB)
     const adminCheck = await isAdmin(user.id);
 
+    // 4. FREEZE CHECK
     const exitEntry = await prisma.adminExitQueue.findUnique({
       where: { discordId: user.id }
     });
@@ -57,26 +61,31 @@ export async function GET(req: Request) {
       exitEntry && new Date(exitEntry.deleteAt).getTime() > Date.now();
 
     // =========================
-    // 🔥 WICHTIGER FIX HIER
+    // FIX: IMMER LOGIN PAGE
     // =========================
-
     const response = NextResponse.redirect(
       `${process.env.NEXT_PUBLIC_APP_URL}/login`
     );
 
-    // DEFAULT USER COOKIE IMMER SETZEN
+    // USER TOKEN IMMER SETZEN (Login bestätigt)
     response.cookies.set('user_token', tokenData.access_token, {
       httpOnly: true,
       maxAge: 60 * 30,
       path: '/',
     });
 
-    // ADMIN COOKIE NUR WENN ER WIRKLICH ADMIN + NICHT FROZEN
+    // ADMIN TOKEN NUR WENN:
     if (adminCheck && !isFrozen) {
       response.cookies.set('admin_token', tokenData.access_token, {
         httpOnly: true,
         maxAge: 60 * 30,
         path: '/',
+      });
+    } else {
+      // cleanup (wichtig gegen alte states)
+      response.cookies.set('admin_token', '', {
+        path: '/',
+        maxAge: 0,
       });
     }
 
