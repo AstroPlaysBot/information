@@ -161,7 +161,11 @@ export default function ApplyRole() {
           discordId: user.id,
           name: user.username,
           discriminator: user.discriminator,
-          avatar: user.avatar,
+
+          avatar: user.avatar
+            ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
+            : null,
+          
           accountCreated: user.created_at,
           age: form.age,
           email: form.email,
