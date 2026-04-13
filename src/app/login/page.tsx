@@ -24,6 +24,7 @@ export default function LoginPage() {
       </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full max-w-4xl">
+
         {/* Dashboard */}
         <a
           href="/dashboard"
@@ -39,6 +40,9 @@ export default function LoginPage() {
         {/* Adminboard */}
         <a
           href={isAdmin ? '/adminboard' : undefined}
+          onClick={(e) => {
+            if (!isAdmin) e.preventDefault()
+          }}
           className={`group relative flex flex-col items-center justify-center p-12 rounded-3xl shadow-2xl text-white font-bold text-2xl transition-transform ${
             isAdmin
               ? 'bg-gradient-to-br from-green-500 to-green-700 hover:scale-105 hover:shadow-3xl'
@@ -63,6 +67,7 @@ export default function LoginPage() {
             </>
           )}
         </a>
+
       </div>
     </div>
   );
