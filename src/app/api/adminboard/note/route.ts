@@ -1,6 +1,5 @@
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 
 export async function POST(req: Request) {
   try {
@@ -13,7 +12,17 @@ export async function POST(req: Request) {
       );
     }
 
-    const token = cookies().get("user_token")?.value;
+    // ✅ FIX: stabiler Cookie Parser (statt cookies() Next API)
+    const getToken = (req: Request) => {
+      const cookie = req.headers.get("cookie");
+      if (!cookie) return null;
+
+      return cookie
+        .split("user_token=")[1]
+        ?.split(";")[0];
+    };
+
+    const token = getToken(req);
 
     if (!token) {
       return NextResponse.json(
