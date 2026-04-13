@@ -14,7 +14,10 @@ interface TopbarProps {
 export default function Topbar({ view, filter, setFilter }: TopbarProps) {
   const [open, setOpen] = useState(false)
   const [confirmCancel, setConfirmCancel] = useState(false)
+
   const [cancelReason, setCancelReason] = useState("")
+  const [reasonType, setReasonType] = useState("")
+  const [agreeBlock, setAgreeBlock] = useState(false)
 
   const router = useRouter()
 
@@ -24,15 +27,27 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
     setOpen(false)
     setConfirmCancel(false)
     setCancelReason("")
+    setReasonType("")
+    setAgreeBlock(false)
   }
 
-  // 🔥 FIX: prevent React #310 crash (safe navigation after state cleanup)
-  const handleSubmitCancel = () => {
+  const handleSubmitCancel = async () => {
+
+    await fetch('/api/adminboard/resignation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        reasonType,
+        reasonText: cancelReason
+      })
+    })
+
     setConfirmCancel(false)
     setOpen(false)
     setCancelReason("")
+    setReasonType("")
+    setAgreeBlock(false)
 
-    // allow React to finish state updates before navigation
     setTimeout(() => {
       router.push('/')
     }, 50)
@@ -41,7 +56,6 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
   return (
     <div className="flex justify-between items-center h-16 border-b border-gray-800 px-6 relative">
 
-      {/* OVERLAY */}
       <AnimatePresence>
         {(open || confirmCancel) && (
           <motion.div
@@ -54,12 +68,10 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
         )}
       </AnimatePresence>
 
-      {/* LEFT */}
       <div className="font-bold text-white text-lg">
         {view === 'applications' ? 'Bewerbungen' : 'AdminBoard'}
       </div>
 
-      {/* FILTERS */}
       {view === 'applications' && (
         <div className="flex gap-2">
           {filters.map(f => (
@@ -77,7 +89,6 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
         </div>
       )}
 
-      {/* SETTINGS */}
       <div className="relative z-[120]">
         <button
           onClick={() => setOpen(v => !v)}
@@ -115,7 +126,6 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
         </AnimatePresence>
       </div>
 
-      {/* CONFIRM MODAL */}
       <AnimatePresence>
         {confirmCancel && (
           <motion.div
@@ -124,40 +134,93 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
             exit={{ opacity: 0 }}
             className="fixed inset-0 flex items-center justify-center z-[200]"
           >
-            {/* BACKDROP */}
+
             <div
               onClick={closeAll}
               className="absolute inset-0 bg-black/60"
             />
 
-            {/* MODAL */}
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="relative bg-gray-900 border border-gray-800 rounded-2xl p-6 w-[520px] shadow-2xl z-10"
+              className="relative bg-gray-900 border border-gray-800 rounded-2xl p-6 w-[560px] shadow-2xl z-10"
             >
 
-              {/* HEADER */}
               <div className="mb-4">
                 <h2 className="text-white text-lg font-semibold">
                   Kündigung bei AstroPlays einreichen
                 </h2>
+
                 <p className="text-gray-400 text-sm mt-1">
-                  Kündigungsgrund optional (für Feedback empfohlen).
+                  Feedback ist freiwillig, hilft uns jedoch unser Team zu verbessern.
                 </p>
               </div>
 
+              {/* REASON DROPDOWN */}
+
+              <select
+                value={reasonType}
+                onChange={(e) => setReasonType(e.target.value)}
+                className="w-full p-3 rounded-lg bg-gray-800 text-white text-sm border border-gray-700 focus:border-purple-500 outline-none mb-3"
+              >
+                <option value="">Kündigungsgrund auswählen (optional)</option>
+                <option value="kein_interesse">Kein Interesse mehr</option>
+                <option value="zeitliche_gruende">Zeitliche Gründe</option>
+                <option value="private_gruende">Private Gründe</option>
+                <option value="unzufriedenheit">Unzufriedenheit im Team</option>
+                <option value="anderes_projekt">Wechsel zu anderem Projekt</option>
+                <option value="sonstiges">Sonstiges</option>
+              </select>
+
               {/* TEXTAREA */}
+
               <textarea
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
-                placeholder="z.B. Kein Bedarf mehr / Budget / Wechsel zu ..."
-                className="w-full h-32 p-3 rounded-lg bg-gray-800 text-white text-sm outline-none border border-gray-700 focus:border-purple-500 resize-none"
+                placeholder="Optionales Feedback..."
+                className="w-full h-28 p-3 rounded-lg bg-gray-800 text-white text-sm outline-none border border-gray-700 focus:border-purple-500 resize-none"
               />
 
-              {/* FOOTER */}
+              {/* INFO BOX */}
+
+              <div className="mt-4 p-4 rounded-lg bg-gray-800 border border-gray-700 text-sm text-gray-300">
+
+                <p className="mb-2">
+                  Nach Einreichung der Kündigung werden alle personenbezogenen Daten,
+                  welche ausschließlich für administrative Zwecke im AdminBoard
+                  benötigt wurden, nach <span className="text-white font-semibold">48 Stunden</span> gelöscht.
+                </p>
+
+                <p>
+                  Innerhalb dieser 48 Stunden hast du die Möglichkeit,
+                  der Kündigung zu widersprechen. In diesem Fall wirst du wieder
+                  im Team aktiviert und deine Daten bleiben bestehen.
+                </p>
+
+              </div>
+
+              {/* CHECKBOX */}
+
+              <label className="flex items-start gap-2 mt-4 text-sm text-gray-300">
+
+                <input
+                  type="checkbox"
+                  checked={agreeBlock}
+                  onChange={(e) => setAgreeBlock(e.target.checked)}
+                  className="mt-1"
+                />
+
+                <span>
+                  Mir ist bewusst, dass ich nach einer Kündigung eine automatisierte
+                  Bewerbungssperre von <span className="text-white font-semibold">30 Tagen</span> erhalte
+                  und mich in diesem Zeitraum nicht erneut bewerben kann.
+                </span>
+
+              </label>
+
               <div className="flex justify-end gap-2 mt-5">
+
                 <button
                   onClick={closeAll}
                   className="px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-white"
@@ -166,11 +229,16 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
                 </button>
 
                 <button
+                  disabled={!agreeBlock}
                   onClick={handleSubmitCancel}
-                  className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white"
+                  className={`px-4 py-2 rounded-lg text-white 
+                  ${agreeBlock
+                    ? "bg-red-600 hover:bg-red-500"
+                    : "bg-gray-700 cursor-not-allowed"}`}
                 >
-                  Einreichen
+                  Kündigung einreichen
                 </button>
+
               </div>
 
             </motion.div>
