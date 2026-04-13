@@ -12,7 +12,7 @@ export default function AdminBoardWrapper(){
   const [applicationCount, setApplicationCount] = useState(0)
 
   // Filter-State für Topbar
-  const [filter, setFilter] = useState("Alle")
+  const [filter, setFilter] = useState("Offen")
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-black via-gray-950 to-gray-900 text-white">
