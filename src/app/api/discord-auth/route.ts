@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { isAdmin } from '@/data/admins';
+import prisma from "@/lib/prisma";
 
 export const dynamic = 'force-dynamic';
 
@@ -15,7 +16,7 @@ export async function GET(req: Request) {
     const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET!;
     const REDIRECT_URI = `${process.env.NEXT_PUBLIC_APP_URL}/api/discord-auth`;
 
-    // 1️⃣ Access Token holen
+    // 1️⃣ TOKEN
     const tokenRes = await fetch(DISCORD_TOKEN_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -32,7 +33,7 @@ export async function GET(req: Request) {
     if (!tokenData.access_token)
       return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
 
-    // 2️⃣ User Infos holen
+    // 2️⃣ USER
     const userRes = await fetch(DISCORD_USER_URL, {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
@@ -41,25 +42,52 @@ export async function GET(req: Request) {
     if (!user?.id)
       return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
 
-    // 🔥 NEU: DB + Cryptix Check
+    // 🔥 CHECK: 30 Tage Admin Sperre
+    const exitBan = await prisma.applicationBan.findUnique({
+      where: { discordId: user.id }
+    });
+
+    const isInBan =
+      exitBan && new Date(exitBan.bannedUntil).getTime() > Date.now();
+
+    // 🔥 ADMIN LOGIC:
     const adminCheck = await isAdmin(user.id);
 
     const response = NextResponse.redirect(
       `${process.env.NEXT_PUBLIC_APP_URL}/login`
     );
 
-    // 3️⃣ Cookie setzen
-    response.cookies.set(
-      adminCheck ? 'admin_token' : 'user_token',
-      tokenData.access_token,
-      {
+    // 🟢 CASE 1: NORMAL USER (immer erlaubt)
+    if (!adminCheck) {
+      response.cookies.set('user_token', tokenData.access_token, {
         httpOnly: true,
         maxAge: 60 * 30,
         path: '/',
-      }
-    );
+      });
+
+      return response;
+    }
+
+    // 🔴 CASE 2: ADMIN ABER IN 30 TAGE SPERRE
+    if (isInBan) {
+      response.cookies.set('user_token', tokenData.access_token, {
+        httpOnly: true,
+        maxAge: 60 * 30,
+        path: '/',
+      });
+
+      return response;
+    }
+
+    // 🟢 CASE 3: ECHTER ADMIN (nur wenn NICHT gebannt)
+    response.cookies.set('admin_token', tokenData.access_token, {
+      httpOnly: true,
+      maxAge: 60 * 30,
+      path: '/',
+    });
 
     return response;
+
   } catch (err) {
     console.error(err);
     return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
