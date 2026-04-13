@@ -72,6 +72,7 @@ export default function ApplicantPage() {
     try {
       const res = await fetch("/api/adminboard/note", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id,
@@ -104,6 +105,7 @@ export default function ApplicantPage() {
     try {
       const res = await fetch('/api/adminboard/invite',{
         method:'POST',
+        credentials: "include",
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
           id,
@@ -134,6 +136,7 @@ export default function ApplicantPage() {
     try {
       const res = await fetch('/api/adminboard/interview-done',{
         method:'POST',
+        credentials: "include",
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({ id })
       })
@@ -250,7 +253,7 @@ export default function ApplicantPage() {
                 await fetch('/api/adminboard/reject',{
                   method:'POST',
                   headers:{'Content-Type':'application/json'},
-                  body:JSON.stringify({id,admin:session?.user?.name})
+                  body:JSON.stringify({ id })
                 })
                 load()
               }} className="bg-red-600 w-full py-2 rounded mt-2">
