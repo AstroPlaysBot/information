@@ -216,11 +216,15 @@ enum AdminStatus {
 // ======================
 model AuditLog {
   id              String   @id @default(cuid())
+
   applicantId     String
+  application     Application @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+
   action          String
   actorDiscordId  String?
   actorName       String?
   meta            Json?
+
   createdAt       DateTime @default(now())
 
   @@index([applicantId])
