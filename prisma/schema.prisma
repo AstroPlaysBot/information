@@ -42,6 +42,8 @@ model Application {
 
   updatedAt      DateTime @updatedAt
   updatedBy      String?
+
+  auditLogs AuditLog[]
 }
 
 // ======================
