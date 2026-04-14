@@ -222,110 +222,151 @@ export default function ApplicantPage() {
   const isInvited = app.status === "INVITED"
   const interviewDone = app.status === "INTERVIEW_DONE"
 
+  const currentPosition =
+    app.status === "HIRED"
+      ? app.role
+      : "Bewerber"
+
+  function statusColor(status:string){
+    switch(status){
+      case "PENDING": return "bg-yellow-600"
+      case "INVITED": return "bg-blue-600"
+      case "INTERVIEW_DONE": return "bg-purple-600"
+      case "HIRED": return "bg-green-600"
+      default: return "bg-gray-600"
+    }
+  }
+
   return (
-    <div className="p-10 max-w-7xl mx-auto space-y-10 text-white">
+    <div className="p-10 max-w-7xl mx-auto space-y-8 text-white">
 
       <button onClick={()=>router.push('/adminboard')} className="bg-blue-600 px-4 py-2 rounded">
         ← Zurück
       </button>
 
-      <div className="grid grid-cols-4 gap-6">
+      <div className="grid grid-cols-12 gap-6">
 
-        {/* VERWALTEN */}
-        <div className="bg-gray-900 p-6 rounded space-y-3">
-          <h2 className="text-lg font-bold">Verwalten</h2>
+        {/* SIDEBAR */}
+        <div className="col-span-3 space-y-6">
 
-          {app.status === "PENDING" && (
-            <>
-              <button onClick={()=>setShowInviteModal(true)} className="bg-green-600 w-full py-2 rounded mt-2">
-                Einladung planen
-              </button>
-
-              <button onClick={async()=>{
-                await fetch('/api/adminboard/reject',{
-                  method:'POST',
-                  headers:{'Content-Type':'application/json'},
-                  body:JSON.stringify({ id })
-                })
-                load()
-              }} className="bg-red-600 w-full py-2 rounded mt-2">
-                Ablehnen
-              </button>
-            </>
-          )}
-
-          {isInvited && (
-            <>
-              <button onClick={finishInterview} className="bg-blue-600 w-full py-2 rounded mt-2">
-                Gespräch beendet
-              </button>
-
-              <button onClick={()=>setShowRescheduleModal(true)} className="bg-yellow-600 w-full py-2 rounded mt-2">
-                Termin verschieben
-              </button>
-            </>
-          )}
-
-          {interviewDone && (
-            <>
-              <button className="bg-green-600 w-full py-2 rounded mt-2">
-                Einstellen
-              </button>
-
-              <button className="bg-red-600 w-full py-2 rounded mt-2">
-                Ablehnen
-              </button>
-            </>
-          )}
-        </div>
-
-        {/* INFOS */}
-        <div className="bg-gray-900 p-6 rounded space-y-2">
-          <h2 className="text-lg font-bold">Infos</h2>
-          <p><b>Name:</b> {app.name}</p>
-          <p><b>Rolle:</b> {app.role}</p>
-          <p><b>Alter:</b> {app.age || "—"}</p>
-          <p><b>Email:</b> {app.email || "—"}</p>
-          <p><b>Status:</b> {app.status}</p>
-          {interviewTime && (
-            <p><b>Interview:</b> {interviewTime.toLocaleString()}</p>
-          )}
-        </div>
-
-        {/* ANTWORTEN */}
-        <div className="bg-gray-900 p-6 rounded space-y-4 col-span-2">
-          <h2 className="text-lg font-bold">Antworten</h2>
-
-          {answerKeys.map((key:string)=>(
-            <div key={key}>
-              <p className="font-semibold">{key}</p>
-              <p className="text-gray-300 whitespace-pre-wrap">{answers[key]}</p>
-            </div>
-          ))}
-        </div>
-
-      </div>
-
-      {/* NOTIZEN */}
-      <div className="bg-gray-900 p-6 rounded space-y-3">
-        <h2 className="text-lg font-bold">Notizen</h2>
-
-        <textarea
-          value={note}
-          onChange={(e)=>setNote(e.target.value)}
-          className="w-full p-3 bg-gray-800 rounded"
-          placeholder="Neue Notiz..."
-        />
-
-        <button onClick={saveNote} className="bg-blue-600 px-4 py-2 rounded">
-          Notiz speichern
-        </button>
-
-        {app.notes?.map((n:any,i:number)=>(
-          <div key={i} className="bg-gray-800 p-3 rounded">
-            {n.text}
+          {/* POSITION */}
+          <div className="bg-gray-900 p-6 rounded-xl border border-gray-800">
+            <h2 className="text-lg font-bold mb-3">Aktuelle Position</h2>
+            <p className="text-xl font-semibold text-blue-400">
+              {currentPosition}
+            </p>
           </div>
-        ))}
+
+          {/* VERWALTEN */}
+          <div className="bg-gray-900 p-6 rounded-xl border border-gray-800 space-y-3">
+            <h2 className="text-lg font-bold">Verwalten</h2>
+
+            {app.status === "PENDING" && (
+              <>
+                <button onClick={()=>setShowInviteModal(true)} className="bg-green-600 w-full py-2 rounded">
+                  Einladung planen
+                </button>
+
+                <button onClick={async()=>{
+                  await fetch('/api/adminboard/reject',{
+                    method:'POST',
+                    headers:{'Content-Type':'application/json'},
+                    body:JSON.stringify({ id })
+                  })
+                  load()
+                }} className="bg-red-600 w-full py-2 rounded">
+                  Ablehnen
+                </button>
+              </>
+            )}
+
+            {isInvited && (
+              <>
+                <button onClick={finishInterview} className="bg-blue-600 w-full py-2 rounded">
+                  Gespräch beendet
+                </button>
+
+                <button onClick={()=>setShowRescheduleModal(true)} className="bg-yellow-600 w-full py-2 rounded">
+                  Termin verschieben
+                </button>
+              </>
+            )}
+
+            {interviewDone && (
+              <>
+                <button className="bg-green-600 w-full py-2 rounded">
+                  Einstellen
+                </button>
+
+                <button className="bg-red-600 w-full py-2 rounded">
+                  Ablehnen
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* INFOS */}
+          <div className="bg-gray-900 p-6 rounded-xl border border-gray-800 space-y-2">
+            <h2 className="text-lg font-bold">Infos</h2>
+
+            <p><b>Name:</b> {app.name}</p>
+            <p><b>Rolle:</b> {app.role}</p>
+            <p><b>Alter:</b> {app.age || "—"}</p>
+            <p><b>Email:</b> {app.email || "—"}</p>
+
+            <p className="flex items-center gap-2">
+              <b>Status:</b>
+              <span className={`px-2 py-1 text-sm rounded ${statusColor(app.status)}`}>
+                {app.status}
+              </span>
+            </p>
+
+            {interviewTime && (
+              <p><b>Interview:</b> {interviewTime.toLocaleString()}</p>
+            )}
+          </div>
+
+        </div>
+
+        {/* MAIN */}
+        <div className="col-span-9 space-y-6">
+
+          {/* ANTWORTEN */}
+          <div className="bg-gray-900 p-8 rounded-xl border border-gray-800 space-y-6">
+            <h2 className="text-xl font-bold">Antworten</h2>
+
+            {answerKeys.map((key:string)=>(
+              <div key={key} className="border-b border-gray-800 pb-4">
+                <p className="font-semibold text-gray-200 mb-1">{key}</p>
+                <p className="text-gray-400 whitespace-pre-wrap">{answers[key]}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* NOTIZEN */}
+          <div className="bg-gray-900 p-6 rounded-xl border border-gray-800 space-y-4">
+            <h2 className="text-lg font-bold">Notizen</h2>
+
+            <textarea
+              value={note}
+              onChange={(e)=>setNote(e.target.value)}
+              className="w-full p-3 bg-gray-800 rounded"
+              placeholder="Neue Notiz..."
+            />
+
+            <button onClick={saveNote} className="bg-blue-600 px-4 py-2 rounded">
+              Notiz speichern
+            </button>
+
+            {app.notes?.map((n:any,i:number)=>(
+              <div key={i} className="bg-gray-800 p-3 rounded">
+                {n.text}
+              </div>
+            ))}
+          </div>
+
+        </div>
+
       </div>
 
     </div>
