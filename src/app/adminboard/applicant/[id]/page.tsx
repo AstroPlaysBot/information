@@ -132,6 +132,38 @@ export default function ApplicantPage() {
     setSendingInvite(false)
   }
 
+  async function sendReschedule() {
+    if(!rescheduleData.date || !rescheduleData.place) return
+
+    try {
+      const res = await fetch('/api/adminboard/reschedule',{
+        method:'POST',
+        credentials:'include',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          id,
+          date: rescheduleData.date,
+          place: rescheduleData.place,
+          reason: rescheduleData.reason
+        })
+      })
+
+      const data = await res.json()
+
+      if(data.success) {
+        setShowRescheduleModal(false)
+        setRescheduleData({ date:"", place:"", reason:"" })
+        load()
+      } else {
+        alert(data.error || "Fehler beim Verschieben")
+      }
+
+    } catch(e) {
+      console.error(e)
+      alert("Fehler beim Verschieben")
+    }
+  }
+
   async function finishInterview() {
     try {
       const res = await fetch('/api/adminboard/interview-done',{
@@ -166,18 +198,10 @@ export default function ApplicantPage() {
       <div className="p-10 text-red-400 space-y-3">
         <h1 className="text-xl font-bold">Fehler beim Laden</h1>
         <p>{error}</p>
-
-        <button
-          onClick={() => router.push('/adminboard')}
-          className="bg-blue-600 px-4 py-2 rounded"
-        >
+        <button onClick={() => router.push('/adminboard')} className="bg-blue-600 px-4 py-2 rounded">
           ← Zurück
         </button>
-
-        <button
-          onClick={load}
-          className="bg-gray-700 px-4 py-2 rounded ml-2"
-        >
+        <button onClick={load} className="bg-gray-700 px-4 py-2 rounded ml-2">
           Retry
         </button>
       </div>
@@ -201,43 +225,78 @@ export default function ApplicantPage() {
   return (
     <div className="p-10 max-w-7xl mx-auto space-y-10 text-white">
 
+      {/* MODAL INVITE */}
+      {showInviteModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
+          <div className="bg-gray-900 p-6 rounded w-[400px] space-y-3">
+            <h2 className="text-lg font-bold">Einladung planen</h2>
+
+            <input type="datetime-local"
+              className="w-full p-2 bg-gray-800 rounded"
+              value={inviteData.date}
+              onChange={(e)=>setInviteData(prev=>({...prev, date:e.target.value}))}
+            />
+
+            <input
+              className="w-full p-2 bg-gray-800 rounded"
+              placeholder="Ort / Discord Kanal"
+              value={inviteData.place}
+              onChange={(e)=>setInviteData(prev=>({...prev, place:e.target.value}))}
+            />
+
+            <button onClick={sendInvite} className="bg-green-600 w-full py-2 rounded">
+              Einladen bestätigen
+            </button>
+
+            <button onClick={()=>setShowInviteModal(false)} className="bg-gray-700 w-full py-2 rounded">
+              Abbrechen
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL RESCHEDULE */}
+      {showRescheduleModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
+          <div className="bg-gray-900 p-6 rounded w-[400px] space-y-3">
+            <h2 className="text-lg font-bold">Termin verschieben</h2>
+
+            <input type="datetime-local"
+              className="w-full p-2 bg-gray-800 rounded"
+              value={rescheduleData.date}
+              onChange={(e)=>setRescheduleData(prev=>({...prev, date:e.target.value}))}
+            />
+
+            <input
+              className="w-full p-2 bg-gray-800 rounded"
+              placeholder="Ort"
+              value={rescheduleData.place}
+              onChange={(e)=>setRescheduleData(prev=>({...prev, place:e.target.value}))}
+            />
+
+            <input
+              className="w-full p-2 bg-gray-800 rounded"
+              placeholder="Grund"
+              value={rescheduleData.reason}
+              onChange={(e)=>setRescheduleData(prev=>({...prev, reason:e.target.value}))}
+            />
+
+            <button onClick={sendReschedule} className="bg-yellow-600 w-full py-2 rounded">
+              Verschieben bestätigen
+            </button>
+
+            <button onClick={()=>setShowRescheduleModal(false)} className="bg-gray-700 w-full py-2 rounded">
+              Abbrechen
+            </button>
+          </div>
+        </div>
+      )}
+
       <button onClick={()=>router.push('/adminboard')} className="bg-blue-600 px-4 py-2 rounded">
         ← Zurück
       </button>
 
       <div className="grid grid-cols-4 gap-6">
-
-        {/* ANGABEN */}
-        <div className="bg-gray-900 p-6 rounded space-y-3">
-          <h2 className="text-lg font-bold">Angaben:</h2>
-
-          {answerKeys.map((key:any,i:number)=>(
-            <div key={i}>
-              <p className="text-gray-400 text-sm">{key}</p>
-              <p>{answers[key]}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* INTERVIEW */}
-        <div className="bg-gray-900 p-6 rounded space-y-3">
-          <h2 className="text-lg font-bold">Interview:</h2>
-
-          {app.oldInterviews?.map((iv:any,i:number)=>(
-            <p key={i} className="line-through text-gray-500">
-              {new Date(iv.date).toLocaleString()} – {iv.place}
-            </p>
-          ))}
-
-          {interviewTime ? (
-            <>
-              <p>{interviewTime.toLocaleString()}</p>
-              <p>{app.interviewPlace}</p>
-            </>
-          ) : (
-            <p className="text-gray-400">Noch kein Interview geplant</p>
-          )}
-        </div>
 
         {/* VERWALTEN */}
         <div className="bg-gray-900 p-6 rounded space-y-3">
@@ -263,9 +322,15 @@ export default function ApplicantPage() {
           )}
 
           {isInvited && (
-            <button onClick={finishInterview} className="bg-blue-600 w-full py-2 rounded mt-2">
-              Gespräch beendet
-            </button>
+            <>
+              <button onClick={finishInterview} className="bg-blue-600 w-full py-2 rounded mt-2">
+                Gespräch beendet
+              </button>
+
+              <button onClick={()=>setShowRescheduleModal(true)} className="bg-yellow-600 w-full py-2 rounded mt-2">
+                Termin verschieben
+              </button>
+            </>
           )}
 
           {interviewDone && (
@@ -279,46 +344,6 @@ export default function ApplicantPage() {
               </button>
             </>
           )}
-
-          {app.status === "HIRED" && (
-            <button disabled={!canFire} className={`w-full py-2 rounded ${canFire ? "bg-red-700" : "bg-gray-700 cursor-not-allowed"}`}>
-              {canFire ? "Kündigen" : "🔒 Kündigen"}
-            </button>
-          )}
-        </div>
-
-        {/* STATUS */}
-        <div className="bg-gray-900 p-6 rounded space-y-3">
-          <h2 className="text-lg font-bold">Aktuell:</h2>
-          {app.status !== "HIRED" && <p>Bewerber</p>}
-          {app.status === "HIRED" && <p>{app.role}</p>}
-        </div>
-
-        {/* NOTES */}
-        <div className="bg-gray-900 p-6 rounded space-y-3 col-span-4">
-          <h2 className="text-lg font-bold">Notizen</h2>
-
-          <div className="space-y-2 max-h-60 overflow-y-auto">
-            {app.notes?.map((n:any, i:number) => (
-              <div key={i} className="bg-gray-800 p-2 rounded">
-                <p className="text-sm text-gray-300">{n.text}</p>
-                <p className="text-xs text-gray-500">
-                  {n.author} – {new Date(n.date).toLocaleString()}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          <textarea
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            className="w-full p-2 bg-gray-800 rounded"
-            placeholder="Notiz schreiben..."
-          />
-
-          <button onClick={saveNote} className="bg-blue-600 w-full py-2 rounded">
-            Notiz speichern
-          </button>
         </div>
 
       </div>
