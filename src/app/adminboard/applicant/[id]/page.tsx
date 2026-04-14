@@ -244,77 +244,6 @@ export default function ApplicantPage() {
   return (
     <div className="p-10 max-w-7xl mx-auto space-y-8 text-white">
 
-      {/* MODAL INVITE */}
-      {showInviteModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
-          <div className="bg-gray-900 p-6 rounded-xl w-[400px] space-y-3">
-            <h2 className="text-xl font-bold">Einladung planen</h2>
-
-            <input
-              type="datetime-local"
-              value={inviteData.date}
-              onChange={(e)=>setInviteData({...inviteData, date:e.target.value})}
-              className="w-full p-2 bg-gray-800 rounded"
-            />
-
-            <input
-              placeholder="Ort"
-              value={inviteData.place}
-              onChange={(e)=>setInviteData({...inviteData, place:e.target.value})}
-              className="w-full p-2 bg-gray-800 rounded"
-            />
-
-            <div className="flex gap-2">
-              <button onClick={()=>setShowInviteModal(false)} className="bg-gray-700 px-4 py-2 rounded w-full">
-                Abbrechen
-              </button>
-              <button onClick={sendInvite} className="bg-green-600 px-4 py-2 rounded w-full">
-                Senden
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL RESCHEDULE */}
-      {showRescheduleModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
-          <div className="bg-gray-900 p-6 rounded-xl w-[400px] space-y-3">
-            <h2 className="text-xl font-bold">Termin verschieben</h2>
-
-            <input
-              type="datetime-local"
-              value={rescheduleData.date}
-              onChange={(e)=>setRescheduleData({...rescheduleData, date:e.target.value})}
-              className="w-full p-2 bg-gray-800 rounded"
-            />
-
-            <input
-              placeholder="Ort"
-              value={rescheduleData.place}
-              onChange={(e)=>setRescheduleData({...rescheduleData, place:e.target.value})}
-              className="w-full p-2 bg-gray-800 rounded"
-            />
-
-            <input
-              placeholder="Grund"
-              value={rescheduleData.reason}
-              onChange={(e)=>setRescheduleData({...rescheduleData, reason:e.target.value})}
-              className="w-full p-2 bg-gray-800 rounded"
-            />
-
-            <div className="flex gap-2">
-              <button onClick={()=>setShowRescheduleModal(false)} className="bg-gray-700 px-4 py-2 rounded w-full">
-                Abbrechen
-              </button>
-              <button onClick={sendReschedule} className="bg-yellow-600 px-4 py-2 rounded w-full">
-                Speichern
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <button onClick={()=>router.push('/adminboard')} className="bg-blue-600 px-4 py-2 rounded">
         ← Zurück
       </button>
@@ -385,6 +314,31 @@ export default function ApplicantPage() {
               </>
             )}
 
+            {app.status === "INTERVIEW_DONE" && (
+              <>
+                <button onClick={async()=>{
+                  await fetch('/api/adminboard/hire',{
+                    method:'POST',
+                    headers:{'Content-Type':'application/json'},
+                    body:JSON.stringify({ id })
+                  })
+                  load()
+                }} className="bg-green-600 w-full py-2 rounded">
+                  Einstellen
+                </button>
+
+                <button onClick={async()=>{
+                  await fetch('/api/adminboard/reject',{
+                    method:'POST',
+                    headers:{'Content-Type':'application/json'},
+                    body:JSON.stringify({ id })
+                  })
+                  load()
+                }} className="bg-red-600 w-full py-2 rounded">
+                  Ablehnen
+                </button>
+              </>
+            )}
           </div>
 
         </div>
@@ -419,16 +373,20 @@ export default function ApplicantPage() {
             </button>
 
             {[...(app.notes || [])]
-              .sort((a:any,b:any)=> new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+              .sort((a:any, b:any) => new Date(b?.createdAt || 0).getTime() - new Date(a?.createdAt || 0).getTime())
               .map((n:any,i:number)=>{
 
               const date = new Date(n.createdAt)
+              const valid = !isNaN(date.getTime())
 
               return (
                 <div key={i} className="bg-gray-800 p-3 rounded">
                   <p>{n.text}</p>
                   <p className="text-xs text-gray-400 mt-1">
-                    — von {n.author || "Unbekannt"} am {date.toLocaleDateString('de-DE')} um {date.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}
+                    — von {n.author || "Unbekannt"} am{" "}
+                    {valid
+                      ? `${date.toLocaleDateString('de-DE')} um ${date.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}`
+                      : "Datum ungültig"}
                   </p>
                 </div>
               )
