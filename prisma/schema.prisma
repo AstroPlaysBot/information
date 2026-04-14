@@ -210,3 +210,19 @@ enum AdminStatus {
   ACTIVE
   RESIGNED
 }
+
+// ======================
+// AdminBoard Logs
+// ======================
+model AuditLog {
+  id              String   @id @default(cuid())
+  applicantId     String
+  action          String
+  actorDiscordId  String?
+  actorName       String?
+  meta            Json?
+  createdAt       DateTime @default(now())
+
+  @@index([applicantId])
+  @@index([createdAt])
+}
