@@ -74,10 +74,7 @@ export default function ApplicantPage() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id,
-          note,
-        })
+        body: JSON.stringify({ id, note })
       })
 
       const data = await res.json()
@@ -103,16 +100,13 @@ export default function ApplicantPage() {
     setSendingInvite(true)
 
     try {
-
-      const localDate = new Date(inviteData.date)
-
       const res = await fetch('/api/adminboard/invite',{
         method:'POST',
         credentials: "include",
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
           id,
-          date: localDate,
+          date: new Date(inviteData.date).toISOString(),
           place: inviteData.place,
         })
       })
@@ -139,16 +133,13 @@ export default function ApplicantPage() {
     if(!rescheduleData.date || !rescheduleData.place) return
 
     try {
-
-      const localDate = new Date(rescheduleData.date)
-
       const res = await fetch('/api/adminboard/reschedule',{
         method:'POST',
         credentials:'include',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
           id,
-          date: localDate,
+          date: new Date(rescheduleData.date).toISOString(),
           place: rescheduleData.place,
           reason: rescheduleData.reason
         })
@@ -223,7 +214,10 @@ export default function ApplicantPage() {
 
   const answerKeys = app.answersOrder || Object.keys(answers)
 
-  const interviewTime: Date | null = app.interviewDate ? new Date(app.interviewDate) : null
+  const interviewTime: Date | null =
+    app.interviewDate && !isNaN(new Date(app.interviewDate).getTime())
+      ? new Date(app.interviewDate)
+      : null
 
   const isInvited = app.status === "INVITED"
   const interviewDone = app.status === "INTERVIEW_DONE"
@@ -250,6 +244,77 @@ export default function ApplicantPage() {
   return (
     <div className="p-10 max-w-7xl mx-auto space-y-8 text-white">
 
+      {/* MODAL INVITE */}
+      {showInviteModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
+          <div className="bg-gray-900 p-6 rounded-xl w-[400px] space-y-3">
+            <h2 className="text-xl font-bold">Einladung planen</h2>
+
+            <input
+              type="datetime-local"
+              value={inviteData.date}
+              onChange={(e)=>setInviteData({...inviteData, date:e.target.value})}
+              className="w-full p-2 bg-gray-800 rounded"
+            />
+
+            <input
+              placeholder="Ort"
+              value={inviteData.place}
+              onChange={(e)=>setInviteData({...inviteData, place:e.target.value})}
+              className="w-full p-2 bg-gray-800 rounded"
+            />
+
+            <div className="flex gap-2">
+              <button onClick={()=>setShowInviteModal(false)} className="bg-gray-700 px-4 py-2 rounded w-full">
+                Abbrechen
+              </button>
+              <button onClick={sendInvite} className="bg-green-600 px-4 py-2 rounded w-full">
+                Senden
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL RESCHEDULE */}
+      {showRescheduleModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
+          <div className="bg-gray-900 p-6 rounded-xl w-[400px] space-y-3">
+            <h2 className="text-xl font-bold">Termin verschieben</h2>
+
+            <input
+              type="datetime-local"
+              value={rescheduleData.date}
+              onChange={(e)=>setRescheduleData({...rescheduleData, date:e.target.value})}
+              className="w-full p-2 bg-gray-800 rounded"
+            />
+
+            <input
+              placeholder="Ort"
+              value={rescheduleData.place}
+              onChange={(e)=>setRescheduleData({...rescheduleData, place:e.target.value})}
+              className="w-full p-2 bg-gray-800 rounded"
+            />
+
+            <input
+              placeholder="Grund"
+              value={rescheduleData.reason}
+              onChange={(e)=>setRescheduleData({...rescheduleData, reason:e.target.value})}
+              className="w-full p-2 bg-gray-800 rounded"
+            />
+
+            <div className="flex gap-2">
+              <button onClick={()=>setShowRescheduleModal(false)} className="bg-gray-700 px-4 py-2 rounded w-full">
+                Abbrechen
+              </button>
+              <button onClick={sendReschedule} className="bg-yellow-600 px-4 py-2 rounded w-full">
+                Speichern
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <button onClick={()=>router.push('/adminboard')} className="bg-blue-600 px-4 py-2 rounded">
         ← Zurück
       </button>
@@ -264,8 +329,6 @@ export default function ApplicantPage() {
               {currentPosition}
             </p>
           </div>
-
-          {/* INFOS JETZT ÜBER VERWALTEN */}
 
           <div className="bg-gray-900 p-6 rounded-xl border border-gray-800 space-y-2">
             <h2 className="text-lg font-bold">Infos</h2>
@@ -375,7 +438,7 @@ export default function ApplicantPage() {
         </div>
 
       </div>
-      
+
     </div>
   )
 }
