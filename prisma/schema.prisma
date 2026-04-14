@@ -172,6 +172,9 @@ model AdminBoardMember {
 
   role          AdminBoardRole @default(VIEWER)
 
+  status        AdminStatus @default(ACTIVE)
+  resignedAt    DateTime?
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
@@ -197,5 +200,13 @@ model AdminBoardResignation {
   reasonType  String?
   reasonText  String?
 
+  revokeToken String   @unique
+  revoked     Boolean  @default(false)
+
   createdAt   DateTime @default(now())
+}
+
+enum AdminStatus {
+  ACTIVE
+  RESIGNED
 }
