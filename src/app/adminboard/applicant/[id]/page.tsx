@@ -234,9 +234,7 @@ export default function ApplicantPage() {
       : "Bewerber"
 
   const phoneAnswer =
-    answers["Telefon Erreichbarkeit"] ||
-    answers["Telefon"] ||
-    answers["Telefonnummer"] ||
+    answers["Telefon erreichbar"] ||
     "—"
 
   function statusColor(status:string){
@@ -265,6 +263,29 @@ export default function ApplicantPage() {
             <p className="text-xl font-semibold text-blue-400">
               {currentPosition}
             </p>
+          </div>
+
+          {/* INFOS JETZT ÜBER VERWALTEN */}
+
+          <div className="bg-gray-900 p-6 rounded-xl border border-gray-800 space-y-2">
+            <h2 className="text-lg font-bold">Infos</h2>
+
+            <p><b>Name:</b> {app.name}</p>
+            <p><b>Rolle:</b> {app.role}</p>
+            <p><b>Alter:</b> {app.age || "—"}</p>
+            <p><b>Email:</b> {app.email || "—"}</p>
+            <p><b>Telefon:</b> {phoneAnswer}</p>
+
+            <p className="flex items-center gap-2">
+              <b>Status:</b>
+              <span className={`px-2 py-1 text-sm rounded ${statusColor(app.status)}`}>
+                {app.status}
+              </span>
+            </p>
+
+            {interviewTime && (
+              <p><b>Interview:</b> {interviewTime.toLocaleString('de-DE')}</p>
+            )}
           </div>
 
           <div className="bg-gray-900 p-6 rounded-xl border border-gray-800 space-y-3">
@@ -303,27 +324,6 @@ export default function ApplicantPage() {
 
           </div>
 
-          <div className="bg-gray-900 p-6 rounded-xl border border-gray-800 space-y-2">
-            <h2 className="text-lg font-bold">Infos</h2>
-
-            <p><b>Name:</b> {app.name}</p>
-            <p><b>Rolle:</b> {app.role}</p>
-            <p><b>Alter:</b> {app.age || "—"}</p>
-            <p><b>Email:</b> {app.email || "—"}</p>
-            <p><b>Telefon:</b> {phoneAnswer}</p>
-
-            <p className="flex items-center gap-2">
-              <b>Status:</b>
-              <span className={`px-2 py-1 text-sm rounded ${statusColor(app.status)}`}>
-                {app.status}
-              </span>
-            </p>
-
-            {interviewTime && (
-              <p><b>Interview:</b> {interviewTime.toLocaleString('de-DE')}</p>
-            )}
-          </div>
-
         </div>
 
         <div className="col-span-9 space-y-6">
@@ -355,7 +355,9 @@ export default function ApplicantPage() {
               Notiz speichern
             </button>
 
-            {app.notes?.map((n:any,i:number)=>{
+            {[...(app.notes || [])]
+              .sort((a:any,b:any)=> new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+              .map((n:any,i:number)=>{
 
               const date = new Date(n.createdAt)
 
@@ -373,80 +375,3 @@ export default function ApplicantPage() {
         </div>
 
       </div>
-
-      {showInviteModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 animate-fadeIn">
-          <div className="bg-gray-900 p-6 rounded-xl w-96 space-y-4 transform animate-scaleIn">
-            <h2 className="text-lg font-bold">Interview planen</h2>
-
-            <input
-              type="datetime-local"
-              value={inviteData.date}
-              onChange={(e)=>setInviteData({...inviteData,date:e.target.value})}
-              className="w-full p-2 bg-gray-800 rounded"
-            />
-
-            <input
-              type="text"
-              placeholder="Ort / Discord / TS"
-              value={inviteData.place}
-              onChange={(e)=>setInviteData({...inviteData,place:e.target.value})}
-              className="w-full p-2 bg-gray-800 rounded"
-            />
-
-            <div className="flex gap-2">
-              <button onClick={sendInvite} className="bg-green-600 px-4 py-2 rounded">
-                Einladen
-              </button>
-
-              <button onClick={()=>setShowInviteModal(false)} className="bg-gray-700 px-4 py-2 rounded">
-                Abbrechen
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showRescheduleModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 animate-fadeIn">
-          <div className="bg-gray-900 p-6 rounded-xl w-96 space-y-4 transform animate-scaleIn">
-            <h2 className="text-lg font-bold">Termin verschieben</h2>
-
-            <input
-              type="datetime-local"
-              value={rescheduleData.date}
-              onChange={(e)=>setRescheduleData({...rescheduleData,date:e.target.value})}
-              className="w-full p-2 bg-gray-800 rounded"
-            />
-
-            <input
-              type="text"
-              placeholder="Ort"
-              value={rescheduleData.place}
-              onChange={(e)=>setRescheduleData({...rescheduleData,place:e.target.value})}
-              className="w-full p-2 bg-gray-800 rounded"
-            />
-
-            <textarea
-              placeholder="Grund"
-              value={rescheduleData.reason}
-              onChange={(e)=>setRescheduleData({...rescheduleData,reason:e.target.value})}
-              className="w-full p-2 bg-gray-800 rounded"
-            />
-
-            <div className="flex gap-2">
-              <button onClick={sendReschedule} className="bg-yellow-600 px-4 py-2 rounded">
-                Verschieben
-              </button>
-
-              <button onClick={()=>setShowRescheduleModal(false)} className="bg-gray-700 px-4 py-2 rounded">
-                Abbrechen
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-    </div>
-  )
-}
