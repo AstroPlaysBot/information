@@ -225,73 +225,6 @@ export default function ApplicantPage() {
   return (
     <div className="p-10 max-w-7xl mx-auto space-y-10 text-white">
 
-      {/* MODAL INVITE */}
-      {showInviteModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
-          <div className="bg-gray-900 p-6 rounded w-[400px] space-y-3">
-            <h2 className="text-lg font-bold">Einladung planen</h2>
-
-            <input type="datetime-local"
-              className="w-full p-2 bg-gray-800 rounded"
-              value={inviteData.date}
-              onChange={(e)=>setInviteData(prev=>({...prev, date:e.target.value}))}
-            />
-
-            <input
-              className="w-full p-2 bg-gray-800 rounded"
-              placeholder="Ort / Discord Kanal"
-              value={inviteData.place}
-              onChange={(e)=>setInviteData(prev=>({...prev, place:e.target.value}))}
-            />
-
-            <button onClick={sendInvite} className="bg-green-600 w-full py-2 rounded">
-              Einladen bestätigen
-            </button>
-
-            <button onClick={()=>setShowInviteModal(false)} className="bg-gray-700 w-full py-2 rounded">
-              Abbrechen
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL RESCHEDULE */}
-      {showRescheduleModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
-          <div className="bg-gray-900 p-6 rounded w-[400px] space-y-3">
-            <h2 className="text-lg font-bold">Termin verschieben</h2>
-
-            <input type="datetime-local"
-              className="w-full p-2 bg-gray-800 rounded"
-              value={rescheduleData.date}
-              onChange={(e)=>setRescheduleData(prev=>({...prev, date:e.target.value}))}
-            />
-
-            <input
-              className="w-full p-2 bg-gray-800 rounded"
-              placeholder="Ort"
-              value={rescheduleData.place}
-              onChange={(e)=>setRescheduleData(prev=>({...prev, place:e.target.value}))}
-            />
-
-            <input
-              className="w-full p-2 bg-gray-800 rounded"
-              placeholder="Grund"
-              value={rescheduleData.reason}
-              onChange={(e)=>setRescheduleData(prev=>({...prev, reason:e.target.value}))}
-            />
-
-            <button onClick={sendReschedule} className="bg-yellow-600 w-full py-2 rounded">
-              Verschieben bestätigen
-            </button>
-
-            <button onClick={()=>setShowRescheduleModal(false)} className="bg-gray-700 w-full py-2 rounded">
-              Abbrechen
-            </button>
-          </div>
-        </div>
-      )}
-
       <button onClick={()=>router.push('/adminboard')} className="bg-blue-600 px-4 py-2 rounded">
         ← Zurück
       </button>
@@ -346,7 +279,55 @@ export default function ApplicantPage() {
           )}
         </div>
 
+        {/* INFOS */}
+        <div className="bg-gray-900 p-6 rounded space-y-2">
+          <h2 className="text-lg font-bold">Infos</h2>
+          <p><b>Name:</b> {app.name}</p>
+          <p><b>Rolle:</b> {app.role}</p>
+          <p><b>Alter:</b> {app.age || "—"}</p>
+          <p><b>Email:</b> {app.email || "—"}</p>
+          <p><b>Status:</b> {app.status}</p>
+          {interviewTime && (
+            <p><b>Interview:</b> {interviewTime.toLocaleString()}</p>
+          )}
+        </div>
+
+        {/* ANTWORTEN */}
+        <div className="bg-gray-900 p-6 rounded space-y-4 col-span-2">
+          <h2 className="text-lg font-bold">Antworten</h2>
+
+          {answerKeys.map((key:string)=>(
+            <div key={key}>
+              <p className="font-semibold">{key}</p>
+              <p className="text-gray-300 whitespace-pre-wrap">{answers[key]}</p>
+            </div>
+          ))}
+        </div>
+
       </div>
+
+      {/* NOTIZEN */}
+      <div className="bg-gray-900 p-6 rounded space-y-3">
+        <h2 className="text-lg font-bold">Notizen</h2>
+
+        <textarea
+          value={note}
+          onChange={(e)=>setNote(e.target.value)}
+          className="w-full p-3 bg-gray-800 rounded"
+          placeholder="Neue Notiz..."
+        />
+
+        <button onClick={saveNote} className="bg-blue-600 px-4 py-2 rounded">
+          Notiz speichern
+        </button>
+
+        {app.notes?.map((n:any,i:number)=>(
+          <div key={i} className="bg-gray-800 p-3 rounded">
+            {n.text}
+          </div>
+        ))}
+      </div>
+
     </div>
   )
 }
