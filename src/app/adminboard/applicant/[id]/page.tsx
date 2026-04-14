@@ -375,3 +375,7 @@ export default function ApplicantPage() {
         </div>
 
       </div>
+      
+    </div>
+  )
+}
