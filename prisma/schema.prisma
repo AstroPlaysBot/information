@@ -184,3 +184,18 @@ enum AdminBoardRole {
   PERSONAL_MANAGER
   VIEWER
 }
+
+// ======================
+// AdminBoard Kündigung
+// ======================
+model AdminBoardResignation {
+  id          String   @id @default(cuid())
+
+  discordId   String
+  discordName String?
+
+  reasonType  String?
+  reasonText  String?
+
+  createdAt   DateTime @default(now())
+}
