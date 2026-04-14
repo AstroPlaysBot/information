@@ -9,7 +9,13 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const code = url.searchParams.get('code');
-    const state = url.searchParams.get('state') || '/apply';
+
+    // 🔥 FIX: state abgesichert (nur interne Routes erlaubt)
+    const rawState = url.searchParams.get('state') || '/apply';
+    const state =
+      rawState.startsWith('/') && !rawState.startsWith('//')
+        ? rawState
+        : '/apply';
 
     const CLIENT_ID = process.env.DISCORD_CLIENT_ID!;
     const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET!;
