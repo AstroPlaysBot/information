@@ -233,6 +233,12 @@ export default function ApplicantPage() {
       ? app.role
       : "Bewerber"
 
+  const phoneAnswer =
+    answers["Telefon Erreichbarkeit"] ||
+    answers["Telefon"] ||
+    answers["Telefonnummer"] ||
+    "—"
+
   function statusColor(status:string){
     switch(status){
       case "PENDING": return "bg-yellow-600"
@@ -252,7 +258,6 @@ export default function ApplicantPage() {
 
       <div className="grid grid-cols-12 gap-6">
 
-        {/* SIDEBAR */}
         <div className="col-span-3 space-y-6">
 
           <div className="bg-gray-900 p-6 rounded-xl border border-gray-800">
@@ -305,7 +310,7 @@ export default function ApplicantPage() {
             <p><b>Rolle:</b> {app.role}</p>
             <p><b>Alter:</b> {app.age || "—"}</p>
             <p><b>Email:</b> {app.email || "—"}</p>
-            <p><b>Telefon:</b> {app.phone || "—"}</p>
+            <p><b>Telefon:</b> {phoneAnswer}</p>
 
             <p className="flex items-center gap-2">
               <b>Status:</b>
@@ -321,13 +326,14 @@ export default function ApplicantPage() {
 
         </div>
 
-        {/* MAIN */}
         <div className="col-span-9 space-y-6">
 
           <div className="bg-gray-900 p-8 rounded-xl border border-gray-800 space-y-6">
             <h2 className="text-xl font-bold">Antworten</h2>
 
-            {answerKeys.map((key:string)=>(
+            {answerKeys
+              .filter((key:string)=>!key.toLowerCase().includes("telefon"))
+              .map((key:string)=>(
               <div key={key} className="border-b border-gray-800 pb-4">
                 <p className="font-semibold text-gray-200 mb-1">{key}</p>
                 <p className="text-gray-400 whitespace-pre-wrap">{answers[key]}</p>
@@ -349,18 +355,25 @@ export default function ApplicantPage() {
               Notiz speichern
             </button>
 
-            {app.notes?.map((n:any,i:number)=>(
-              <div key={i} className="bg-gray-800 p-3 rounded">
-                {n.text}
-              </div>
-            ))}
+            {app.notes?.map((n:any,i:number)=>{
+
+              const date = new Date(n.createdAt)
+
+              return (
+                <div key={i} className="bg-gray-800 p-3 rounded">
+                  <p>{n.text}</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    — von {n.author || "Unbekannt"} am {date.toLocaleDateString('de-DE')} um {date.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}
+                  </p>
+                </div>
+              )
+            })}
           </div>
 
         </div>
 
       </div>
 
-      {/* INVITE MODAL */}
       {showInviteModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 animate-fadeIn">
           <div className="bg-gray-900 p-6 rounded-xl w-96 space-y-4 transform animate-scaleIn">
@@ -394,7 +407,6 @@ export default function ApplicantPage() {
         </div>
       )}
 
-      {/* RESCHEDULE MODAL */}
       {showRescheduleModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 animate-fadeIn">
           <div className="bg-gray-900 p-6 rounded-xl w-96 space-y-4 transform animate-scaleIn">
