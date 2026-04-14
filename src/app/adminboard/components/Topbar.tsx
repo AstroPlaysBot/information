@@ -47,6 +47,7 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         discordId: user.user.id,
+        email: user.user.email,
         reasonType,
         reasonText: cancelReason
       })
