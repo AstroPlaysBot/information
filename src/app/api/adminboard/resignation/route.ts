@@ -1,99 +1,85 @@
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 import prisma from "@/lib/prisma";
+import crypto from "crypto";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-
-    const { discordId, reasonType, reasonText } = body;
+    const { discordId, reasonType, reasonText, email } = body;
 
     if (!discordId) {
-      return NextResponse.json({ success: false, error: "Missing discordId" });
+      return NextResponse.json({ success: false });
     }
 
-    // AdminBoard Member finden
     const member = await prisma.adminBoardMember.findUnique({
       where: { discordId }
     });
 
     if (!member) {
-      return NextResponse.json({ success: false, error: "Admin nicht gefunden" });
+      return NextResponse.json({ success: false });
     }
 
-    // Kündigung speichern
+    const revokeToken = crypto.randomBytes(32).toString("hex");
+
+    // SAVE RESIGNATION
     await prisma.adminBoardResignation.create({
       data: {
         discordId,
         discordName: member.discordName,
         reasonType,
-        reasonText
+        reasonText,
+        revokeToken
       }
     });
 
-    // Admin aus AdminBoard entfernen
-    await prisma.adminBoardMember.delete({
-      where: { discordId }
+    // SET STATUS (NO DELETE!)
+    await prisma.adminBoardMember.update({
+      where: { discordId },
+      data: {
+        status: "RESIGNED",
+        resignedAt: new Date()
+      }
     });
 
-    // Email senden (nur wenn Email übergeben wurde)
-    if (body.email) {
+    const revokeUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/adminboard/resignation/revoke?token=${revokeToken}`;
 
-      const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: Number(process.env.SMTP_PORT) || 587,
-        secure: false,
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
-        },
-      });
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT) || 587,
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
 
+    if (email) {
       await transporter.sendMail({
-        from: `"AdminBoard System" <${process.env.SMTP_USER}>`,
-        to: body.email,
-        subject: "Bestätigung deiner AdminBoard Kündigung",
+        from: `"AdminBoard" <${process.env.SMTP_USER}>`,
+        to: email,
+        subject: "Kündigung bestätigt",
         html: `
-          <div style="font-family:sans-serif; line-height:1.6; color:#111">
-            <h2 style="color:#7f3fff;">Hallo ${member.discordName},</h2>
+          <h2>Deine Kündigung wurde verarbeitet</h2>
 
-            <p>deine Kündigung aus dem <strong>AdminBoard</strong> wurde erfolgreich eingereicht.</p>
+          <p><b>${member.discordName}</b></p>
 
-            <p><strong>Kündigungsgrund:</strong> ${reasonType || "Nicht angegeben"}</p>
+          <p>Grund: ${reasonType || "-"}</p>
+          <p>${reasonText || "-"}</p>
 
-            <p><strong>Feedback:</strong><br>
-            ${reasonText || "Kein Feedback angegeben"}
-            </p>
+          <p>Du hast 48h Zeit zum Widerruf:</p>
 
-            <br/>
-
-            <p>
-            Deine personenbezogenen Daten werden innerhalb von 
-            <strong>48 Stunden</strong> gelöscht.
-            </p>
-
-            <p>
-            Innerhalb dieser Zeit kannst du deine Kündigung noch widerrufen,
-            indem du dich beim Team meldest.
-            </p>
-
-            <br/>
-
-            <p>Viele Grüße<br>AdminBoard System</p>
-          </div>
+          <a href="${revokeUrl}">
+            Kündigung widerrufen
+          </a>
         `
       });
-
     }
 
     return NextResponse.json({ success: true });
 
   } catch (err) {
-    console.error("Resignation error:", err);
-
-    return NextResponse.json({
-      success: false,
-      error: "Server error"
-    });
+    console.error(err);
+    return NextResponse.json({ success: false });
   }
 }
