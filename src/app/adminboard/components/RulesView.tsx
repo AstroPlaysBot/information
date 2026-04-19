@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from "react"
-import { rules } from "./rules"
+import { rules } from "../rules/config"
 
 export default function RulesView() {
   const [open, setOpen] = useState<string | null>(null)
