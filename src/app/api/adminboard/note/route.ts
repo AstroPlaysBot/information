@@ -42,9 +42,6 @@ export async function POST(req: Request) {
     }
 
     const discordUser = await discordRes.json();
-    const displayName =
-      discordUser.global_name ||
-      discordUser.username;
 
     const app = await prisma.application.findUnique({
       where: { id: body.id },
@@ -60,7 +57,7 @@ export async function POST(req: Request) {
     const notes = Array.isArray(app.notes) ? app.notes : [];
     const newNote = {
       text: body.note,
-      author: displayName,
+      author: discordUser.username,
       createdAt: new Date().toISOString(), // war: date
     };
 
