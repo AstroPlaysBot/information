@@ -29,7 +29,7 @@ export default function AdminAnimation({ onFinish }: AdminAnimationProps) {
     const taglineEl = taglineRef.current!
     const ctx = canvas.getContext('2d')!
 
-    let W: number, H: number, cx: number, cy: number
+    let W = 0, H = 0, cx = 0, cy = 0
     function resize() {
       W = canvas.width = stage.offsetWidth
       H = canvas.height = stage.offsetHeight
@@ -37,6 +37,12 @@ export default function AdminAnimation({ onFinish }: AdminAnimationProps) {
     }
     resize()
 
+    let rocketX = 0
+    let rocketY = 0
+
+    rocketX = W + 80
+    rocketY = H * 0.75
+    
     const stars = Array.from({ length: 160 }, () => ({
       x: Math.random() * W, y: Math.random() * H,
       r: Math.random() * 1.4 + 0.3,
@@ -48,7 +54,7 @@ export default function AdminAnimation({ onFinish }: AdminAnimationProps) {
     let trailParticles: Particle[] = []
     let cloudParticles: Particle[] = []
 
-    let rocketX = W + 80, rocketY = H * 0.75
+    //let rocketX = W + 80, rocketY = H * 0.75
     let rocketVX = -9, rocketVY = -2.5
     let phase = 'enter'
     let explodeT = 0
