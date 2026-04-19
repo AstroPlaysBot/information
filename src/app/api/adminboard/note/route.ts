@@ -4,7 +4,6 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-
     if (!body.id || !body.note) {
       return NextResponse.json(
         { error: "Fehlende Daten: id oder note" },
@@ -14,12 +13,10 @@ export async function POST(req: Request) {
 
     // 🔥 ONLY ADMIN TOKEN
     const cookie = req.headers.get("cookie") || "";
-
     const getCookie = (name: string) =>
       cookie
         .split(`${name}=`)[1]
         ?.split(";")[0];
-
     const token = getCookie("admin_token");
 
     // ❌ USER IST HIER KOMPLETT UNGÜLTIG
@@ -45,7 +42,6 @@ export async function POST(req: Request) {
     }
 
     const discordUser = await discordRes.json();
-
     const displayName =
       discordUser.global_name ||
       discordUser.username;
@@ -62,11 +58,10 @@ export async function POST(req: Request) {
     }
 
     const notes = Array.isArray(app.notes) ? app.notes : [];
-
     const newNote = {
       text: body.note,
       author: displayName,
-      date: new Date().toISOString(),
+      createdAt: new Date().toISOString(), // war: date
     };
 
     await prisma.application.update({
@@ -77,10 +72,8 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ success: true });
-
   } catch (err) {
     console.error("Error saving note:", err);
-
     return NextResponse.json(
       { error: "Interner Serverfehler" },
       { status: 500 }
