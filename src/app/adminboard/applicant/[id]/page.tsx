@@ -161,12 +161,24 @@ export default function ApplicantPage() {
     }
   }
 
-  // FIX: Robuste Datums-Formatierung
+  // FIX: Robuste Datums-Formatierung – behandelt String, Date-Objekt, ISO, Timestamp
   function formatDate(value: any): string {
-    if (!value) return "Datum unbekannt"
-    const date = new Date(value)
+    if (value === null || value === undefined || value === "") return "Datum unbekannt"
+    // Prisma Json-Feld kann { $date: "..." } oder direkt ein ISO-String sein
+    let raw = value
+    if (typeof raw === "object" && raw !== null && "$date" in raw) {
+      raw = raw["$date"]
+    }
+    const date = new Date(raw)
     if (isNaN(date.getTime())) return "Datum unbekannt"
-    return `${date.toLocaleDateString('de-DE')} um ${date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`
+    return `${date.toLocaleDateString('de-DE')} um ${date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr`
+  }
+
+  function formatDateShort(value: any): string {
+    if (!value) return "—"
+    const date = new Date(value)
+    if (isNaN(date.getTime())) return "—"
+    return `${date.toLocaleDateString('de-DE')}, ${date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr`
   }
 
   if(loading) return <div className="p-10 text-gray-400">Lade Bewerbung...</div>
@@ -196,6 +208,14 @@ export default function ApplicantPage() {
       ? new Date(app.interviewDate)
       : null
 
+  // Letzter verschobener Termin aus oldInterviews
+  const oldInterviews: any[] = Array.isArray(app.oldInterviews)
+    ? app.oldInterviews
+    : (typeof app.oldInterviews === "string" ? JSON.parse(app.oldInterviews || "[]") : [])
+  const lastOld = oldInterviews.length > 0 ? oldInterviews[oldInterviews.length - 1] : null
+
+  const wasRescheduled = !!lastOld && !!interviewTime
+
   const isInvited = app.status === "INVITED"
   const currentPosition = app.status === "HIRED" ? app.role : "Bewerber"
   const phoneAnswer = answers["Telefon erreichbar"] || "—"
@@ -209,6 +229,11 @@ export default function ApplicantPage() {
       default: return "bg-gray-600"
     }
   }
+
+  // Datetime-local min: jetzt
+  const nowLocal = new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 16)
 
   return (
     <div className="p-10 max-w-7xl mx-auto space-y-8 text-white">
@@ -237,8 +262,35 @@ export default function ApplicantPage() {
               <b>Status:</b>
               <span className={`px-2 py-1 text-sm rounded ${statusColor(app.status)}`}>{app.status}</span>
             </p>
+
+            {/* Interview-Anzeige mit Verschoben-Logik */}
             {interviewTime && (
-              <p><b>Interview:</b> {interviewTime.toLocaleString('de-DE')}</p>
+              <div className="mt-1 space-y-1">
+                <p className="font-semibold text-gray-300">Interview:</p>
+                {wasRescheduled && lastOld ? (
+                  <>
+                    {/* Alter Termin durchgestrichen */}
+                    <p className="line-through text-gray-500 text-sm">
+                      {formatDateShort(lastOld.date)}
+                      {lastOld.place ? ` · ${lastOld.place}` : ""}
+                    </p>
+                    {/* Neuer Termin */}
+                    <div className="bg-yellow-900/30 border border-yellow-700/40 rounded-lg p-2 text-sm space-y-0.5">
+                      <p className="text-yellow-400 font-semibold text-xs uppercase tracking-wide">Verschoben</p>
+                      <p className="text-white">{formatDateShort(app.interviewDate)}</p>
+                      {app.interviewPlace && <p className="text-gray-300">📍 {app.interviewPlace}</p>}
+                      <p className="text-gray-400 text-xs">
+                        Grund: {lastOld.reason ? lastOld.reason : "Grund wurde nicht genannt"}
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-gray-200 text-sm">
+                    {formatDateShort(app.interviewDate)}
+                    {app.interviewPlace ? ` · ${app.interviewPlace}` : ""}
+                  </p>
+                )}
+              </div>
             )}
           </div>
 
@@ -316,11 +368,14 @@ export default function ApplicantPage() {
               Notiz speichern
             </button>
             {[...(app.notes || [])]
-              .sort((a:any, b:any) => new Date(b?.createdAt || 0).getTime() - new Date(a?.createdAt || 0).getTime())
+              .sort((a:any, b:any) => {
+                const da = a?.createdAt ? new Date(a.createdAt).getTime() : 0
+                const db = b?.createdAt ? new Date(b.createdAt).getTime() : 0
+                return db - da
+              })
               .map((n:any,i:number)=>(
                 <div key={i} className="bg-gray-800 p-3 rounded">
                   <p>{n.text}</p>
-                  {/* FIX: Robuste Datumsformatierung */}
                   <p className="text-xs text-gray-400 mt-1">
                     — von {n.author || "Unbekannt"} am {formatDate(n.createdAt)}
                   </p>
@@ -332,43 +387,72 @@ export default function ApplicantPage() {
         </div>
       </div>
 
-      {/* FIX: Invite Modal */}
+      {/* Invite Modal – verbessertes UI */}
       {showInviteModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
           <div className="bg-gray-900 border border-gray-700 rounded-xl p-8 w-full max-w-md space-y-5">
-            <h2 className="text-xl font-bold">Einladung planen</h2>
-            <div className="space-y-1">
-              <label className="text-sm text-gray-400">Datum & Uhrzeit</label>
-              <input
-                type="datetime-local"
-                value={inviteData.date}
-                onChange={e => setInviteData(prev => ({ ...prev, date: e.target.value }))}
-                className="w-full p-3 bg-gray-800 rounded text-white"
-              />
+            <h2 className="text-xl font-bold">📅 Einladung planen</h2>
+
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-300">Datum</label>
+                <input
+                  type="date"
+                  min={nowLocal.slice(0,10)}
+                  value={inviteData.date ? inviteData.date.slice(0,10) : ""}
+                  onChange={e => setInviteData(prev => ({
+                    ...prev,
+                    date: e.target.value + (prev.date.slice(10) || "T00:00")
+                  }))}
+                  className="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-300">Uhrzeit</label>
+                <input
+                  type="time"
+                  value={inviteData.date ? inviteData.date.slice(11,16) : ""}
+                  onChange={e => setInviteData(prev => ({
+                    ...prev,
+                    date: (prev.date.slice(0,10) || new Date().toISOString().slice(0,10)) + "T" + e.target.value
+                  }))}
+                  className="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-300">Ort / Plattform</label>
+                <input
+                  type="text"
+                  placeholder="z.B. Discord Voice, TeamSpeak..."
+                  value={inviteData.place}
+                  onChange={e => setInviteData(prev => ({ ...prev, place: e.target.value }))}
+                  className="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                />
+              </div>
             </div>
-            <div className="space-y-1">
-              <label className="text-sm text-gray-400">Ort / Plattform</label>
-              <input
-                type="text"
-                placeholder="z.B. Discord Voice, TeamSpeak..."
-                value={inviteData.place}
-                onChange={e => setInviteData(prev => ({ ...prev, place: e.target.value }))}
-                className="w-full p-3 bg-gray-800 rounded text-white"
-              />
-            </div>
+
+            {/* Vorschau */}
+            {inviteData.date && inviteData.place && (
+              <div className="bg-blue-900/30 border border-blue-700/40 rounded-lg p-3 text-sm text-blue-200">
+                <p className="font-semibold mb-1">Vorschau:</p>
+                <p>📅 {formatDateShort(inviteData.date)}</p>
+                <p>📍 {inviteData.place}</p>
+              </div>
+            )}
+
             <div className="flex gap-3">
               <button
                 type="button"
                 onClick={sendInvite}
-                disabled={sendingInvite || !inviteData.date || !inviteData.place}
-                className="bg-green-600 px-5 py-2 rounded disabled:opacity-50 flex-1"
+                disabled={sendingInvite || !inviteData.date || !inviteData.date.slice(11,16) || !inviteData.place}
+                className="bg-green-600 px-5 py-2 rounded-lg disabled:opacity-50 flex-1 font-medium"
               >
                 {sendingInvite ? "Wird gesendet..." : "Einladung senden"}
               </button>
               <button
                 type="button"
                 onClick={() => { setShowInviteModal(false); setInviteData({ date: "", place: "" }) }}
-                className="bg-gray-700 px-5 py-2 rounded flex-1"
+                className="bg-gray-700 px-5 py-2 rounded-lg flex-1"
               >
                 Abbrechen
               </button>
@@ -377,53 +461,92 @@ export default function ApplicantPage() {
         </div>
       )}
 
-      {/* FIX: Reschedule Modal */}
+      {/* Reschedule Modal – verbessertes UI */}
       {showRescheduleModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
           <div className="bg-gray-900 border border-gray-700 rounded-xl p-8 w-full max-w-md space-y-5">
-            <h2 className="text-xl font-bold">Termin verschieben</h2>
-            <div className="space-y-1">
-              <label className="text-sm text-gray-400">Neues Datum & Uhrzeit</label>
-              <input
-                type="datetime-local"
-                value={rescheduleData.date}
-                onChange={e => setRescheduleData(prev => ({ ...prev, date: e.target.value }))}
-                className="w-full p-3 bg-gray-800 rounded text-white"
-              />
+            <h2 className="text-xl font-bold">🔄 Termin verschieben</h2>
+
+            {/* Aktueller Termin zur Orientierung */}
+            {interviewTime && (
+              <div className="bg-gray-800 border border-gray-700 rounded-lg p-3 text-sm">
+                <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">Aktueller Termin</p>
+                <p className="text-gray-200">{formatDateShort(app.interviewDate)}</p>
+                {app.interviewPlace && <p className="text-gray-400">📍 {app.interviewPlace}</p>}
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-300">Neues Datum</label>
+                <input
+                  type="date"
+                  min={nowLocal.slice(0,10)}
+                  value={rescheduleData.date ? rescheduleData.date.slice(0,10) : ""}
+                  onChange={e => setRescheduleData(prev => ({
+                    ...prev,
+                    date: e.target.value + (prev.date.slice(10) || "T00:00")
+                  }))}
+                  className="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-yellow-500"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-300">Neue Uhrzeit</label>
+                <input
+                  type="time"
+                  value={rescheduleData.date ? rescheduleData.date.slice(11,16) : ""}
+                  onChange={e => setRescheduleData(prev => ({
+                    ...prev,
+                    date: (prev.date.slice(0,10) || new Date().toISOString().slice(0,10)) + "T" + e.target.value
+                  }))}
+                  className="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-yellow-500"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-300">Neuer Ort / Plattform</label>
+                <input
+                  type="text"
+                  placeholder="z.B. Discord Voice, TeamSpeak..."
+                  value={rescheduleData.place}
+                  onChange={e => setRescheduleData(prev => ({ ...prev, place: e.target.value }))}
+                  className="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-300">Grund <span className="text-gray-500">(optional)</span></label>
+                <input
+                  type="text"
+                  placeholder="Grund für die Verschiebung..."
+                  value={rescheduleData.reason}
+                  onChange={e => setRescheduleData(prev => ({ ...prev, reason: e.target.value }))}
+                  className="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500"
+                />
+              </div>
             </div>
-            <div className="space-y-1">
-              <label className="text-sm text-gray-400">Neuer Ort / Plattform</label>
-              <input
-                type="text"
-                placeholder="z.B. Discord Voice, TeamSpeak..."
-                value={rescheduleData.place}
-                onChange={e => setRescheduleData(prev => ({ ...prev, place: e.target.value }))}
-                className="w-full p-3 bg-gray-800 rounded text-white"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-sm text-gray-400">Grund (optional)</label>
-              <input
-                type="text"
-                placeholder="Grund für Verschiebung..."
-                value={rescheduleData.reason}
-                onChange={e => setRescheduleData(prev => ({ ...prev, reason: e.target.value }))}
-                className="w-full p-3 bg-gray-800 rounded text-white"
-              />
-            </div>
+
+            {/* Vorschau */}
+            {rescheduleData.date && rescheduleData.place && (
+              <div className="bg-yellow-900/30 border border-yellow-700/40 rounded-lg p-3 text-sm text-yellow-200">
+                <p className="font-semibold mb-1">Neuer Termin:</p>
+                <p>📅 {formatDateShort(rescheduleData.date)}</p>
+                <p>📍 {rescheduleData.place}</p>
+                <p>💬 {rescheduleData.reason || "Grund wurde nicht genannt"}</p>
+              </div>
+            )}
+
             <div className="flex gap-3">
               <button
                 type="button"
                 onClick={sendReschedule}
-                disabled={!rescheduleData.date || !rescheduleData.place}
-                className="bg-yellow-600 px-5 py-2 rounded disabled:opacity-50 flex-1"
+                disabled={!rescheduleData.date || !rescheduleData.date.slice(11,16) || !rescheduleData.place}
+                className="bg-yellow-600 px-5 py-2 rounded-lg disabled:opacity-50 flex-1 font-medium"
               >
                 Verschieben
               </button>
               <button
                 type="button"
                 onClick={() => { setShowRescheduleModal(false); setRescheduleData({ date: "", place: "", reason: "" }) }}
-                className="bg-gray-700 px-5 py-2 rounded flex-1"
+                className="bg-gray-700 px-5 py-2 rounded-lg flex-1"
               >
                 Abbrechen
               </button>
