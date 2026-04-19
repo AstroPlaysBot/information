@@ -78,18 +78,10 @@ export default function ApplicantPage() {
         alert(data.error || "Fehler beim Speichern")
         return
       }
-      // Optimistic update – kein Reload
-      const newNote = {
-        text: note,
-        author: discordName,
-        authorId: discordId || null,
-        createdAt: new Date().toISOString()
-      }
-      setApp((prev: any) => ({
-        ...prev,
-        notes: [newNote, ...(prev.notes || [])]
-      }))
+      
       setNote("")
+      load()
+      
     } catch (err) {
       console.error(err)
       alert("Fehler beim Speichern")
