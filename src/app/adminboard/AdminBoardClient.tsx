@@ -44,7 +44,7 @@ export default function AdminBoardClient({ setApplicationCount, filter }: Props)
     if(filter === "Alle") return true
     if(filter === "Offen") return app.status === "PENDING"
     if(filter === "Eingeladen") return app.status === "INTERVIEW"
-    if(filter === "Eingestellt") return app.status === "ACCEPTED"
+    if(filter === "Eingestellt") return app.status === "HIRED"
     if(filter === "Abgelehnt") return app.status === "REJECTED"
   })
 
