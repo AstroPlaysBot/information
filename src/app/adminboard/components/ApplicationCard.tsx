@@ -22,7 +22,7 @@ export default function ApplicationCard({ app, reload }: any) {
         Eingeladen
       </span>
 
-    if (status === "ACCEPTED")
+    if (status === "HIRED")
       return <span className="text-xs bg-green-600/20 text-green-300 border border-green-500/30 px-2 py-1 rounded-full">
         Angenommen
       </span>
