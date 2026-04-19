@@ -6,7 +6,7 @@ const CRYPTIX_ID = "1462891063202156807"
 
 export default function Sidebar({ setView, view, applicationCount, session }: any) {
 
-  const discordId = session?.discordId || session?.user?.discordId
+  const discordId = session?.user?.id
   const canManage = discordId === CRYPTIX_ID
 
   return (
