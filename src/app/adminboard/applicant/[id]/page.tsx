@@ -23,14 +23,19 @@ export default function ApplicantPage() {
 
   const [rescheduleData, setRescheduleData] = useState({ date: "", place: "", reason: "" })
 
+  const [memberRole, setMemberRole] = useState<string | null>(null)
+  const [roleLoading, setRoleLoading] = useState(true)
+
   const discordId = session?.discordId || session?.user?.discordId
   const discordName = session?.username || session?.user?.username || session?.global_name || "Unbekannt"
   const canFire = discordId === "1462891063202156807"
+  const canEdit = canFire || memberRole === "PERSONAL_MANAGER" || memberRole === "OWNER"
 
   useEffect(() => { window.scrollTo(0,0) }, [])
 
   useEffect(() => {
     loadSession()
+    loadRole()
     if(id) load()
   },[id])
 
@@ -40,6 +45,16 @@ export default function ApplicantPage() {
       const data = await res.json()
       setSession(data)
     } catch {}
+  }
+
+  async function loadRole() {
+    setRoleLoading(true)
+    try {
+      const res = await fetch("/api/adminboard/my-role", { credentials: "include" })
+      const data = await res.json()
+      setMemberRole(data.role || null)
+    } catch {}
+    setRoleLoading(false)
   }
 
   async function load() {
@@ -78,10 +93,8 @@ export default function ApplicantPage() {
         alert(data.error || "Fehler beim Speichern")
         return
       }
-      
       setNote("")
       load()
-      
     } catch (err) {
       console.error(err)
       alert("Fehler beim Speichern")
@@ -183,7 +196,7 @@ export default function ApplicantPage() {
     return `${date.toLocaleDateString('de-DE')}, ${date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr`
   }
 
-  if(loading) return (
+  if(loading || roleLoading) return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center">
       <div className="flex flex-col items-center gap-3">
         <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
@@ -354,7 +367,11 @@ export default function ApplicantPage() {
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-2">
               <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">Aktionen</p>
 
-              {app.status === "PENDING" && (
+              {!canEdit && (
+                <p className="text-xs text-gray-600 text-center py-2">Keine Berechtigung</p>
+              )}
+
+              {canEdit && app.status === "PENDING" && (
                 <>
                   <button type="button" onClick={() => setShowInviteModal(true)}
                     className="w-full py-2.5 bg-green-600 hover:bg-green-500 transition rounded-xl text-sm font-semibold">
@@ -369,7 +386,7 @@ export default function ApplicantPage() {
                 </>
               )}
 
-              {isInvited && (
+              {canEdit && isInvited && (
                 <>
                   <button type="button" onClick={finishInterview}
                     className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 transition rounded-xl text-sm font-semibold">
@@ -382,7 +399,7 @@ export default function ApplicantPage() {
                 </>
               )}
 
-              {app.status === "INTERVIEW_DONE" && (
+              {canEdit && app.status === "INTERVIEW_DONE" && (
                 <>
                   <button type="button" onClick={async () => {
                     await fetch('/api/adminboard/hire', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })
@@ -428,17 +445,18 @@ export default function ApplicantPage() {
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) saveNote()
+                    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && canEdit) saveNote()
                   }}
                   rows={3}
-                  className="w-full p-3.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-gray-500 resize-none transition"
-                  placeholder="Neue Notiz... (Strg+Enter zum Speichern)"
+                  disabled={!canEdit}
+                  className="w-full p-3.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-gray-500 resize-none transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  placeholder={canEdit ? "Neue Notiz... (Strg+Enter zum Speichern)" : "Keine Berechtigung zum Schreiben"}
                 />
                 <div className="flex justify-end">
                   <button
                     type="button"
                     onClick={saveNote}
-                    disabled={savingNote || !note.trim()}
+                    disabled={savingNote || !note.trim() || !canEdit}
                     className="px-5 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed transition rounded-lg text-sm font-semibold"
                   >
                     {savingNote ? "Speichern..." : "Notiz speichern"}
