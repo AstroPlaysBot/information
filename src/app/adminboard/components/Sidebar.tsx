@@ -1,8 +1,13 @@
 'use client'
 
-import { ClipboardList, Trash2, ScrollText } from 'lucide-react'
+import { ClipboardList, Trash2, ScrollText, Lock } from 'lucide-react'
 
-export default function Sidebar({ setView, view, applicationCount }: any) {
+const CRYPTIX_ID = "1462891063202156807"
+
+export default function Sidebar({ setView, view, applicationCount, session }: any) {
+
+  const discordId = session?.discordId || session?.user?.discordId
+  const canManage = discordId === CRYPTIX_ID
 
   return (
     <div className="w-72 bg-black/60 backdrop-blur-xl border-r border-gray-800 p-6 flex flex-col">
@@ -21,7 +26,6 @@ export default function Sidebar({ setView, view, applicationCount }: any) {
 
         Bewerbungen
 
-        {/* 🔥 ONLY PENDING COUNT */}
         {applicationCount > 0 && (
           <span className="ml-auto text-xs bg-red-500 px-2 py-0.5 rounded-full">
             {applicationCount}
@@ -45,6 +49,27 @@ export default function Sidebar({ setView, view, applicationCount }: any) {
       >
         <ScrollText size={18}/>
         Regeln
+      </button>
+
+      {/* VERWALTEN (locked) */}
+      <button
+        onClick={() => {
+          if (!canManage) return
+          setView('manage')
+        }}
+        className={`flex items-center gap-3 p-3 rounded-lg mt-2 transition
+          ${view === 'manage' ? 'bg-gray-800' : 'hover:bg-gray-800'}
+          ${!canManage ? 'opacity-50 cursor-not-allowed' : ''}`}
+      >
+        <Lock size={18} />
+
+        Verwalten
+
+        {!canManage && (
+          <span className="ml-auto text-xs text-gray-500">
+            🔒
+          </span>
+        )}
       </button>
 
     </div>
