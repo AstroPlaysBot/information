@@ -18,6 +18,7 @@ export async function GET(
         status: true,
         interviewDate: true,
         interviewPlace: true,
+        scheduledBy: true,
         notes: true,
         oldInterviews: true,
       }
