@@ -246,3 +246,55 @@ model NewsPost {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// ======================
+// Mail > Ticket 
+// ======================
+model Ticket {
+  id          String   @id @default(cuid())
+  ticketId    String   @unique // z.B. APL-4821
+  
+  senderMail  String
+  senderName  String?
+  subject     String
+  
+  badge       String?  // ALLGEMEIN, LOESCHANTRAG, BUG, FEATURE, BESCHWERDE, SONSTIGES
+  status      String   @default("OPEN") // OPEN, IN_PROGRESS, CLOSED, ARCHIVED
+  
+  gmailThreadId String? // für Reply-Threading
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  closedAt    DateTime?
+  
+  messages    TicketMessage[]
+}
+
+model TicketMessage {
+  id        String   @id @default(cuid())
+  
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  content   String
+  fromMail  String   // Absender-Mail
+  fromName  String?  // Absender-Name
+  isStaff   Boolean  @default(false) // true = vom Team gesendet
+  staffId   String?  // discordId wenn isStaff
+  staffName String?
+  
+  gmailMessageId String? // für Deduplizierung
+  
+  createdAt DateTime @default(now())
+  
+  @@index([ticketId])
+}
+
+model ZentraleAccess {
+  id          String   @id @default(cuid())
+  discordId   String   @unique
+  discordName String
+  canAccess   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
