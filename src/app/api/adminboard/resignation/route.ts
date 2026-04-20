@@ -33,12 +33,13 @@ export async function POST(req: Request) {
       }
     });
 
-    // SET STATUS (NO DELETE!)
+    // SET STATUS + automatisch auf VIEWER setzen
     await prisma.adminBoardMember.update({
       where: { discordId },
       data: {
         status: "RESIGNED",
-        resignedAt: new Date()
+        resignedAt: new Date(),
+        role: "VIEWER"
       }
     });
 
@@ -61,14 +62,10 @@ export async function POST(req: Request) {
         subject: "Kündigung bestätigt",
         html: `
           <h2>Deine Kündigung wurde verarbeitet</h2>
-
           <p><b>${member.discordName}</b></p>
-
           <p>Grund: ${reasonType || "-"}</p>
           <p>${reasonText || "-"}</p>
-
           <p>Du hast 48h Zeit zum Widerruf:</p>
-
           <a href="${revokeUrl}">
             Kündigung widerrufen
           </a>
@@ -77,7 +74,6 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ success: true });
-
   } catch (err) {
     console.error(err);
     return NextResponse.json({ success: false });
