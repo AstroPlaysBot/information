@@ -5,23 +5,25 @@ export async function GET(req: Request) {
   const cookie = req.headers.get("cookie") || ""
   const token = cookie.split("admin_token=")[1]?.split(";")[0]
 
-  if (!token) return NextResponse.json({ role: null })
+  if (!token) return NextResponse.json({ role: null, isBetaTester: false })
 
   const discordRes = await fetch("https://discord.com/api/users/@me", {
     headers: { Authorization: `Bearer ${token}` }
   })
 
-  if (!discordRes.ok) return NextResponse.json({ role: null })
+  if (!discordRes.ok) return NextResponse.json({ role: null, isBetaTester: false })
 
   const discordUser = await discordRes.json()
 
   if (discordUser.id === "1462891063202156807") {
-    return NextResponse.json({ role: "OWNER" })
+    return NextResponse.json({ role: "OWNER", isBetaTester: false })
   }
 
   const member = await prisma.adminBoardMember.findUnique({
     where: { discordId: discordUser.id }
   })
 
-  return NextResponse.json({ role: member?.role || null })
+  const isBetaTester = member?.position?.toLowerCase().includes("beta tester") ?? false
+
+  return NextResponse.json({ role: member?.role || null, isBetaTester })
 }
