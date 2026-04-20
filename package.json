@@ -25,7 +25,9 @@
     "nodemailer": "^6.9.4",
     "three": "^0.161.0",
     "@react-three/fiber": "^8.15.0",
-    "@react-three/drei": "^9.64.0"
+    "@react-three/drei": "^9.64.0",
+    "imapflow": "^1.0.169",
+    "mailparser": "^3.7.1"
   },
   "devDependencies": {
     "typescript": "^5.1.6",
