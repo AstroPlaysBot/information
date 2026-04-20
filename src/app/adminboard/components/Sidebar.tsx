@@ -1,235 +1,87 @@
 'use client'
-import { useEffect, useState } from "react"
+import { ClipboardList, Trash2, ScrollText, Lock, Newspaper } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 const CRYPTIX_ID = "1462891063202156807"
 
-// Kategorien mit Reihenfolge und erlaubten Manager-Titeln
-const CATEGORIES = [
-  {
-    label: "Gründer",
-    positions: ["Gründer"],
-    managerTitle: null, // kein Manager-Titel möglich
-  },
-  {
-    label: "Manager",
-    positions: ["Manager", "Co-Manager"],
-    managerTitle: "Senior Manager",
-  },
-  {
-    label: "Frontend Developer",
-    positions: ["Frontend Developer", "Junior Frontend Developer"],
-    managerTitle: "Lead Frontend Developer",
-  },
-  {
-    label: "Backend Developer",
-    positions: ["Backend Developer", "Junior Backend Developer"],
-    managerTitle: "Lead Backend Developer",
-  },
-  {
-    label: "Promotion Manager",
-    positions: ["Promotion Manager", "Junior Promotion Manager"],
-    managerTitle: "Senior Promotion Manager",
-  },
-  {
-    label: "Praktikant",
-    positions: ["Praktikant"],
-    managerTitle: null,
-  },
-]
-
-// Welche DB-role entspricht welchem Titel
-const TITLE_TO_DB_ROLE: Record<string, string> = {
-  "Senior Manager": "PERSONAL_MANAGER",
-  "Lead Frontend Developer": "PERSONAL_MANAGER",
-  "Lead Backend Developer": "PERSONAL_MANAGER",
-  "Senior Promotion Manager": "PERSONAL_MANAGER",
-}
-
-export default function ManagePage() {
-  const [users, setUsers] = useState<any[]>([])
+export default function Sidebar({ setView, view, applicationCount, session }: any) {
   const [myRole, setMyRole] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [pendingUser, setPendingUser] = useState<any>(null)
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   useEffect(() => {
     fetch("/api/adminboard/my-role", { credentials: "include" })
       .then(r => r.json())
       .then(d => setMyRole(d.role))
       .catch(() => {})
-
-    loadUsers()
   }, [])
 
-  async function loadUsers() {
-    setLoading(true)
-    const res = await fetch("/api/adminboard/members")
-    const data = await res.json()
-    setUsers(data)
-    setLoading(false)
-  }
-
-  const canAccess = myRole === "OWNER"
-
-  // Finde Kategorie eines Users anhand seiner position
-  function getCategoryForUser(user: any) {
-    return CATEGORIES.find(cat =>
-      cat.positions.some(p =>
-        user.position?.toLowerCase().includes(p.toLowerCase())
-      )
-    ) || CATEGORIES[CATEGORIES.length - 1]
-  }
-
-  // Ist dieser User aktuell PERSONAL_MANAGER (hat einen Lead/Senior Titel)?
-  function isManager(user: any) {
-    return user.role === "PERSONAL_MANAGER"
-  }
-
-  async function applyRole(user: any, title: string | "VIEWER") {
-    setErrorMsg(null)
-    const dbRole = title === "VIEWER" ? "VIEWER" : (TITLE_TO_DB_ROLE[title] || "VIEWER")
-
-    // Prüfe ob jemand anderes in dieser Kategorie bereits PERSONAL_MANAGER ist
-    if (dbRole === "PERSONAL_MANAGER") {
-      const cat = getCategoryForUser(user)
-      const conflict = users.find(u =>
-        u.discordId !== user.discordId &&
-        u.role === "PERSONAL_MANAGER" &&
-        getCategoryForUser(u).label === cat.label
-      )
-      if (conflict) {
-        setErrorMsg(`Es gibt bereits einen ${cat.managerTitle}: ${conflict.discordName}. Setze diesen zuerst auf Viewer.`)
-        setPendingUser(null)
-        return
-      }
-    }
-
-    await fetch("/api/adminboard/set-role", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ discordId: user.discordId, role: dbRole })
-    })
-    setPendingUser(null)
-    loadUsers()
-  }
-
-  if (!canAccess && myRole !== null) {
-    return <div className="p-10 text-red-400">Kein Zugriff.</div>
-  }
-
-  if (loading || myRole === null) {
-    return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    )
-  }
+  const canManage = myRole === "OWNER"
+  const isBetaTester = myRole === "BETA_TESTER"
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white px-10 py-8 space-y-8">
-      <h1 className="text-2xl font-bold">Verwalten</h1>
+    <div className="w-72 bg-black/60 backdrop-blur-xl border-r border-gray-800 p-6 flex flex-col">
+      <h1 className="text-2xl font-bold mb-10">AdminBoard</h1>
 
-      {errorMsg && (
-        <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-xl px-4 py-3">
-          {errorMsg}
-          <button onClick={() => setErrorMsg(null)} className="ml-3 text-red-300 hover:text-white">✕</button>
-        </div>
-      )}
+      {/* Neuigkeiten */}
+      <button
+        onClick={() => { if (!isBetaTester) setView('news'); else setView('news') }}
+        className={`flex items-center gap-3 p-3 rounded-lg transition
+          ${view === 'news' ? 'bg-gray-800' : 'hover:bg-gray-800'}`}
+      >
+        <Newspaper size={18} />
+        Neuigkeiten
+      </button>
 
-      {CATEGORIES.map(cat => {
-        const catUsers = users.filter(u =>
-          cat.positions.some(p =>
-            u.position?.toLowerCase().includes(p.toLowerCase())
-          )
-        )
-        // Gründer-Kategorie: auch Cryptix ID
-        const isFounder = cat.label === "Gründer"
-        const displayUsers = isFounder
-          ? [{ discordId: CRYPTIX_ID, discordName: "Cryptix", position: "Gründer", role: "OWNER" }, ...catUsers.filter(u => u.discordId !== CRYPTIX_ID)]
-          : [...catUsers].sort((a, b) => {
-              // Manager immer oben
-              if (a.role === "PERSONAL_MANAGER" && b.role !== "PERSONAL_MANAGER") return -1
-              if (b.role === "PERSONAL_MANAGER" && a.role !== "PERSONAL_MANAGER") return 1
-              return 0
-            })
+      {/* Bewerbungen */}
+      <button
+        onClick={() => { if (isBetaTester) return; setView('applications') }}
+        className={`flex items-center gap-3 p-3 rounded-lg transition mt-2
+          ${view === 'applications' ? 'bg-gray-800' : 'hover:bg-gray-800'}
+          ${isBetaTester ? 'opacity-40 cursor-not-allowed' : ''}`}
+      >
+        <ClipboardList size={18} />
+        Bewerbungen
+        {!isBetaTester && applicationCount > 0 && (
+          <span className="ml-auto text-xs bg-red-500 px-2 py-0.5 rounded-full">
+            {applicationCount}
+          </span>
+        )}
+      </button>
 
-        if (displayUsers.length === 0) return null
+      {/* Papierkorb */}
+      <button
+        onClick={() => { if (isBetaTester) return; setView('trash') }}
+        className={`flex items-center gap-3 p-3 rounded-lg mt-2 transition
+          ${view === 'trash' ? 'bg-gray-800' : 'hover:bg-gray-800'}
+          ${isBetaTester ? 'opacity-40 cursor-not-allowed' : ''}`}
+      >
+        <Trash2 size={18}/>
+        Papierkorb
+      </button>
 
-        return (
-          <div key={cat.label} className="space-y-2">
-            <p className="text-xs text-gray-500 uppercase tracking-widest mb-3">{cat.label}</p>
-            {displayUsers.map(user => {
-              const isFounderUser = user.discordId === CRYPTIX_ID
-              const currentIsManager = isManager(user)
-              const managerTitle = cat.managerTitle
+      {/* Regeln */}
+      <button
+        onClick={() => { if (isBetaTester) return; setView('rules') }}
+        className={`flex items-center gap-3 p-3 rounded-lg mt-2 transition
+          ${view === 'rules' ? 'bg-gray-800' : 'hover:bg-gray-800'}
+          ${isBetaTester ? 'opacity-40 cursor-not-allowed' : ''}`}
+      >
+        <ScrollText size={18}/>
+        Regeln
+      </button>
 
-              return (
-                <div
-                  key={user.discordId}
-                  className="bg-gray-900 border border-gray-800 rounded-xl px-5 py-3.5 flex items-center justify-between gap-4"
-                >
-                  <div>
-                    <p className="font-semibold text-sm">{user.discordName || user.discordId}</p>
-                    <p className="text-xs text-gray-500">{user.position}</p>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    {currentIsManager && (
-                      <span className="text-xs bg-blue-500/15 text-blue-400 border border-blue-500/30 px-2 py-1 rounded-full">
-                        {managerTitle || "Manager"}
-                      </span>
-                    )}
-
-                    {!isFounderUser && (
-                      <div className="relative">
-                        <button
-                          onClick={() => {
-                            setErrorMsg(null)
-                            setPendingUser(pendingUser?.discordId === user.discordId ? null : user)
-                          }}
-                          className="text-xs bg-gray-800 hover:bg-gray-700 border border-gray-700 px-3 py-1.5 rounded-lg transition"
-                        >
-                          {currentIsManager ? "Viewer" : (managerTitle || "Viewer")} ▾
-                        </button>
-
-                        {pendingUser?.discordId === user.discordId && (
-                          <div className="absolute right-0 top-9 z-50 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl overflow-hidden min-w-[200px]">
-                            {managerTitle && !currentIsManager && (
-                              <button
-                                onClick={() => applyRole(user, managerTitle)}
-                                className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-700 transition text-blue-400"
-                              >
-                                {managerTitle}
-                              </button>
-                            )}
-                            {currentIsManager && (
-                              <button
-                                onClick={() => applyRole(user, "VIEWER")}
-                                className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-700 transition text-red-400"
-                              >
-                                Auf Viewer setzen
-                              </button>
-                            )}
-                            {!managerTitle && (
-                              <div className="px-4 py-2.5 text-xs text-gray-500">Keine Optionen verfügbar</div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {isFounderUser && (
-                      <span className="text-xs bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 px-2 py-1 rounded-full">
-                        Gründer
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )
-      })}
+      {/* Verwalten */}
+      <button
+        onClick={() => { if (!canManage) return; setView('manage') }}
+        className={`flex items-center gap-3 p-3 rounded-lg mt-2 transition
+          ${view === 'manage' ? 'bg-gray-800' : 'hover:bg-gray-800'}
+          ${!canManage ? 'opacity-50 cursor-not-allowed' : ''}`}
+      >
+        <Lock size={18} />
+        Verwalten
+        {!canManage && (
+          <span className="ml-auto text-xs text-gray-500">🔒</span>
+        )}
+      </button>
     </div>
   )
 }
