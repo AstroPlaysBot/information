@@ -2,13 +2,14 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Settings, LogOut } from 'lucide-react'
+import { Settings, LogOut, ChevronRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface TopbarProps {
   view: string
   filter: string
   setFilter: (filter: string) => void
+  manageTab?: string
 }
 
 async function getUser() {
@@ -22,9 +23,15 @@ const VIEW_LABELS: Record<string, string> = {
   trash: 'Papierkorb',
   rules: 'Regeln',
   manage: 'Verwalten',
+  zentrale: 'Zentrale',
 }
 
-export default function Topbar({ view, filter, setFilter }: TopbarProps) {
+const MANAGE_TAB_LABELS: Record<string, string> = {
+  berechtigungen: 'Berechtigungen',
+  zentrale: 'Zentrale',
+}
+
+export default function Topbar({ view, filter, setFilter, manageTab }: TopbarProps) {
   const [open, setOpen] = useState(false)
   const [confirmCancel, setConfirmCancel] = useState(false)
   const [cancelReason, setCancelReason] = useState("")
@@ -64,11 +71,19 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
     setTimeout(() => { router.push('/') }, 1200)
   }
 
+  // Breadcrumb aufbauen
+  const breadcrumbs: string[] = []
+  if (view === 'manage') {
+    breadcrumbs.push('Verwalten')
+    if (manageTab) breadcrumbs.push(MANAGE_TAB_LABELS[manageTab] || manageTab)
+  } else {
+    breadcrumbs.push(VIEW_LABELS[view] || 'AdminBoard')
+  }
+
   return (
     <>
-      <div className="flex justify-between items-center h-16 border-b border-gray-800/60 px-6 relative bg-black/30 backdrop-blur-sm">
+      <div className="flex justify-between items-center h-14 border-b border-gray-800/60 px-6 relative bg-black/30 backdrop-blur-sm">
 
-        {/* Loading overlay */}
         <AnimatePresence>
           {loggingOut && (
             <motion.div
@@ -83,9 +98,21 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
           )}
         </AnimatePresence>
 
-        {/* Title */}
-        <div className="font-semibold text-white text-base tracking-tight">
-          {VIEW_LABELS[view] || 'AdminBoard'}
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-gray-600 font-medium">AdminBoard</span>
+          {breadcrumbs.map((crumb, i) => (
+            <span key={i} className="flex items-center gap-1.5">
+              <ChevronRight size={12} className="text-gray-700" />
+              <span className={`text-xs font-medium ${
+                i === breadcrumbs.length - 1
+                  ? "text-white"
+                  : "text-gray-500"
+              }`}>
+                {crumb}
+              </span>
+            </span>
+          ))}
         </div>
 
         {/* Filter */}
@@ -118,10 +145,7 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
           <AnimatePresence>
             {open && (
               <>
-                <div
-                  className="fixed inset-0 z-[115]"
-                  onClick={() => setOpen(false)}
-                />
+                <div className="fixed inset-0 z-[115]" onClick={() => setOpen(false)} />
                 <motion.div
                   initial={{ opacity: 0, y: -8, scale: 0.97 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -149,7 +173,6 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
         </div>
       </div>
 
-      {/* Kündigen Modal — außerhalb der Topbar damit kein transform/positioning Bug */}
       <AnimatePresence>
         {confirmCancel && (
           <motion.div
@@ -158,13 +181,7 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[200] flex items-center justify-center p-4"
           >
-            {/* Backdrop */}
-            <div
-              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-              onClick={closeAll}
-            />
-
-            {/* Modal */}
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={closeAll} />
             <motion.div
               initial={{ scale: 0.96, opacity: 0, y: 8 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
