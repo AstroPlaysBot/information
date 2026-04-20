@@ -5,6 +5,8 @@ import { CRYPTIX_ID } from "./config"
 interface NewsPost {
   id: string
   content: string
+  authorId: string
+  authorName: string
   createdAt: string
   updatedAt: string
 }
@@ -62,19 +64,32 @@ function timeAgo(dateStr: string): string {
 export default function NewsPage() {
   const [posts, setPosts] = useState<NewsPost[]>([])
   const [myRole, setMyRole] = useState<string | null>(null)
+  const [myDiscordId, setMyDiscordId] = useState<string | null>(null)
+  const [myName, setMyName] = useState<string>("Unbekannt")
   const [loading, setLoading] = useState(true)
-  const [content, setContent] = useState("")
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editContent, setEditContent] = useState("")
-  const [saving, setSaving] = useState(false)
-  const [preview, setPreview] = useState(false)
 
-  const canEdit = myRole === "OWNER"
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [content, setContent] = useState("")
+  const [preview, setPreview] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  const [editingPost, setEditingPost] = useState<NewsPost | null>(null)
+  const [editContent, setEditContent] = useState("")
+  const [editPreview, setEditPreview] = useState(false)
+
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
+
+  const canCreate = myRole === "OWNER" || myRole === "PERSONAL_MANAGER"
 
   useEffect(() => {
     fetch("/api/adminboard/my-role", { credentials: "include" })
       .then(r => r.json())
-      .then(d => setMyRole(d.role))
+      .then(d => {
+        setMyRole(d.role)
+        setMyDiscordId(d.discordId || null)
+        setMyName(d.username || "Unbekannt")
+      })
       .catch(() => {})
     loadPosts()
   }, [])
@@ -101,38 +116,48 @@ export default function NewsPage() {
       })
       setContent("")
       setPreview(false)
+      setShowCreateModal(false)
       loadPosts()
     } catch {}
     setSaving(false)
   }
 
   async function updatePost() {
-    if (!editContent.trim() || !editingId) return
+    if (!editContent.trim() || !editingPost) return
     setSaving(true)
     try {
       await fetch("/api/adminboard/news", {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: editingId, content: editContent })
+        body: JSON.stringify({ id: editingPost.id, content: editContent })
       })
-      setEditingId(null)
+      setEditingPost(null)
       setEditContent("")
+      setEditPreview(false)
       loadPosts()
     } catch {}
     setSaving(false)
   }
 
-  async function deletePost(id: string) {
-    if (!confirm("Wirklich löschen?")) return
-    await fetch("/api/adminboard/news", {
-      method: "DELETE",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id })
-    })
-    loadPosts()
+  async function deletePost() {
+    if (!deleteTargetId) return
+    setDeleting(true)
+    try {
+      await fetch("/api/adminboard/news", {
+        method: "DELETE",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: deleteTargetId })
+      })
+      setDeleteTargetId(null)
+      loadPosts()
+    } catch {}
+    setDeleting(false)
   }
+
+  const isAuthor = (post: NewsPost) =>
+    myDiscordId === post.authorId || myDiscordId === CRYPTIX_ID
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
@@ -144,57 +169,23 @@ export default function NewsPage() {
             <h1 className="text-2xl font-bold tracking-tight">Neuigkeiten</h1>
             <p className="text-xs text-gray-500 mt-0.5">Ankündigungen & Updates für das Team</p>
           </div>
-          {!loading && (
-            <span className="text-xs text-gray-600 bg-gray-900 border border-gray-800 px-3 py-1.5 rounded-full">
-              {posts.length} {posts.length === 1 ? 'Beitrag' : 'Beiträge'}
-            </span>
-          )}
-        </div>
-
-        {/* Editor */}
-        {canEdit && (
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-800">
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-widest">Neue Nachricht</p>
+          <div className="flex items-center gap-3">
+            {!loading && (
+              <span className="text-xs text-gray-600 bg-gray-900 border border-gray-800 px-3 py-1.5 rounded-full">
+                {posts.length} {posts.length === 1 ? 'Beitrag' : 'Beiträge'}
+              </span>
+            )}
+            {canCreate && (
               <button
-                onClick={() => setPreview(!preview)}
-                className="text-xs text-gray-500 hover:text-gray-300 transition px-2.5 py-1 rounded-lg hover:bg-gray-800"
+                onClick={() => setShowCreateModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 transition rounded-xl text-sm font-semibold"
               >
-                {preview ? "✏️ Bearbeiten" : "👁 Vorschau"}
+                <span className="text-base leading-none">+</span>
+                Beitrag erstellen
               </button>
-            </div>
-
-            <div className="p-5 space-y-4">
-              {preview ? (
-                <div className="min-h-[120px] space-y-1 text-sm">
-                  {content.trim()
-                    ? renderDiscordMarkdown(content)
-                    : <p className="text-gray-600 italic">Nichts zum Vorschauen...</p>
-                  }
-                </div>
-              ) : (
-                <textarea
-                  value={content}
-                  onChange={e => setContent(e.target.value)}
-                  rows={5}
-                  className="w-full bg-gray-800/60 border border-gray-700/60 rounded-xl p-3.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-gray-500 resize-none transition font-mono leading-relaxed"
-                  placeholder={"# Überschrift\n**Fett**, *Kursiv*, `Code`\n---\nDein Text hier..."}
-                />
-              )}
-
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-gray-700"># &nbsp;## &nbsp;### &nbsp;**fett** &nbsp;*kursiv* &nbsp;`code` &nbsp;---</p>
-                <button
-                  onClick={createPost}
-                  disabled={saving || !content.trim()}
-                  className="px-5 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-30 disabled:cursor-not-allowed transition rounded-lg text-sm font-semibold"
-                >
-                  {saving ? "Wird veröffentlicht..." : "Veröffentlichen"}
-                </button>
-              </div>
-            </div>
+            )}
           </div>
-        )}
+        </div>
 
         {/* Posts */}
         {loading ? (
@@ -209,32 +200,34 @@ export default function NewsPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {posts.map((post, idx) => (
-              <div
-                key={post.id}
-                className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden"
-              >
-                {/* Post meta */}
+            {posts.map(post => (
+              <div key={post.id} className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+
+                {/* Meta */}
                 <div className="flex items-center justify-between px-5 py-3 border-b border-gray-800/60">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-6 h-6 rounded-full bg-yellow-500/20 border border-yellow-500/30 flex items-center justify-center text-xs text-yellow-400 font-bold">
-                      C
+                    <div className="w-6 h-6 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-xs text-blue-400 font-bold">
+                      {(post.authorName || "?")[0].toUpperCase()}
                     </div>
                     <div>
-                      <p className="text-xs font-medium text-gray-300">Cryptix</p>
-                      <p className="text-xs text-gray-600">{timeAgo(post.createdAt)}{post.updatedAt !== post.createdAt && " · bearbeitet"}</p>
+                      <p className="text-xs font-medium text-gray-300">{post.authorName || "Unbekannt"}</p>
+                      <p className="text-xs text-gray-600">
+                        {timeAgo(post.createdAt)}
+                        {post.updatedAt !== post.createdAt && " · bearbeitet"}
+                      </p>
                     </div>
                   </div>
-                  {canEdit && editingId !== post.id && (
+
+                  {isAuthor(post) && (
                     <div className="flex gap-1">
                       <button
-                        onClick={() => { setEditingId(post.id); setEditContent(post.content) }}
+                        onClick={() => { setEditingPost(post); setEditContent(post.content) }}
                         className="text-xs text-gray-600 hover:text-gray-300 transition px-2.5 py-1.5 rounded-lg hover:bg-gray-800"
                       >
                         Bearbeiten
                       </button>
                       <button
-                        onClick={() => deletePost(post.id)}
+                        onClick={() => setDeleteTargetId(post.id)}
                         className="text-xs text-gray-600 hover:text-red-400 transition px-2.5 py-1.5 rounded-lg hover:bg-gray-800"
                       >
                         Löschen
@@ -243,43 +236,166 @@ export default function NewsPage() {
                   )}
                 </div>
 
-                {/* Post content */}
-                <div className="px-5 py-4">
-                  {editingId === post.id ? (
-                    <div className="space-y-3">
-                      <textarea
-                        value={editContent}
-                        onChange={e => setEditContent(e.target.value)}
-                        rows={5}
-                        className="w-full bg-gray-800/60 border border-gray-700/60 rounded-xl p-3.5 text-sm text-white focus:outline-none focus:border-gray-500 resize-none transition font-mono"
-                      />
-                      <div className="flex gap-2 justify-end">
-                        <button
-                          onClick={() => { setEditingId(null); setEditContent("") }}
-                          className="px-4 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-sm transition text-gray-300"
-                        >
-                          Abbrechen
-                        </button>
-                        <button
-                          onClick={updatePost}
-                          disabled={saving}
-                          className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 rounded-lg text-sm transition font-medium"
-                        >
-                          Speichern
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-0.5">
-                      {renderDiscordMarkdown(post.content)}
-                    </div>
-                  )}
+                {/* Content */}
+                <div className="px-5 py-4 space-y-0.5">
+                  {renderDiscordMarkdown(post.content)}
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Create Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
+              <h2 className="text-base font-bold">Beitrag erstellen</h2>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPreview(!preview)}
+                  className="text-xs text-gray-500 hover:text-gray-300 transition px-2.5 py-1 rounded-lg hover:bg-gray-800"
+                >
+                  {preview ? "✏️ Bearbeiten" : "👁 Vorschau"}
+                </button>
+                <button
+                  onClick={() => { setShowCreateModal(false); setContent(""); setPreview(false) }}
+                  className="text-gray-600 hover:text-white transition text-lg leading-none px-1"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {preview ? (
+                <div className="min-h-[140px] space-y-1 text-sm bg-gray-800/40 rounded-xl p-4 border border-gray-700/50">
+                  {content.trim()
+                    ? renderDiscordMarkdown(content)
+                    : <p className="text-gray-600 italic">Nichts zum Vorschauen...</p>
+                  }
+                </div>
+              ) : (
+                <textarea
+                  value={content}
+                  onChange={e => setContent(e.target.value)}
+                  rows={7}
+                  autoFocus
+                  className="w-full bg-gray-800/60 border border-gray-700/60 rounded-xl p-3.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-gray-500 resize-none transition font-mono leading-relaxed"
+                  placeholder={"# Überschrift\n**Fett**, *Kursiv*, `Code`\n---\nDein Text hier..."}
+                />
+              )}
+              <p className="text-xs text-gray-700"># &nbsp;## &nbsp;### &nbsp;**fett** &nbsp;*kursiv* &nbsp;`code` &nbsp;---</p>
+            </div>
+
+            <div className="flex gap-3 px-6 pb-6">
+              <button
+                onClick={() => { setShowCreateModal(false); setContent(""); setPreview(false) }}
+                className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 transition rounded-xl text-sm"
+              >
+                Abbrechen
+              </button>
+              <button
+                onClick={createPost}
+                disabled={saving || !content.trim()}
+                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-30 disabled:cursor-not-allowed transition rounded-xl text-sm font-semibold"
+              >
+                {saving ? "Wird veröffentlicht..." : "Veröffentlichen"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editingPost && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
+              <h2 className="text-base font-bold">Beitrag bearbeiten</h2>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setEditPreview(!editPreview)}
+                  className="text-xs text-gray-500 hover:text-gray-300 transition px-2.5 py-1 rounded-lg hover:bg-gray-800"
+                >
+                  {editPreview ? "✏️ Bearbeiten" : "👁 Vorschau"}
+                </button>
+                <button
+                  onClick={() => { setEditingPost(null); setEditContent(""); setEditPreview(false) }}
+                  className="text-gray-600 hover:text-white transition text-lg leading-none px-1"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {editPreview ? (
+                <div className="min-h-[140px] space-y-1 text-sm bg-gray-800/40 rounded-xl p-4 border border-gray-700/50">
+                  {editContent.trim()
+                    ? renderDiscordMarkdown(editContent)
+                    : <p className="text-gray-600 italic">Nichts zum Vorschauen...</p>
+                  }
+                </div>
+              ) : (
+                <textarea
+                  value={editContent}
+                  onChange={e => setEditContent(e.target.value)}
+                  rows={7}
+                  autoFocus
+                  className="w-full bg-gray-800/60 border border-gray-700/60 rounded-xl p-3.5 text-sm text-white focus:outline-none focus:border-gray-500 resize-none transition font-mono leading-relaxed"
+                />
+              )}
+              <p className="text-xs text-gray-700"># &nbsp;## &nbsp;### &nbsp;**fett** &nbsp;*kursiv* &nbsp;`code` &nbsp;---</p>
+            </div>
+
+            <div className="flex gap-3 px-6 pb-6">
+              <button
+                onClick={() => { setEditingPost(null); setEditContent(""); setEditPreview(false) }}
+                className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 transition rounded-xl text-sm"
+              >
+                Abbrechen
+              </button>
+              <button
+                onClick={updatePost}
+                disabled={saving || !editContent.trim()}
+                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-30 disabled:cursor-not-allowed transition rounded-xl text-sm font-semibold"
+              >
+                {saving ? "Speichern..." : "Speichern"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Modal */}
+      {deleteTargetId && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm shadow-2xl p-6 space-y-5">
+            <div className="space-y-1.5">
+              <h2 className="text-base font-bold">Beitrag löschen</h2>
+              <p className="text-sm text-gray-400">Dieser Beitrag wird unwiderruflich gelöscht. Bist du sicher?</p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteTargetId(null)}
+                className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 transition rounded-xl text-sm"
+              >
+                Abbrechen
+              </button>
+              <button
+                onClick={deletePost}
+                disabled={deleting}
+                className="flex-1 py-2.5 bg-red-600 hover:bg-red-500 disabled:opacity-40 transition rounded-xl text-sm font-semibold"
+              >
+                {deleting ? "Löschen..." : "Löschen"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }
