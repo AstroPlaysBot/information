@@ -52,8 +52,10 @@ export default function ManagePage() {
   const [users, setUsers] = useState<any[]>([])
   const [myRole, setMyRole] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [pendingUser, setPendingUser] = useState<any>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+
+  // Pro User: welche Auswahl gerade aktiv ist (null = kein Edit-Modus)
+  const [pendingRoles, setPendingRoles] = useState<Record<string, string>>({})
 
   useEffect(() => {
     fetch("/api/adminboard/my-role", { credentials: "include" })
@@ -81,15 +83,34 @@ export default function ManagePage() {
     ) || CATEGORIES[CATEGORIES.length - 1]
   }
 
-  function isManager(user: any) {
-    return user.role === "PERSONAL_MANAGER"
+  // Zeigt den lesbaren Titel basierend auf DB-Role + Kategorie
+  function getDisplayTitle(user: any, cat: typeof CATEGORIES[0]): string {
+    if (user.role === "PERSONAL_MANAGER" && cat.managerTitle) return cat.managerTitle
+    return "Viewer"
   }
 
-  async function applyRole(user: any, title: string | "VIEWER") {
-    setErrorMsg(null)
-    const dbRole = title === "VIEWER" ? "VIEWER" : (TITLE_TO_DB_ROLE[title] || "VIEWER")
+  function startEdit(user: any) {
+    setPendingRoles(prev => ({ ...prev, [user.discordId]: user.role }))
+  }
 
-    if (dbRole === "PERSONAL_MANAGER") {
+  function cancelEdit(discordId: string) {
+    setPendingRoles(prev => {
+      const next = { ...prev }
+      delete next[discordId]
+      return next
+    })
+  }
+
+  function selectPending(discordId: string, value: string) {
+    setPendingRoles(prev => ({ ...prev, [discordId]: value }))
+  }
+
+  async function saveRole(user: any) {
+    setErrorMsg(null)
+    const selectedRole = pendingRoles[user.discordId]
+    if (!selectedRole) return
+
+    if (selectedRole === "PERSONAL_MANAGER") {
       const cat = getCategoryForUser(user)
       const conflict = users.find(u =>
         u.discordId !== user.discordId &&
@@ -98,7 +119,7 @@ export default function ManagePage() {
       )
       if (conflict) {
         setErrorMsg(`Es gibt bereits einen ${cat.managerTitle}: ${conflict.discordName}. Setze diesen zuerst auf Viewer.`)
-        setPendingUser(null)
+        cancelEdit(user.discordId)
         return
       }
     }
@@ -106,9 +127,9 @@ export default function ManagePage() {
     await fetch("/api/adminboard/set-role", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ discordId: user.discordId, role: dbRole })
+      body: JSON.stringify({ discordId: user.discordId, role: selectedRole })
     })
-    setPendingUser(null)
+    cancelEdit(user.discordId)
     loadUsers()
   }
 
@@ -160,8 +181,10 @@ export default function ManagePage() {
             ) : (
               displayUsers.map(user => {
                 const isFounderUser = user.discordId === CRYPTIX_ID
-                const currentIsManager = isManager(user)
-                const managerTitle = cat.managerTitle
+                const displayTitle = getDisplayTitle(user, cat)
+                const isEditing = user.discordId in pendingRoles
+                const pendingValue = pendingRoles[user.discordId]
+                const hasChanged = isEditing && pendingValue !== user.role
 
                 return (
                   <div
@@ -174,54 +197,74 @@ export default function ManagePage() {
                     </div>
 
                     <div className="flex items-center gap-3">
-                      {currentIsManager && (
-                        <span className="text-xs bg-blue-500/15 text-blue-400 border border-blue-500/30 px-2 py-1 rounded-full">
-                          {managerTitle || "Manager"}
-                        </span>
-                      )}
-
-                      {!isFounderUser && (
-                        <div className="relative">
-                          <button
-                            onClick={() => {
-                              setErrorMsg(null)
-                              setPendingUser(pendingUser?.discordId === user.discordId ? null : user)
-                            }}
-                            className="text-xs bg-gray-800 hover:bg-gray-700 border border-gray-700 px-3 py-1.5 rounded-lg transition"
-                          >
-                            {currentIsManager ? "Viewer" : (managerTitle || "Viewer")} ▾
-                          </button>
-
-                          {pendingUser?.discordId === user.discordId && (
-                            <div className="absolute right-0 top-9 z-50 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl overflow-hidden min-w-[200px]">
-                              {managerTitle && !currentIsManager && (
-                                <button
-                                  onClick={() => applyRole(user, managerTitle)}
-                                  className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-700 transition text-blue-400"
-                                >
-                                  {managerTitle}
-                                </button>
-                              )}
-                              {currentIsManager && (
-                                <button
-                                  onClick={() => applyRole(user, "VIEWER")}
-                                  className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-700 transition text-red-400"
-                                >
-                                  Auf Viewer setzen
-                                </button>
-                              )}
-                              {!managerTitle && (
-                                <div className="px-4 py-2.5 text-xs text-gray-500">Keine Optionen verfügbar</div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {isFounderUser && (
+                      {isFounderUser ? (
                         <span className="text-xs bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 px-2 py-1 rounded-full">
                           Gründer
                         </span>
+                      ) : isEditing ? (
+                        // Edit-Modus
+                        <div className="flex items-center gap-2">
+                          {/* Viewer Option */}
+                          <button
+                            onClick={() => selectPending(user.discordId, "VIEWER")}
+                            className={`text-xs px-3 py-1.5 rounded-lg border transition ${
+                              pendingValue === "VIEWER"
+                                ? "bg-gray-600 border-gray-500 text-white"
+                                : "bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700"
+                            }`}
+                          >
+                            Viewer
+                          </button>
+
+                          {/* Manager Option (nur wenn Kategorie einen managerTitle hat) */}
+                          {cat.managerTitle && (
+                            <button
+                              onClick={() => selectPending(user.discordId, "PERSONAL_MANAGER")}
+                              className={`text-xs px-3 py-1.5 rounded-lg border transition ${
+                                pendingValue === "PERSONAL_MANAGER"
+                                  ? "bg-blue-600 border-blue-500 text-white"
+                                  : "bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700"
+                              }`}
+                            >
+                              {cat.managerTitle}
+                            </button>
+                          )}
+
+                          {/* Speichern */}
+                          {hasChanged && (
+                            <button
+                              onClick={() => saveRole(user)}
+                              className="text-xs px-3 py-1.5 bg-green-600 hover:bg-green-500 rounded-lg border border-green-500 text-white transition font-medium"
+                            >
+                              Speichern
+                            </button>
+                          )}
+
+                          {/* Abbrechen */}
+                          <button
+                            onClick={() => cancelEdit(user.discordId)}
+                            className="text-xs text-gray-600 hover:text-gray-300 transition px-1"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        // Anzeige-Modus
+                        <div className="flex items-center gap-2">
+                          <span className={`text-xs px-2.5 py-1 rounded-full border ${
+                            user.role === "PERSONAL_MANAGER"
+                              ? "bg-blue-500/15 text-blue-400 border-blue-500/30"
+                              : "bg-gray-500/15 text-gray-400 border-gray-500/30"
+                          }`}>
+                            {displayTitle}
+                          </span>
+                          <button
+                            onClick={() => startEdit(user)}
+                            className="text-xs text-gray-600 hover:text-gray-300 transition px-2 py-1 rounded-lg hover:bg-gray-800"
+                          >
+                            ✏️
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>
