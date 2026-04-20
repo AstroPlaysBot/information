@@ -16,6 +16,11 @@ const CATEGORIES = [
     managerTitle: "Senior Manager",
   },
   {
+  label: "Beta Tester",
+  positions: ["Beta Tester"],
+  managerTitle: null,
+  },
+  {
     label: "Frontend Developer",
     positions: ["Frontend Developer", "Junior Frontend Developer"],
     managerTitle: "Lead Frontend Developer",
