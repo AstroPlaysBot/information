@@ -14,6 +14,15 @@ async function getDiscordUser(req: Request) {
   return res.json()
 }
 
+async function canPost(user: any) {
+  if (!user) return false
+  if (user.id === CRYPTIX_ID) return true
+  const member = await prisma.adminBoardMember.findUnique({
+    where: { discordId: user.id }
+  })
+  return member?.role === "PERSONAL_MANAGER"
+}
+
 // GET — alle Posts laden
 export async function GET() {
   const posts = await prisma.newsPost.findMany({
@@ -25,27 +34,40 @@ export async function GET() {
 // POST — neuen Post erstellen
 export async function POST(req: Request) {
   const user = await getDiscordUser(req)
-  if (!user || user.id !== CRYPTIX_ID) {
+  if (!await canPost(user)) {
     return NextResponse.json({ error: "Kein Zugriff" }, { status: 401 })
   }
   const { content } = await req.json()
   if (!content?.trim()) {
     return NextResponse.json({ error: "Kein Inhalt" }, { status: 400 })
   }
-  const post = await prisma.newsPost.create({ data: { content } })
+  const post = await prisma.newsPost.create({
+    data: {
+      content,
+      authorId: user.id,
+      authorName: user.username
+    }
+  })
   return NextResponse.json({ success: true, post })
 }
 
-// PATCH — Post bearbeiten
+// PATCH — Post bearbeiten (nur Verfasser oder Cryptix)
 export async function PATCH(req: Request) {
   const user = await getDiscordUser(req)
-  if (!user || user.id !== CRYPTIX_ID) {
-    return NextResponse.json({ error: "Kein Zugriff" }, { status: 401 })
-  }
+  if (!user) return NextResponse.json({ error: "Kein Zugriff" }, { status: 401 })
+
   const { id, content } = await req.json()
   if (!id || !content?.trim()) {
     return NextResponse.json({ error: "Fehlende Daten" }, { status: 400 })
   }
+
+  const existing = await prisma.newsPost.findUnique({ where: { id } })
+  if (!existing) return NextResponse.json({ error: "Nicht gefunden" }, { status: 404 })
+
+  if (existing.authorId !== user.id && user.id !== CRYPTIX_ID) {
+    return NextResponse.json({ error: "Kein Zugriff" }, { status: 403 })
+  }
+
   const post = await prisma.newsPost.update({
     where: { id },
     data: { content }
@@ -53,16 +75,21 @@ export async function PATCH(req: Request) {
   return NextResponse.json({ success: true, post })
 }
 
-// DELETE — Post löschen
+// DELETE — Post löschen (nur Verfasser oder Cryptix)
 export async function DELETE(req: Request) {
   const user = await getDiscordUser(req)
-  if (!user || user.id !== CRYPTIX_ID) {
-    return NextResponse.json({ error: "Kein Zugriff" }, { status: 401 })
-  }
+  if (!user) return NextResponse.json({ error: "Kein Zugriff" }, { status: 401 })
+
   const { id } = await req.json()
-  if (!id) {
-    return NextResponse.json({ error: "Fehlende ID" }, { status: 400 })
+  if (!id) return NextResponse.json({ error: "Fehlende ID" }, { status: 400 })
+
+  const existing = await prisma.newsPost.findUnique({ where: { id } })
+  if (!existing) return NextResponse.json({ error: "Nicht gefunden" }, { status: 404 })
+
+  if (existing.authorId !== user.id && user.id !== CRYPTIX_ID) {
+    return NextResponse.json({ error: "Kein Zugriff" }, { status: 403 })
   }
+
   await prisma.newsPost.delete({ where: { id } })
   return NextResponse.json({ success: true })
 }
