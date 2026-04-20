@@ -4,41 +4,13 @@ import { useEffect, useState } from "react"
 const CRYPTIX_ID = "1462891063202156807"
 
 const CATEGORIES = [
-  {
-    label: "Gründer",
-    positions: ["Gründer"],
-    managerTitle: null,
-  },
-  {
-    label: "Moderator",
-    positions: ["Moderator"],
-    managerTitle: "Senior Moderator",
-  },
-  {
-    label: "Beta Tester",
-    positions: ["Beta Tester"],
-    managerTitle: null,
-  },
-  {
-    label: "Frontend Developer",
-    positions: ["Frontend Developer", "Junior Frontend Developer"],
-    managerTitle: "Lead Frontend Developer",
-  },
-  {
-    label: "Backend Developer",
-    positions: ["Backend Developer", "Junior Backend Developer"],
-    managerTitle: "Lead Backend Developer",
-  },
-  {
-    label: "Promotion Manager",
-    positions: ["Promotion Manager", "Junior Promotion Manager"],
-    managerTitle: "Senior Promotion Manager",
-  },
-  {
-    label: "Praktikant",
-    positions: ["Praktikant"],
-    managerTitle: null,
-  },
+  { label: "Gründer", positions: ["Gründer"], managerTitle: null },
+  { label: "Moderator", positions: ["Moderator"], managerTitle: "Senior Moderator" },
+  { label: "Beta Tester", positions: ["Beta Tester"], managerTitle: null },
+  { label: "Frontend Developer", positions: ["Frontend Developer", "Junior Frontend Developer"], managerTitle: "Lead Frontend Developer" },
+  { label: "Backend Developer", positions: ["Backend Developer", "Junior Backend Developer"], managerTitle: "Lead Backend Developer" },
+  { label: "Promotion Manager", positions: ["Promotion Manager", "Junior Promotion Manager"], managerTitle: "Senior Promotion Manager" },
+  { label: "Praktikant", positions: ["Praktikant"], managerTitle: null },
 ]
 
 const TITLE_TO_DB_ROLE: Record<string, string> = {
@@ -48,14 +20,20 @@ const TITLE_TO_DB_ROLE: Record<string, string> = {
   "Senior Promotion Manager": "PERSONAL_MANAGER",
 }
 
+interface Toast {
+  id: number
+  type: "success" | "error"
+  message: string
+}
+
 export default function ManagePage() {
   const [users, setUsers] = useState<any[]>([])
   const [myRole, setMyRole] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
-
-  // Pro User: welche Auswahl gerade aktiv ist (null = kein Edit-Modus)
-  const [pendingRoles, setPendingRoles] = useState<Record<string, string>>({})
+  const [toasts, setToasts] = useState<Toast[]>([])
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null)
+  const [pendingSelections, setPendingSelections] = useState<Record<string, string>>({})
+  const [saving, setSaving] = useState<string | null>(null)
 
   useEffect(() => {
     fetch("/api/adminboard/my-role", { credentials: "include" })
@@ -63,6 +41,16 @@ export default function ManagePage() {
       .then(d => setMyRole(d.role))
       .catch(() => {})
     loadUsers()
+  }, [])
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      const target = e.target as HTMLElement
+      if (!target.closest("[data-dropdown]")) setOpenDropdown(null)
+    }
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
   }, [])
 
   async function loadUsers() {
@@ -73,42 +61,48 @@ export default function ManagePage() {
     setLoading(false)
   }
 
+  function addToast(type: "success" | "error", message: string) {
+    const id = Date.now()
+    setToasts(prev => [...prev, { id, type, message }])
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 5000)
+  }
+
+  function removeToast(id: number) {
+    setToasts(prev => prev.filter(t => t.id !== id))
+  }
+
   const canAccess = myRole === "OWNER"
 
   function getCategoryForUser(user: any) {
     return CATEGORIES.find(cat =>
-      cat.positions.some(p =>
-        user.position?.toLowerCase().includes(p.toLowerCase())
-      )
+      cat.positions.some(p => user.position?.toLowerCase().includes(p.toLowerCase()))
     ) || CATEGORIES[CATEGORIES.length - 1]
   }
 
-  // Zeigt den lesbaren Titel basierend auf DB-Role + Kategorie
   function getDisplayTitle(user: any, cat: typeof CATEGORIES[0]): string {
     if (user.role === "PERSONAL_MANAGER" && cat.managerTitle) return cat.managerTitle
     return "Viewer"
   }
 
-  function startEdit(user: any) {
-    setPendingRoles(prev => ({ ...prev, [user.discordId]: user.role }))
+  function selectOption(discordId: string, value: string) {
+    setPendingSelections(prev => ({ ...prev, [discordId]: value }))
   }
 
-  function cancelEdit(discordId: string) {
-    setPendingRoles(prev => {
+  function cancelSelection(discordId: string) {
+    setPendingSelections(prev => {
       const next = { ...prev }
       delete next[discordId]
       return next
     })
-  }
-
-  function selectPending(discordId: string, value: string) {
-    setPendingRoles(prev => ({ ...prev, [discordId]: value }))
+    setOpenDropdown(null)
   }
 
   async function saveRole(user: any) {
-    setErrorMsg(null)
-    const selectedRole = pendingRoles[user.discordId]
-    if (!selectedRole) return
+    const selectedRole = pendingSelections[user.discordId]
+    if (!selectedRole || selectedRole === user.role) {
+      cancelSelection(user.discordId)
+      return
+    }
 
     if (selectedRole === "PERSONAL_MANAGER") {
       const cat = getCategoryForUser(user)
@@ -118,19 +112,32 @@ export default function ManagePage() {
         getCategoryForUser(u).label === cat.label
       )
       if (conflict) {
-        setErrorMsg(`Es gibt bereits einen ${cat.managerTitle}: ${conflict.discordName}. Setze diesen zuerst auf Viewer.`)
-        cancelEdit(user.discordId)
+        addToast("error", `Es gibt bereits einen ${cat.managerTitle}: ${conflict.discordName}. Setze diesen zuerst auf Viewer.`)
+        cancelSelection(user.discordId)
         return
       }
     }
 
-    await fetch("/api/adminboard/set-role", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ discordId: user.discordId, role: selectedRole })
-    })
-    cancelEdit(user.discordId)
-    loadUsers()
+    setSaving(user.discordId)
+    try {
+      const res = await fetch("/api/adminboard/set-role", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ discordId: user.discordId, role: selectedRole })
+      })
+      const data = await res.json()
+      if (!data.success) throw new Error()
+
+      // Optimistic update
+      setUsers(prev => prev.map(u =>
+        u.discordId === user.discordId ? { ...u, role: selectedRole } : u
+      ))
+      addToast("success", "Rolle erfolgreich gespeichert.")
+    } catch {
+      addToast("error", "Fehler beim Speichern. Bitte versuche es erneut.")
+    }
+    cancelSelection(user.discordId)
+    setSaving(null)
   }
 
   if (!canAccess && myRole !== null) {
@@ -149,18 +156,9 @@ export default function ManagePage() {
     <div className="min-h-screen bg-gray-950 text-white px-10 py-8 space-y-8">
       <h1 className="text-2xl font-bold">Verwalten</h1>
 
-      {errorMsg && (
-        <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-xl px-4 py-3">
-          {errorMsg}
-          <button onClick={() => setErrorMsg(null)} className="ml-3 text-red-300 hover:text-white">✕</button>
-        </div>
-      )}
-
       {CATEGORIES.map(cat => {
         const catUsers = users.filter(u =>
-          cat.positions.some(p =>
-            u.position?.toLowerCase().includes(p.toLowerCase())
-          )
+          cat.positions.some(p => u.position?.toLowerCase().includes(p.toLowerCase()))
         )
 
         const isFounder = cat.label === "Gründer"
@@ -182,9 +180,10 @@ export default function ManagePage() {
               displayUsers.map(user => {
                 const isFounderUser = user.discordId === CRYPTIX_ID
                 const displayTitle = getDisplayTitle(user, cat)
-                const isEditing = user.discordId in pendingRoles
-                const pendingValue = pendingRoles[user.discordId]
-                const hasChanged = isEditing && pendingValue !== user.role
+                const isOpen = openDropdown === user.discordId
+                const pendingValue = pendingSelections[user.discordId]
+                const hasPending = pendingValue !== undefined && pendingValue !== user.role
+                const isSaving = saving === user.discordId
 
                 return (
                   <div
@@ -198,72 +197,97 @@ export default function ManagePage() {
 
                     <div className="flex items-center gap-3">
                       {isFounderUser ? (
-                        <span className="text-xs bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 px-2 py-1 rounded-full">
+                        <span className="text-xs bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 px-2.5 py-1 rounded-full">
                           Gründer
                         </span>
-                      ) : isEditing ? (
-                        // Edit-Modus
-                        <div className="flex items-center gap-2">
-                          {/* Viewer Option */}
-                          <button
-                            onClick={() => selectPending(user.discordId, "VIEWER")}
-                            className={`text-xs px-3 py-1.5 rounded-lg border transition ${
-                              pendingValue === "VIEWER"
-                                ? "bg-gray-600 border-gray-500 text-white"
-                                : "bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700"
-                            }`}
-                          >
-                            Viewer
-                          </button>
-
-                          {/* Manager Option (nur wenn Kategorie einen managerTitle hat) */}
-                          {cat.managerTitle && (
-                            <button
-                              onClick={() => selectPending(user.discordId, "PERSONAL_MANAGER")}
-                              className={`text-xs px-3 py-1.5 rounded-lg border transition ${
-                                pendingValue === "PERSONAL_MANAGER"
-                                  ? "bg-blue-600 border-blue-500 text-white"
-                                  : "bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700"
-                              }`}
-                            >
-                              {cat.managerTitle}
-                            </button>
-                          )}
-
-                          {/* Speichern */}
-                          {hasChanged && (
-                            <button
-                              onClick={() => saveRole(user)}
-                              className="text-xs px-3 py-1.5 bg-green-600 hover:bg-green-500 rounded-lg border border-green-500 text-white transition font-medium"
-                            >
-                              Speichern
-                            </button>
-                          )}
-
-                          {/* Abbrechen */}
-                          <button
-                            onClick={() => cancelEdit(user.discordId)}
-                            className="text-xs text-gray-600 hover:text-gray-300 transition px-1"
-                          >
-                            ✕
-                          </button>
-                        </div>
                       ) : (
-                        // Anzeige-Modus
-                        <div className="flex items-center gap-2">
-                          <span className={`text-xs px-2.5 py-1 rounded-full border ${
-                            user.role === "PERSONAL_MANAGER"
-                              ? "bg-blue-500/15 text-blue-400 border-blue-500/30"
-                              : "bg-gray-500/15 text-gray-400 border-gray-500/30"
-                          }`}>
-                            {displayTitle}
-                          </span>
+                        <div className="relative" data-dropdown>
+                          {/* Badge + Trigger */}
                           <button
-                            onClick={() => startEdit(user)}
-                            className="text-xs text-gray-600 hover:text-gray-300 transition px-2 py-1 rounded-lg hover:bg-gray-800"
+                            onClick={() => {
+                              if (isOpen) {
+                                setOpenDropdown(null)
+                                cancelSelection(user.discordId)
+                              } else {
+                                setOpenDropdown(user.discordId)
+                                setPendingSelections(prev => ({ ...prev, [user.discordId]: user.role }))
+                              }
+                            }}
+                            disabled={isSaving}
+                            className={`flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg border transition ${
+                              user.role === "PERSONAL_MANAGER"
+                                ? "bg-blue-500/10 text-blue-400 border-blue-500/30 hover:bg-blue-500/20"
+                                : "bg-gray-800 text-gray-400 border-gray-700 hover:bg-gray-700"
+                            } disabled:opacity-40`}
                           >
-                            ✏️
+                            {isSaving ? (
+                              <span className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
+                            ) : null}
+                            {displayTitle}
+                            <span className="text-gray-600">▾</span>
                           </button>
+
+                          {/* Dropdown */}
+                          {isOpen && (
+                            <div className="absolute right-0 top-10 z-50 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl overflow-hidden min-w-[220px]">
+                              <div className="px-3 py-2 border-b border-gray-700">
+                                <p className="text-xs text-gray-500 uppercase tracking-wider">Rolle wählen</p>
+                              </div>
+
+                              {/* Viewer Option */}
+                              <button
+                                onClick={() => selectOption(user.discordId, "VIEWER")}
+                                className={`w-full text-left px-4 py-2.5 text-sm transition flex items-center justify-between ${
+                                  (pendingValue ?? user.role) === "VIEWER"
+                                    ? "bg-gray-700 text-white"
+                                    : "hover:bg-gray-700 text-gray-300"
+                                }`}
+                              >
+                                Viewer
+                                {(pendingValue ?? user.role) === "VIEWER" && (
+                                  <span className="text-green-400 text-xs">✓</span>
+                                )}
+                              </button>
+
+                              {/* Manager Option */}
+                              {cat.managerTitle && (
+                                <button
+                                  onClick={() => selectOption(user.discordId, "PERSONAL_MANAGER")}
+                                  className={`w-full text-left px-4 py-2.5 text-sm transition flex items-center justify-between ${
+                                    (pendingValue ?? user.role) === "PERSONAL_MANAGER"
+                                      ? "bg-gray-700 text-white"
+                                      : "hover:bg-gray-700 text-gray-300"
+                                  }`}
+                                >
+                                  {cat.managerTitle}
+                                  {(pendingValue ?? user.role) === "PERSONAL_MANAGER" && (
+                                    <span className="text-green-400 text-xs">✓</span>
+                                  )}
+                                </button>
+                              )}
+
+                              {!cat.managerTitle && (
+                                <div className="px-4 py-2.5 text-xs text-gray-600 italic">Keine weiteren Optionen</div>
+                              )}
+
+                              {/* Aktionen */}
+                              <div className="flex gap-2 px-3 py-3 border-t border-gray-700">
+                                <button
+                                  onClick={() => cancelSelection(user.discordId)}
+                                  className="flex-1 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 rounded-lg transition text-gray-300"
+                                >
+                                  Abbrechen
+                                </button>
+                                <button
+                                  onClick={() => saveRole(user)}
+                                  disabled={!hasPending}
+                                  className="flex-1 py-1.5 text-xs bg-green-600 hover:bg-green-500 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg transition text-white font-medium"
+                                >
+                                  Speichern
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -274,6 +298,29 @@ export default function ManagePage() {
           </div>
         )
       })}
+
+      {/* Toasts */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 items-end">
+        {toasts.map(toast => (
+          <div
+            key={toast.id}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl border shadow-2xl text-sm font-medium max-w-sm transition-all ${
+              toast.type === "success"
+                ? "bg-green-500/10 border-green-500/30 text-green-400"
+                : "bg-red-500/10 border-red-500/30 text-red-400"
+            }`}
+          >
+            <span>{toast.type === "success" ? "✓" : "✕"}</span>
+            <span className="flex-1">{toast.message}</span>
+            <button
+              onClick={() => removeToast(toast.id)}
+              className="text-current opacity-50 hover:opacity-100 transition ml-1"
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
