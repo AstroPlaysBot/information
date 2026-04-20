@@ -1,3 +1,4 @@
+// src/app/adminboard/manage/page.tsx
 'use client'
 
 import { useEffect, useState } from "react"
