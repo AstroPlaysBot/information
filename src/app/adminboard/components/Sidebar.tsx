@@ -6,16 +6,19 @@ const CRYPTIX_ID = "1462891063202156807"
 
 export default function Sidebar({ setView, view, applicationCount, session }: any) {
   const [myRole, setMyRole] = useState<string | null>(null)
+  const [isBetaTester, setIsBetaTester] = useState(false)
 
   useEffect(() => {
     fetch("/api/adminboard/my-role", { credentials: "include" })
       .then(r => r.json())
-      .then(d => setMyRole(d.role))
+      .then(d => {
+        setMyRole(d.role)
+        setIsBetaTester(d.isBetaTester ?? false)
+      })
       .catch(() => {})
   }, [])
 
   const canManage = myRole === "OWNER"
-  const isBetaTester = myRole === "BETA_TESTER"
 
   return (
     <div className="w-72 bg-black/60 backdrop-blur-xl border-r border-gray-800 p-6 flex flex-col">
@@ -23,7 +26,7 @@ export default function Sidebar({ setView, view, applicationCount, session }: an
 
       {/* Neuigkeiten */}
       <button
-        onClick={() => { if (!isBetaTester) setView('news'); else setView('news') }}
+        onClick={() => setView('news')}
         className={`flex items-center gap-3 p-3 rounded-lg transition
           ${view === 'news' ? 'bg-gray-800' : 'hover:bg-gray-800'}`}
       >
