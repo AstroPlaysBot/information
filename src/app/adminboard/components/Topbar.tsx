@@ -65,109 +65,111 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
   }
 
   return (
-    <div className="flex justify-between items-center h-16 border-b border-gray-800/60 px-6 relative bg-black/30 backdrop-blur-sm">
+    <>
+      <div className="flex justify-between items-center h-16 border-b border-gray-800/60 px-6 relative bg-black/30 backdrop-blur-sm">
 
-      {/* Loading overlay */}
-      <AnimatePresence>
-        {loggingOut && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 z-[999] flex flex-col items-center justify-center"
-          >
-            <div className="w-12 h-12 border-4 border-gray-700 border-t-blue-500 rounded-full animate-spin" />
-            <p className="text-white mt-4 text-sm font-medium">Wird ausgeloggt...</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {(open || confirmCancel) && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={closeAll}
-            className="fixed inset-0 bg-black/60 z-[90]"
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Title */}
-      <div className="font-semibold text-white text-base tracking-tight">
-        {VIEW_LABELS[view] || 'AdminBoard'}
-      </div>
-
-      {/* Filter */}
-      {view === 'applications' && (
-        <div className="flex gap-1.5">
-          {filters.map(f => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition
-                ${filter === f
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-800/80 text-gray-400 hover:bg-gray-700 hover:text-white border border-gray-700/50"}`}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Settings */}
-      <div className="relative z-[120]">
-        <button
-          onClick={() => setOpen(v => !v)}
-          className="p-2 rounded-lg bg-gray-800/80 hover:bg-gray-700 border border-gray-700/50 transition"
-        >
-          <Settings size={16} className="text-gray-400" />
-        </button>
-
+        {/* Loading overlay */}
         <AnimatePresence>
-          {open && (
+          {loggingOut && (
             <motion.div
-              initial={{ opacity: 0, y: -8, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -8, scale: 0.97 }}
-              className="absolute right-0 mt-2 bg-gray-900 border border-gray-700/60 rounded-xl w-44 shadow-2xl z-[130] overflow-hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/80 z-[999] flex flex-col items-center justify-center"
             >
-              <button
-                onClick={() => window.location.href = '/'}
-                className="flex items-center gap-2.5 w-full px-4 py-3 hover:bg-gray-800 text-sm text-gray-300 hover:text-white transition"
-              >
-                <LogOut size={15} />
-                Ausloggen
-              </button>
-              <div className="border-t border-gray-800" />
-              <button
-                onClick={() => { setOpen(false); setConfirmCancel(true) }}
-                className="flex items-center gap-2.5 w-full px-4 py-3 hover:bg-gray-800 text-sm text-red-400 hover:text-red-300 transition"
-              >
-                Kündigen
-              </button>
+              <div className="w-12 h-12 border-4 border-gray-700 border-t-blue-500 rounded-full animate-spin" />
+              <p className="text-white mt-4 text-sm font-medium">Wird ausgeloggt...</p>
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Title */}
+        <div className="font-semibold text-white text-base tracking-tight">
+          {VIEW_LABELS[view] || 'AdminBoard'}
+        </div>
+
+        {/* Filter */}
+        {view === 'applications' && (
+          <div className="flex gap-1.5">
+            {filters.map(f => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition
+                  ${filter === f
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-800/80 text-gray-400 hover:bg-gray-700 hover:text-white border border-gray-700/50"}`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Settings */}
+        <div className="relative z-[120]">
+          <button
+            onClick={() => setOpen(v => !v)}
+            className="p-2 rounded-lg bg-gray-800/80 hover:bg-gray-700 border border-gray-700/50 transition"
+          >
+            <Settings size={16} className="text-gray-400" />
+          </button>
+
+          <AnimatePresence>
+            {open && (
+              <>
+                <div
+                  className="fixed inset-0 z-[115]"
+                  onClick={() => setOpen(false)}
+                />
+                <motion.div
+                  initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                  className="absolute right-0 mt-2 bg-gray-900 border border-gray-700/60 rounded-xl w-44 shadow-2xl z-[130] overflow-hidden"
+                >
+                  <button
+                    onClick={() => window.location.href = '/'}
+                    className="flex items-center gap-2.5 w-full px-4 py-3 hover:bg-gray-800 text-sm text-gray-300 hover:text-white transition"
+                  >
+                    <LogOut size={15} />
+                    Ausloggen
+                  </button>
+                  <div className="border-t border-gray-800" />
+                  <button
+                    onClick={() => { setOpen(false); setConfirmCancel(true) }}
+                    className="flex items-center gap-2.5 w-full px-4 py-3 hover:bg-gray-800 text-sm text-red-400 hover:text-red-300 transition"
+                  >
+                    Kündigen
+                  </button>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
 
-      {/* Kündigen Modal */}
+      {/* Kündigen Modal — außerhalb der Topbar damit kein transform/positioning Bug */}
       <AnimatePresence>
         {confirmCancel && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 flex items-center justify-center z-[200]"
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4"
           >
-            <div onClick={closeAll} className="absolute inset-0 bg-black/70" />
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              onClick={closeAll}
+            />
+
+            {/* Modal */}
             <motion.div
-              initial={{ scale: 0.96, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.96, opacity: 0 }}
-              className="relative bg-gray-900 border border-gray-700/60 rounded-2xl p-6 w-[540px] shadow-2xl z-10"
+              initial={{ scale: 0.96, opacity: 0, y: 8 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.96, opacity: 0, y: 8 }}
+              className="relative bg-gray-900 border border-gray-700/60 rounded-2xl p-6 w-full max-w-lg shadow-2xl z-10"
             >
               <div className="mb-5">
                 <h2 className="text-white text-lg font-bold">Kündigung einreichen</h2>
@@ -232,6 +234,6 @@ export default function Topbar({ view, filter, setFilter }: TopbarProps) {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </>
   )
 }
