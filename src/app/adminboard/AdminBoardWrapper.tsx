@@ -16,7 +16,7 @@ export default function AdminBoardWrapper(){
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-black via-gray-950 to-gray-900 text-white">
-      <Sidebar setView={setView} view={view} applicationCount={applicationCount} />
+      <Sidebar setView={(v) => setView(v as any)} view={view} applicationCount={applicationCount} />
       <div className="flex flex-col flex-1">
         <Topbar view={view} filter={filter} setFilter={setFilter} manageTab={manageTab} />
         <div className="flex-1 overflow-auto">
