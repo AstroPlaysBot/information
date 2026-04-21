@@ -5,7 +5,7 @@ import Topbar from './components/Topbar'
 import AdminBoardClient from './AdminBoardClient'
 import RulesPage from './rules/page'
 import NewsPage from './news/page'
-import ManagePage from './manage/page'
+import ManagePage from './manage/ManagePage'
 import ZentralePage from './zentrale/page'
 
 export default function AdminBoardWrapper(){
