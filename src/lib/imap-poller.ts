@@ -32,6 +32,7 @@ export async function pollGmail() {
       }
 
       for (const msg of messages) {
+        if (!msg.source) continue
         const parsed = await simpleParser(msg.source)
         const gmailMessageId = parsed.messageId || null
         const gmailThreadId = (parsed.headers.get('thread-index') as string) || gmailMessageId || null
