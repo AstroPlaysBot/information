@@ -6,6 +6,7 @@ import AdminBoardClient from './AdminBoardClient'
 import RulesPage from './rules/page'
 import NewsPage from './news/page'
 import ManagePage from './manage/page'
+import ZentralePage from './zentrale/page'
 
 export default function AdminBoardWrapper(){
   const [view, setView] = useState<'applications'|'rules'|'trash'|'news'|'manage'|'zentrale'>('news')
@@ -24,7 +25,7 @@ export default function AdminBoardWrapper(){
           {view === 'rules' && <RulesPage />}
           {view === 'trash' && <div className="p-10 text-gray-400">Papierkorb kommt bald.</div>}
           {view === 'manage' && <ManagePage onTabChange={setManageTab} />}
-          {view === 'zentrale' && <div className="p-10 text-gray-400">Zentrale kommt bald.</div>}
+          {view === 'zentrale' && <ZentralePage />}
         </div>
       </div>
     </div>
