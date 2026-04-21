@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma"
 import { NextResponse } from "next/server"
+import { sendTicketClosed } from "@/lib/mail"
 
 const CRYPTIX_ID = "1462891063202156807"
 
@@ -24,8 +25,24 @@ export async function POST(req: Request) {
 
   const ticket = await prisma.ticket.update({
     where: { id: ticketId },
-    data: { status: "CLOSED", closedAt: new Date() }
+    data: {
+      status: "CLOSED",
+      closedAt: new Date(),
+      closedBy: user.username
+    }
   })
+
+  // Mail an User senden
+  try {
+    await sendTicketClosed(
+      ticket.senderMail,
+      ticket.senderName,
+      ticket.ticketId,
+      user.username
+    )
+  } catch (e) {
+    console.error("Fehler beim Senden der Abschluss-Mail:", e)
+  }
 
   return NextResponse.json({ success: true, ticket })
 }
