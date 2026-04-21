@@ -8,6 +8,17 @@ function generateTicketId(): string {
   return `APL-${num}`
 }
 
+const IGNORED_SENDERS = [
+  'vercel.com',
+  'noreply@',
+  'no-reply@',
+  'mailer-daemon',
+  'postmaster@',
+  'notifications@',
+  'github.com',
+  'automated@',
+]
+
 export async function pollGmail() {
   const client = new ImapFlow({
     host: 'imap.gmail.com',
@@ -15,7 +26,7 @@ export async function pollGmail() {
     secure: true,
     auth: {
       user: process.env.SMTP_USER!,
-      pass: process.env.SMTP_PASS!, // Gmail App-Passwort
+      pass: process.env.SMTP_PASS!,
     },
     logger: false,
   })
@@ -25,7 +36,6 @@ export async function pollGmail() {
     const lock = await client.getMailboxLock('INBOX')
 
     try {
-      // Nur ungelesene Mails holen
       const messages = []
       for await (const msg of client.fetch({ seen: false }, { source: true, envelope: true })) {
         messages.push(msg)
@@ -41,23 +51,36 @@ export async function pollGmail() {
         const subject = parsed.subject || '(Kein Betreff)'
         const content = parsed.text || parsed.html || ''
 
+        // System-Mails ignorieren
+        if (IGNORED_SENDERS.some(s => senderMail.toLowerCase().includes(s))) {
+          await client.messageFlagsAdd({ uid: msg.uid }, ['\\Seen'])
+          continue
+        }
+
+        // Eigene Mails ignorieren (Loop-Schutz)
+        if (senderMail.toLowerCase() === process.env.SMTP_USER?.toLowerCase()) {
+          await client.messageFlagsAdd({ uid: msg.uid }, ['\\Seen'])
+          continue
+        }
+
         // Deduplizierung
         if (gmailMessageId) {
           const exists = await prisma.ticketMessage.findFirst({
             where: { gmailMessageId }
           })
-          if (exists) continue
+          if (exists) {
+            await client.messageFlagsAdd({ uid: msg.uid }, ['\\Seen'])
+            continue
+          }
         }
 
-        // Prüfe ob es eine Antwort auf ein bestehendes Ticket ist
-        // (User antwortet mit Ticket-ID im Betreff)
+        // Prüfe ob Antwort auf bestehendes Ticket
         const ticketIdMatch = subject.match(/APL-\d{4}/i)
         const existingTicket = ticketIdMatch
           ? await prisma.ticket.findUnique({ where: { ticketId: ticketIdMatch[0].toUpperCase() } })
           : null
 
         if (existingTicket) {
-          // Nachricht zu bestehendem Ticket hinzufügen
           await prisma.ticketMessage.create({
             data: {
               ticketId: existingTicket.id,
@@ -73,14 +96,12 @@ export async function pollGmail() {
             data: { status: 'OPEN', updatedAt: new Date() }
           })
         } else {
-          // Neues Ticket erstellen
           let ticketId = generateTicketId()
-          // Sicherstellen dass ID unique ist
           while (await prisma.ticket.findUnique({ where: { ticketId } })) {
             ticketId = generateTicketId()
           }
 
-          const ticket = await prisma.ticket.create({
+          await prisma.ticket.create({
             data: {
               ticketId,
               senderMail,
@@ -100,11 +121,9 @@ export async function pollGmail() {
             }
           })
 
-          // Auto-Antwort mit Ticket-ID senden
           await sendAutoReply(senderMail, senderName, ticketId, subject)
         }
 
-        // Mail als gelesen markieren
         await client.messageFlagsAdd({ uid: msg.uid }, ['\\Seen'])
       }
     } finally {
