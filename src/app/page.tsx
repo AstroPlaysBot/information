@@ -88,13 +88,15 @@ export default function HomePage() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            
+
+            <a
               href="/concept"
               className="inline-flex items-center justify-center rounded-lg bg-indigo-600 hover:bg-indigo-500 transition text-white font-semibold px-6 py-3"
             >
               Zum Konzept
             </a>
-            
+
+            <a
               href="/features"
               className="text-white font-medium hover:underline"
             >
@@ -156,7 +158,7 @@ export default function HomePage() {
               </div>
 
               {/* Invite Button */}
-              
+              <a
                 href={inviteUrl}
                 target="_blank"
                 rel="noopener noreferrer"
