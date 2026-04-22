@@ -425,11 +425,12 @@ export default function PurchasePage() {
                       className="px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300"
                       style={{
                         background: !on ? "rgba(255,255,255,0.025)" : isH ? game.color : "rgba(255,255,255,0.06)",
-                        color: !on ? "#383838" : isH ? "#000" : "#ccc",
+                        color: !on ? "#555" : isH ? "#000" : "#ccc",
                         border: `1px solid ${!on ? "rgba(255,255,255,0.04)" : isH ? game.color : "rgba(255,255,255,0.09)"}`,
                         boxShadow: isH && on ? `0 0 18px rgba(${game.glow},0.35)` : "none",
                         cursor: on ? "pointer" : "not-allowed",
                         textDecoration: !on ? "line-through" : "none",
+                        opacity: !on ? 0.6 : 1
                       }}
                     >
                       Kaufen →
