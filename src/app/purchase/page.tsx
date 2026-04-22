@@ -4,14 +4,14 @@ import { useState, useEffect } from "react";
 
 // ── Icons via Iconify CDN ──────────────────────────────────────────────────
 const GAME_ICON_SLUGS: Record<string, { slug: string; hex: string }> = {
-  Minecraft:            { slug: "simple-icons:minecraft",      hex: "62B47A" },
-  Fortnite:             { slug: "simple-icons:epicgames",      hex: "9B59B6" },
-  "GTA V":              { slug: "simple-icons:rockstargames",  hex: "FCAF17" },
-  "League of Legends":  { slug: "simple-icons:riotgames",      hex: "C89B3C" },
-  Valorant:             { slug: "simple-icons:valorant",       hex: "FF4655" },
-  "Rocket League":      { slug: "simple-icons:rocketleague",   hex: "1B8BE0" },
-  "Apex Legends":       { slug: "simple-icons:apexlegends",    hex: "DA292A" },
-  "Destiny 2":          { slug: "simple-icons:bungie",         hex: "b0b8c8" },
+  Minecraft:            { slug: "simple-icons:minecraft",         hex: "62B47A" },
+  Fortnite:             { slug: "simple-icons:epicgames",         hex: "9B59B6" },
+  "GTA V":              { slug: "simple-icons:rockstargames",     hex: "FCAF17" },
+  "League of Legends":  { slug: "simple-icons:riotgames",        hex: "C89B3C" },
+  Valorant:             { slug: "simple-icons:valorant",          hex: "FF4655" },
+  "Rocket League":      { slug: "simple-icons:rocketleague",     hex: "1B8BE0" },
+  "Apex Legends":       { slug: "simple-icons:apexlegends",      hex: "DA292A" },
+  "Destiny 2":          { slug: "simple-icons:bungie",            hex: "b0b8c8" },
 };
 
 const GameIcon = ({ name, disabled }: { name: string; disabled?: boolean }) => {
@@ -233,28 +233,23 @@ export default function PurchasePage() {
               )}
 
               <div className="relative p-10 md:p-14">
-                {!premiumOn && (
-                  <div className="absolute inset-0 rounded-3xl z-10 flex flex-col items-center justify-center gap-3 bg-[#06060e]/75 backdrop-blur-[2px]">
-                    <div className="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-                      <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                      </svg>
-                    </div>
-                    <p className="text-red-400 font-semibold text-sm">Aktuell nicht verfügbar</p>
-                    <p className="text-gray-700 text-xs">Premium ist vorübergehend deaktiviert.</p>
-                  </div>
-                )}
-
-                <div className={`flex flex-col md:flex-row md:items-start md:justify-between gap-10 transition-opacity duration-300 ${!premiumOn ? "opacity-25 pointer-events-none select-none" : ""}`}>
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-10">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-6">
                       <div className="flex gap-0.5">
                         {[...Array(5)].map((_, i) => (
                           <div key={i} className="w-1 h-5 rounded-full"
-                            style={{ background: "linear-gradient(180deg,#818cf8,#c084fc)", opacity: 1 - i * 0.16 }} />
+                            style={{
+                              background: premiumOn
+                                ? "linear-gradient(180deg,#818cf8,#c084fc)"
+                                : "rgba(255,255,255,0.08)",
+                              opacity: 1 - i * 0.16,
+                            }} />
                         ))}
                       </div>
-                      <span className="text-indigo-400 font-bold tracking-[0.2em] uppercase text-[11px]">Premium Plan</span>
+                      <span className={`font-bold tracking-[0.2em] uppercase text-[11px] ${premiumOn ? "text-indigo-400" : "text-gray-600"}`}>
+                        Premium Plan
+                      </span>
                     </div>
 
                     <h2 className="text-white font-black mb-3 tracking-tight" style={{ fontSize: "clamp(1.8rem,3vw,2.5rem)" }}>
@@ -274,7 +269,10 @@ export default function PurchasePage() {
                         ["Early Access auf neue Features",         "#fb7185"],
                       ].map(([f, col]) => (
                         <div key={f} className="flex items-center gap-3 bg-white/[0.025] rounded-xl px-4 py-3 border border-white/[0.04]">
-                          <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: col, boxShadow: `0 0 6px ${col}` }} />
+                          <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{
+                            background: premiumOn ? col : "#333",
+                            boxShadow: premiumOn ? `0 0 6px ${col}` : "none",
+                          }} />
                           <span className="text-gray-400 text-[13px]">{f}</span>
                         </div>
                       ))}
@@ -291,18 +289,32 @@ export default function PurchasePage() {
                       <p className="text-gray-700 text-[11px] mt-2">pro Monat · jederzeit kündbar</p>
                     </div>
 
-                    <button
-                      disabled={!premiumOn}
-                      className="w-full py-4 rounded-2xl font-bold text-base text-white transition-all duration-300"
-                      style={{
-                        background: "linear-gradient(135deg,#6366f1,#a855f7)",
-                        boxShadow: "0 0 28px rgba(99,102,241,0.22)",
-                        cursor: premiumOn ? "pointer" : "not-allowed",
-                      }}
-                    >
-                      Jetzt abonnieren →
-                    </button>
-                    <p className="text-gray-700 text-[11px] text-center w-full">Keine versteckten Kosten</p>
+                    {/* Premium Button — nur Button gesperrt wenn deaktiviert */}
+                    <div className="w-full flex flex-col items-stretch gap-1.5">
+                      <button
+                        disabled={!premiumOn}
+                        className="w-full py-4 rounded-2xl font-bold text-base transition-all duration-300"
+                        style={premiumOn ? {
+                          background: "linear-gradient(135deg,#6366f1,#a855f7)",
+                          boxShadow: "0 0 28px rgba(99,102,241,0.22)",
+                          color: "#fff",
+                          cursor: "pointer",
+                        } : {
+                          background: "rgba(255,255,255,0.04)",
+                          border: "1px solid rgba(255,255,255,0.07)",
+                          color: "#555",
+                          cursor: "not-allowed",
+                          textDecoration: "line-through",
+                          textDecorationColor: "#666",
+                        }}
+                      >
+                        Jetzt abonnieren →
+                      </button>
+                      {!premiumOn && (
+                        <p className="text-[11px] text-red-500/70 text-center">aktuell nicht verfügbar</p>
+                      )}
+                      <p className="text-gray-700 text-[11px] text-center">Keine versteckten Kosten</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -324,60 +336,48 @@ export default function PurchasePage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {GAMES.map((game) => {
             const on = gameOn(game.name);
-            const isH = hovered === game.name && on;
+            const isH = hovered === game.name;
 
             return (
               <div
                 key={game.name}
-                onMouseEnter={() => on && setHovered(game.name)}
+                onMouseEnter={() => setHovered(game.name)}
                 onMouseLeave={() => setHovered(null)}
                 className="relative rounded-2xl overflow-hidden flex flex-col transition-all duration-300"
                 style={{
-                  border: `1px solid ${isH ? game.color + "55" : on ? "rgba(255,255,255,0.055)" : "rgba(255,255,255,0.025)"}`,
-                  background: isH
+                  border: `1px solid ${isH && on ? game.color + "55" : "rgba(255,255,255,0.055)"}`,
+                  background: isH && on
                     ? `radial-gradient(ellipse at 0% 0%, rgba(${game.glow},0.1) 0%, #07070d 65%)`
                     : "#07070d",
-                  boxShadow: isH ? `0 0 28px rgba(${game.glow},0.14), 0 0 65px rgba(${game.glow},0.05)` : "none",
+                  boxShadow: isH && on ? `0 0 28px rgba(${game.glow},0.14), 0 0 65px rgba(${game.glow},0.05)` : "none",
                   transform: isH ? "translateY(-3px)" : "translateY(0)",
-                  cursor: on ? "pointer" : "default",
+                  cursor: "default",
                 }}
               >
                 {/* Top glow line */}
                 <div className="absolute top-0 left-0 right-0 h-px transition-opacity duration-300 pointer-events-none"
                   style={{
                     background: `linear-gradient(90deg,transparent,${game.color},transparent)`,
-                    opacity: isH ? 1 : 0,
+                    opacity: isH && on ? 1 : 0,
                   }} />
 
                 {/* Ambient blob */}
                 <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full blur-3xl pointer-events-none transition-opacity duration-500"
-                  style={{ background: game.color, opacity: isH ? 0.07 : 0 }} />
+                  style={{ background: game.color, opacity: isH && on ? 0.07 : 0 }} />
 
                 <div className="relative p-6 flex flex-col flex-1">
-
-                  {/* UNAVAILABLE OVERLAY */}
-                  {!on && (
-                    <div className="absolute inset-0 z-20 rounded-2xl bg-[#07070d]/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-                        <svg className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                        </svg>
-                      </div>
-                      <p className="text-red-400 text-xs font-semibold">Aktuell nicht verfügbar</p>
-                    </div>
-                  )}
 
                   {/* Header */}
                   <div className="flex items-center gap-3 mb-5">
                     <div className="p-2.5 rounded-xl flex-shrink-0 transition-all duration-300" style={{
-                      background: on ? `rgba(${game.glow},0.08)` : "rgba(255,255,255,0.025)",
-                      border: `1px solid rgba(${game.glow},${on ? 0.16 : 0.04})`,
+                      background: `rgba(${game.glow},0.08)`,
+                      border: `1px solid rgba(${game.glow},0.16)`,
                     }}>
                       <GameIcon name={game.name} disabled={!on} />
                     </div>
                     <div className="min-w-0">
                       <span className="text-gray-700 text-[10px] uppercase tracking-widest block mb-0.5">{game.tag}</span>
-                      <h3 className={`font-bold text-base leading-tight truncate ${on ? "text-white" : "text-gray-600"}`}>
+                      <h3 className="font-bold text-base leading-tight truncate text-white">
                         {game.name}
                       </h3>
                       <div className="h-px mt-1.5 rounded-full transition-all duration-500" style={{
@@ -396,39 +396,46 @@ export default function PurchasePage() {
                           background: on ? game.color : "#333",
                           boxShadow: on && isH ? `0 0 4px ${game.color}` : "none",
                         }} />
-                        <span className={on ? "text-gray-500" : "text-gray-700 line-through decoration-gray-700/60"}>{f}</span>
+                        <span className="text-gray-500">{f}</span>
                       </li>
                     ))}
                   </ul>
 
                   {/* Price + CTA */}
                   <div className="border-t pt-5 flex items-start justify-between"
-                    style={{ borderColor: `rgba(${game.glow},${isH ? 0.16 : 0.05})` }}>
+                    style={{ borderColor: `rgba(${game.glow},${isH && on ? 0.16 : 0.05})` }}>
                     <div>
                       <p className="text-gray-700 text-[10px] uppercase tracking-wider mb-0.5">einmalig</p>
-                      <p className={`font-black text-xl ${on ? "text-white" : "text-gray-600 line-through decoration-gray-600/60"}`}>
+                      <p className="font-black text-xl text-white">
                         {game.price}€
                       </p>
                     </div>
 
-                    <div className="flex flex-col items-end">
+                    {/* Game Button — nur Button gesperrt wenn deaktiviert */}
+                    <div className="flex flex-col items-end gap-1">
                       <button
                         disabled={!on}
                         className="px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300"
-                        style={{
-                          background: !on ? "rgba(255,255,255,0.04)" : isH ? game.color : "rgba(255,255,255,0.06)",
-                          color: !on ? "#666" : isH ? "#000" : "#ccc",
-                          border: `1px solid ${!on ? "rgba(255,255,255,0.06)" : isH ? game.color : "rgba(255,255,255,0.09)"}`,
-                          boxShadow: isH && on ? `0 0 18px rgba(${game.glow},0.35)` : "none",
-                          cursor: on ? "pointer" : "not-allowed",
-                          textDecoration: !on ? "line-through" : "none",
-                          opacity: !on ? 0.7 : 1,
+                        style={on ? {
+                          background: isH ? game.color : "rgba(255,255,255,0.06)",
+                          color: isH ? "#000" : "#ccc",
+                          border: `1px solid ${isH ? game.color : "rgba(255,255,255,0.09)"}`,
+                          boxShadow: isH ? `0 0 18px rgba(${game.glow},0.35)` : "none",
+                          cursor: "pointer",
+                        } : {
+                          background: "rgba(255,255,255,0.04)",
+                          color: "#555",
+                          border: "1px solid rgba(255,255,255,0.06)",
+                          cursor: "not-allowed",
+                          textDecoration: "line-through",
+                          textDecorationColor: "#666",
+                          textDecorationStyle: "solid",
                         }}
                       >
                         Kaufen
                       </button>
                       {!on && (
-                        <p className="text-[11px] text-gray-600 mt-1">aktuell nicht verfügbar</p>
+                        <p className="text-[11px] text-red-500/70">nicht verfügbar</p>
                       )}
                     </div>
                   </div>
