@@ -161,7 +161,7 @@ async function loadAvail() {
 
 // ── Page component ─────────────────────────────────────────────────────────
 export default function PurchasePage() {
-  const [hovered, setHovered] = useState(null);
+  const [hovered, setHovered] = useState<string | null>(null);
   const [avail, setAvail] = useState(DEFAULT_AVAIL);
   const [ready, setReady] = useState(false);
 
