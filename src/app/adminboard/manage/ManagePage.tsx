@@ -32,20 +32,32 @@ const DEFAULT_AVAIL = {
 // ── Storage helpers ────────────────────────────────────────────────────────
 async function loadAvail() {
   try {
-    const res = await window.storage.get("availability")
-    if (!res) return DEFAULT_AVAIL
-    const parsed = JSON.parse(res.value)
+    const res = await fetch("/api/adminboard/availability", {
+      credentials: "include"
+    })
+
+    const data = await res.json()
+
     return {
-      premium: parsed.premium ?? true,
-      games: { ...DEFAULT_AVAIL.games, ...parsed.games },
+      premium: data.premium ?? true,
+      games: { ...DEFAULT_AVAIL.games, ...data.games }
     }
   } catch {
     return DEFAULT_AVAIL
   }
 }
+
 async function saveAvail(data: typeof DEFAULT_AVAIL) {
   try {
-    await window.storage.set("availability", JSON.stringify(data))
+    await fetch("/api/adminboard/availability", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      credentials: "include",
+      body: JSON.stringify(data)
+    })
+
     return true
   } catch {
     return false
