@@ -364,18 +364,6 @@ export default function PurchasePage() {
 
                 <div className="relative p-6 flex flex-col flex-1">
 
-                  {/* UNAVAILABLE OVERLAY */}
-                  {!on && (
-                    <div className="absolute inset-0 z-20 rounded-2xl bg-[#07070d]/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-                        <svg className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                        </svg>
-                      </div>
-                      <p className="text-red-400 text-xs font-semibold">Aktuell nicht verfügbar</p>
-                    </div>
-                  )}
-
                   {/* Header */}
                   <div className="flex items-center gap-3 mb-5">
                     <div className="p-2.5 rounded-xl flex-shrink-0 transition-all duration-300" style={{
@@ -411,7 +399,7 @@ export default function PurchasePage() {
                   </ul>
 
                   {/* Price + CTA */}
-                  <div className="border-t pt-5 flex items-center justify-between"
+                  <div className="border-t pt-5 flex items-start justify-between"
                     style={{ borderColor: `rgba(${game.glow},${isH ? 0.16 : 0.05})` }}>
                     <div>
                       <p className="text-gray-700 text-[10px] uppercase tracking-wider mb-0.5">einmalig</p>
@@ -420,21 +408,28 @@ export default function PurchasePage() {
                       </p>
                     </div>
 
+                  <div className="flex flex-col items-end">
                     <button
                       disabled={!on}
                       className="px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300"
                       style={{
-                        background: !on ? "rgba(255,255,255,0.025)" : isH ? game.color : "rgba(255,255,255,0.06)",
-                        color: !on ? "#555" : isH ? "#000" : "#ccc",
-                        border: `1px solid ${!on ? "rgba(255,255,255,0.04)" : isH ? game.color : "rgba(255,255,255,0.09)"}`,
+                        background: !on ? "rgba(255,255,255,0.04)" : isH ? game.color : "rgba(255,255,255,0.06)",
+                        color: !on ? "#666" : isH ? "#000" : "#ccc",
+                        border: `1px solid ${!on ? "rgba(255,255,255,0.06)" : isH ? game.color : "rgba(255,255,255,0.09)"}`,
                         boxShadow: isH && on ? `0 0 18px rgba(${game.glow},0.35)` : "none",
                         cursor: on ? "pointer" : "not-allowed",
                         textDecoration: !on ? "line-through" : "none",
-                        opacity: !on ? 0.6 : 1
+                        opacity: !on ? 0.7 : 1
                       }}
                     >
-                      Kaufen →
+                      Kaufen
                     </button>
+
+                    {!on && (
+                      <p className="text-[11px] text-gray-600 mt-1">
+                        aktuell nicht verfügbar
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
