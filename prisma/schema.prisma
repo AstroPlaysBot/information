@@ -299,3 +299,10 @@ model ZentraleAccess {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model AvailabilitySettings {
+  id        Int      @id @default(1)
+  premium   Boolean  @default(true)
+  games     Json
+  updatedAt DateTime @updatedAt
+}
