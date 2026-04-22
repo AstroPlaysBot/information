@@ -173,7 +173,7 @@ export default function PurchasePage() {
   }, []);
 
   const premiumOn = avail.premium !== false;
-  const gameOn = (name) => avail.games?.[name] !== false;
+  const gameOn = (name: string) => avail.games?.[name] !== false;
 
   return (
     <div className="overflow-x-hidden relative min-h-screen bg-[#06060e]">
