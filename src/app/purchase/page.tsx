@@ -4,14 +4,15 @@ import { useState, useEffect } from "react";
 
 // ── Icons via Iconify CDN ──────────────────────────────────────────────────
 const GAME_ICON_SLUGS: Record<string, { slug: string; hex: string }> = {
-  Minecraft:            { slug: "simple-icons:minecraft",         hex: "62B47A" },
-  Fortnite:             { slug: "simple-icons:epicgames",         hex: "9B59B6" },
-  "GTA V":              { slug: "simple-icons:rockstargames",     hex: "FCAF17" },
-  "League of Legends":  { slug: "simple-icons:riotgames",        hex: "C89B3C" },
-  Valorant:             { slug: "simple-icons:valorant",          hex: "FF4655" },
-  "Rocket League":      { slug: "simple-icons:rocketleague",     hex: "1B8BE0" },
-  "Apex Legends":       { slug: "simple-icons:apexlegends",      hex: "DA292A" },
-  "Destiny 2":          { slug: "simple-icons:bungie",            hex: "b0b8c8" },
+  Minecraft:            { slug: "simple-icons:minecraft",        hex: "62B47A" },
+  Fortnite:             { slug: "simple-icons:epicgames",        hex: "9B59B6" },
+  "GTA V":              { slug: "simple-icons:rockstargames",    hex: "FCAF17" },
+  "League of Legends":  { slug: "simple-icons:riotgames",       hex: "C89B3C" },
+  Valorant:             { slug: "simple-icons:valorant",         hex: "FF4655" },
+  // Rocket League & Apex: game-icons.net via Iconify (da simple-icons diese proprietären Logos nicht hat)
+  "Rocket League":      { slug: "game-icons:rocket",            hex: "1B8BE0" },
+  "Apex Legends":       { slug: "game-icons:targeting",         hex: "DA292A" },
+  "Destiny 2":          { slug: "simple-icons:bungie",           hex: "b0b8c8" },
 };
 
 const GameIcon = ({ name, disabled }: { name: string; disabled?: boolean }) => {
@@ -134,6 +135,16 @@ const GAMES = [
   },
 ];
 
+// ── Premium features ───────────────────────────────────────────────────────
+const PREMIUM_FEATURES = [
+  { label: "Alle PLAYS-Spiele inklusive",            color: "#818cf8", idx: 0 },
+  { label: "Minecraft, Fortnite, GTA V & mehr",      color: "#a78bfa", idx: 1 },
+  { label: "Neue Spiele automatisch freigeschaltet", color: "#c084fc", idx: 2 },
+  { label: "Exklusives AstroTickets+ System",        color: "#e879f9", idx: 3 },
+  { label: "Priority Support rund um die Uhr",       color: "#f472b6", idx: 4 },
+  { label: "Early Access auf neue Features",         color: "#fb7185", idx: 5 },
+];
+
 // ── Availability ───────────────────────────────────────────────────────────
 const DEFAULT_AVAIL = {
   premium: true,
@@ -157,6 +168,7 @@ async function loadAvail() {
 // ── Page component ─────────────────────────────────────────────────────────
 export default function PurchasePage() {
   const [hovered, setHovered] = useState<string | null>(null);
+  const [premiumHovered, setPremiumHovered] = useState(false);
   const [avail, setAvail] = useState(DEFAULT_AVAIL);
   const [ready, setReady] = useState(false);
 
@@ -171,6 +183,77 @@ export default function PurchasePage() {
 
   return (
     <div className="overflow-x-hidden relative min-h-screen bg-[#06060e]">
+
+      {/* ── GLOBAL ANIMATIONS ── */}
+      <style>{`
+        @keyframes gradShift {
+          0%, 100% { background-position: 0% 50%; }
+          50%       { background-position: 100% 50%; }
+        }
+
+        /* Jede Feature-Box hat eine einzigartige Phase — sie treffen sich nie */
+        @keyframes float0 {
+          0%,100% { transform: translateY(0px) rotate(0deg); }
+          30%     { transform: translateY(-3px) rotate(0.12deg); }
+          60%     { transform: translateY(-1.5px) rotate(-0.08deg); }
+        }
+        @keyframes float1 {
+          0%,100% { transform: translateY(0px) rotate(0deg); }
+          25%     { transform: translateY(-2px) rotate(-0.1deg); }
+          65%     { transform: translateY(-3.5px) rotate(0.1deg); }
+        }
+        @keyframes float2 {
+          0%,100% { transform: translateY(0px) rotate(0deg); }
+          40%     { transform: translateY(-2.5px) rotate(0.09deg); }
+          70%     { transform: translateY(-1px) rotate(-0.12deg); }
+        }
+        @keyframes float3 {
+          0%,100% { transform: translateY(0px) rotate(0deg); }
+          20%     { transform: translateY(-1.5px) rotate(-0.08deg); }
+          55%     { transform: translateY(-3px) rotate(0.11deg); }
+        }
+        @keyframes float4 {
+          0%,100% { transform: translateY(0px) rotate(0deg); }
+          35%     { transform: translateY(-3px) rotate(0.1deg); }
+          75%     { transform: translateY(-1.5px) rotate(-0.09deg); }
+        }
+        @keyframes float5 {
+          0%,100% { transform: translateY(0px) rotate(0deg); }
+          45%     { transform: translateY(-2px) rotate(-0.1deg); }
+          80%     { transform: translateY(-3.5px) rotate(0.08deg); }
+        }
+
+        .feature-float-0 { animation: float0 6.8s ease-in-out infinite; }
+        .feature-float-1 { animation: float1 7.6s ease-in-out infinite; }
+        .feature-float-2 { animation: float2 6.3s ease-in-out infinite; }
+        .feature-float-3 { animation: float3 8.1s ease-in-out infinite; }
+        .feature-float-4 { animation: float4 6.6s ease-in-out infinite; }
+        .feature-float-5 { animation: float5 7.3s ease-in-out infinite; }
+
+        .feature-box {
+          transition: background 0.4s ease, border-color 0.4s ease,
+                      box-shadow 0.5s ease, transform 0.5s cubic-bezier(0.34,1.4,0.64,1);
+          will-change: transform;
+        }
+
+        /* Wenn Premium gehovert: Box zusätzlich nach oben anheben (Float-Animation läuft parallel) */
+        .feature-box-lifted {
+          transform: translateY(-6px) !important;
+          box-shadow: 0 12px 32px rgba(0,0,0,0.35), 0 0 0 0.5px rgba(255,255,255,0.07) !important;
+        }
+
+        .premium-card-outer {
+          transition: transform 0.5s cubic-bezier(0.34,1.15,0.64,1),
+                      box-shadow 0.5s ease;
+          will-change: transform;
+        }
+        .premium-card-outer-hovered {
+          transform: translateY(-10px) scale(1.013);
+          box-shadow: 0 48px 96px rgba(99,102,241,0.2),
+                      0 16px 32px rgba(168,85,247,0.1),
+                      0 0 0 1px rgba(99,102,241,0.08);
+        }
+      `}</style>
 
       {/* BG */}
       <div className="fixed inset-0 pointer-events-none z-0">
@@ -216,7 +299,11 @@ export default function PurchasePage() {
         </div>
 
         {/* ── PREMIUM CARD ── */}
-        <div className="relative mb-24">
+        <div
+          className={`relative mb-24 premium-card-outer ${premiumHovered ? "premium-card-outer-hovered" : ""}`}
+          onMouseEnter={() => setPremiumHovered(true)}
+          onMouseLeave={() => setPremiumHovered(false)}
+        >
           <div className="rounded-3xl p-px" style={{
             background: premiumOn
               ? "linear-gradient(135deg,#6366f1,#a855f7,#ec4899,#6366f1)"
@@ -259,21 +346,27 @@ export default function PurchasePage() {
                       Alle Spiele der PLAYS-Kategorie inklusive — solange dein Abo aktiv ist. Plus exklusive Features die kein anderer hat.
                     </p>
 
+                    {/* ── FEATURE BOXES — schweben bei Hover ── */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                      {[
-                        ["Alle PLAYS-Spiele inklusive",            "#818cf8"],
-                        ["Minecraft, Fortnite, GTA V & mehr",      "#a78bfa"],
-                        ["Neue Spiele automatisch freigeschaltet", "#c084fc"],
-                        ["Exklusives AstroTickets+ System",        "#e879f9"],
-                        ["Priority Support rund um die Uhr",       "#f472b6"],
-                        ["Early Access auf neue Features",         "#fb7185"],
-                      ].map(([f, col]) => (
-                        <div key={f} className="flex items-center gap-3 bg-white/[0.025] rounded-xl px-4 py-3 border border-white/[0.04]">
+                      {PREMIUM_FEATURES.map(({ label, color, idx }) => (
+                        <div
+                          key={label}
+                          className={`feature-box feature-float-${idx} ${premiumHovered ? "feature-box-lifted" : ""} flex items-center gap-3 rounded-xl px-4 py-3`}
+                          style={{
+                            background: premiumHovered
+                              ? "rgba(255,255,255,0.04)"
+                              : "rgba(255,255,255,0.025)",
+                            border: `1px solid ${premiumHovered ? color + "33" : "rgba(255,255,255,0.04)"}`,
+                            // individuelle Verzögerung damit sie gestaffelt abheben
+                            transitionDelay: premiumHovered ? `${idx * 30}ms` : "0ms",
+                          }}
+                        >
                           <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{
-                            background: premiumOn ? col : "#333",
-                            boxShadow: premiumOn ? `0 0 6px ${col}` : "none",
+                            background: premiumOn ? color : "#333",
+                            boxShadow: premiumOn ? `0 0 ${premiumHovered ? 10 : 6}px ${color}` : "none",
+                            transition: "box-shadow 0.4s ease",
                           }} />
-                          <span className="text-gray-400 text-[13px]">{f}</span>
+                          <span className="text-gray-400 text-[13px]">{label}</span>
                         </div>
                       ))}
                     </div>
@@ -289,16 +382,20 @@ export default function PurchasePage() {
                       <p className="text-gray-700 text-[11px] mt-2">pro Monat · jederzeit kündbar</p>
                     </div>
 
-                    {/* Premium Button — nur Button gesperrt wenn deaktiviert */}
+                    {/* Premium Button */}
                     <div className="w-full flex flex-col items-stretch gap-1.5">
                       <button
                         disabled={!premiumOn}
-                        className="w-full py-4 rounded-2xl font-bold text-base transition-all duration-300"
+                        className="w-full py-4 rounded-2xl font-bold text-base"
                         style={premiumOn ? {
                           background: "linear-gradient(135deg,#6366f1,#a855f7)",
-                          boxShadow: "0 0 28px rgba(99,102,241,0.22)",
+                          boxShadow: premiumHovered
+                            ? "0 0 44px rgba(99,102,241,0.5), 0 0 16px rgba(168,85,247,0.35)"
+                            : "0 0 28px rgba(99,102,241,0.22)",
                           color: "#fff",
                           cursor: "pointer",
+                          transform: premiumHovered ? "scale(1.04)" : "scale(1)",
+                          transition: "transform 0.3s cubic-bezier(0.34,1.4,0.64,1), box-shadow 0.3s ease",
                         } : {
                           background: "rgba(255,255,255,0.04)",
                           border: "1px solid rgba(255,255,255,0.07)",
@@ -306,6 +403,7 @@ export default function PurchasePage() {
                           cursor: "not-allowed",
                           textDecoration: "line-through",
                           textDecorationColor: "#666",
+                          transition: "none",
                         }}
                       >
                         Jetzt abonnieren →
@@ -450,13 +548,6 @@ export default function PurchasePage() {
           Weitere Spiele folgen · Alle Preise inkl. MwSt.
         </p>
       </section>
-
-      <style>{`
-        @keyframes gradShift {
-          0%, 100% { background-position: 0% 50%; }
-          50%       { background-position: 100% 50%; }
-        }
-      `}</style>
     </div>
   );
 }
