@@ -14,7 +14,7 @@ const GAME_ICON_SLUGS = {
   "Destiny 2":          { slug: "bungie",          hex: "b0b8c8" },
 };
 
-const GameIcon = ({ name, disabled }) => {
+const GameIcon = ({ name, disabled }: { name: string; disabled?: boolean }) => {
   const info = GAME_ICON_SLUGS[name];
   if (!info) return null;
   const hex = disabled ? "444455" : info.hex;
