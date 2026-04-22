@@ -2,25 +2,25 @@
 
 import { useState, useEffect } from "react";
 
-// ── Simple Icons via CDN (simpleicons.org – CC0 licensed) ──────────────────
-const GAME_ICON_SLUGS = {
-  Minecraft:            { slug: "minecraft",       hex: "62B47A" },
-  Fortnite:             { slug: "fortnite",        hex: "9B59B6" },
-  "GTA V":              { slug: "rockstargames",   hex: "FCAF17" },
-  "League of Legends":  { slug: "leagueoflegends", hex: "C89B3C" },
-  Valorant:             { slug: "valorant",        hex: "FF4655" },
-  "Rocket League":      { slug: "rocketleague",    hex: "1B8BE0" },
-  "Apex Legends":       { slug: "apexlegends",     hex: "DA292A" },
-  "Destiny 2":          { slug: "bungie",          hex: "b0b8c8" },
+// ── Icons via Iconify CDN ──────────────────────────────────────────────────
+const GAME_ICON_SLUGS: Record<string, { slug: string; hex: string }> = {
+  Minecraft:            { slug: "simple-icons:minecraft",      hex: "62B47A" },
+  Fortnite:             { slug: "simple-icons:epicgames",      hex: "9B59B6" },
+  "GTA V":              { slug: "simple-icons:rockstargames",  hex: "FCAF17" },
+  "League of Legends":  { slug: "simple-icons:riotgames",      hex: "C89B3C" },
+  Valorant:             { slug: "simple-icons:valorant",       hex: "FF4655" },
+  "Rocket League":      { slug: "simple-icons:rocketleague",   hex: "1B8BE0" },
+  "Apex Legends":       { slug: "simple-icons:apexlegends",    hex: "DA292A" },
+  "Destiny 2":          { slug: "simple-icons:bungie",         hex: "b0b8c8" },
 };
 
 const GameIcon = ({ name, disabled }: { name: string; disabled?: boolean }) => {
-  const info = GAME_ICON_SLUGS[name as keyof typeof GAME_ICON_SLUGS];
+  const info = GAME_ICON_SLUGS[name];
   if (!info) return null;
   const hex = disabled ? "444455" : info.hex;
   return (
     <img
-      src={`https://cdn.simpleicons.org/${info.slug}/${hex}`}
+      src={`https://api.iconify.design/${info.slug}.svg?color=%23${hex}`}
       alt={name}
       className="w-9 h-9 transition-all duration-300"
       style={{ filter: disabled ? "grayscale(1) opacity(0.3)" : "none" }}
@@ -134,10 +134,7 @@ const GAMES = [
   },
 ];
 
-// ── Availability via window.storage ────────────────────────────────────────
-// Admin sets: { premium: bool, games: { [name]: bool } }
-// Use key "availability" — shared so adminboard can write to same key.
-
+// ── Availability ───────────────────────────────────────────────────────────
 const DEFAULT_AVAIL = {
   premium: true,
   games: Object.fromEntries(GAMES.map((g) => [g.name, true])),
@@ -147,20 +144,16 @@ async function loadAvail() {
   try {
     const res = await fetch("/api/adminboard/availability");
     const data = await res.json();
-
     if (!data) return DEFAULT_AVAIL;
-
     return {
       premium: data.premium ?? true,
-      games: {
-        ...DEFAULT_AVAIL.games,
-        ...(data.games || {})
-      }
+      games: { ...DEFAULT_AVAIL.games, ...(data.games ?? {}) },
     };
   } catch {
     return DEFAULT_AVAIL;
   }
 }
+
 // ── Page component ─────────────────────────────────────────────────────────
 export default function PurchasePage() {
   const [hovered, setHovered] = useState<string | null>(null);
@@ -169,7 +162,6 @@ export default function PurchasePage() {
 
   useEffect(() => {
     loadAvail().then((d) => { setAvail(d); setReady(true); });
-    // Poll every 30s so admin changes are reflected without full reload
     const id = setInterval(() => loadAvail().then(setAvail), 30_000);
     return () => clearInterval(id);
   }, []);
@@ -241,7 +233,6 @@ export default function PurchasePage() {
               )}
 
               <div className="relative p-10 md:p-14">
-                {/* UNAVAILABLE OVERLAY */}
                 {!premiumOn && (
                   <div className="absolute inset-0 rounded-3xl z-10 flex flex-col items-center justify-center gap-3 bg-[#06060e]/75 backdrop-blur-[2px]">
                     <div className="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
@@ -275,12 +266,12 @@ export default function PurchasePage() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       {[
-                        ["Alle PLAYS-Spiele inklusive",        "#818cf8"],
-                        ["Minecraft, Fortnite, GTA V & mehr",  "#a78bfa"],
+                        ["Alle PLAYS-Spiele inklusive",            "#818cf8"],
+                        ["Minecraft, Fortnite, GTA V & mehr",      "#a78bfa"],
                         ["Neue Spiele automatisch freigeschaltet", "#c084fc"],
-                        ["Exklusives AstroTickets+ System",    "#e879f9"],
-                        ["Priority Support rund um die Uhr",   "#f472b6"],
-                        ["Early Access auf neue Features",     "#fb7185"],
+                        ["Exklusives AstroTickets+ System",        "#e879f9"],
+                        ["Priority Support rund um die Uhr",       "#f472b6"],
+                        ["Early Access auf neue Features",         "#fb7185"],
                       ].map(([f, col]) => (
                         <div key={f} className="flex items-center gap-3 bg-white/[0.025] rounded-xl px-4 py-3 border border-white/[0.04]">
                           <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: col, boxShadow: `0 0 6px ${col}` }} />
@@ -364,6 +355,18 @@ export default function PurchasePage() {
 
                 <div className="relative p-6 flex flex-col flex-1">
 
+                  {/* UNAVAILABLE OVERLAY */}
+                  {!on && (
+                    <div className="absolute inset-0 z-20 rounded-2xl bg-[#07070d]/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                        <svg className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                        </svg>
+                      </div>
+                      <p className="text-red-400 text-xs font-semibold">Aktuell nicht verfügbar</p>
+                    </div>
+                  )}
+
                   {/* Header */}
                   <div className="flex items-center gap-3 mb-5">
                     <div className="p-2.5 rounded-xl flex-shrink-0 transition-all duration-300" style={{
@@ -408,29 +411,28 @@ export default function PurchasePage() {
                       </p>
                     </div>
 
-                  <div className="flex flex-col items-end">
-                    <button
-                      disabled={!on}
-                      className="px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300"
-                      style={{
-                        background: !on ? "rgba(255,255,255,0.04)" : isH ? game.color : "rgba(255,255,255,0.06)",
-                        color: !on ? "#666" : isH ? "#000" : "#ccc",
-                        border: `1px solid ${!on ? "rgba(255,255,255,0.06)" : isH ? game.color : "rgba(255,255,255,0.09)"}`,
-                        boxShadow: isH && on ? `0 0 18px rgba(${game.glow},0.35)` : "none",
-                        cursor: on ? "pointer" : "not-allowed",
-                        textDecoration: !on ? "line-through" : "none",
-                        opacity: !on ? 0.7 : 1
-                      }}
-                    >
-                      Kaufen
-                    </button>
-
-                    {!on && (
-                      <p className="text-[11px] text-gray-600 mt-1">
-                        aktuell nicht verfügbar
-                      </p>
-                    )}
+                    <div className="flex flex-col items-end">
+                      <button
+                        disabled={!on}
+                        className="px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300"
+                        style={{
+                          background: !on ? "rgba(255,255,255,0.04)" : isH ? game.color : "rgba(255,255,255,0.06)",
+                          color: !on ? "#666" : isH ? "#000" : "#ccc",
+                          border: `1px solid ${!on ? "rgba(255,255,255,0.06)" : isH ? game.color : "rgba(255,255,255,0.09)"}`,
+                          boxShadow: isH && on ? `0 0 18px rgba(${game.glow},0.35)` : "none",
+                          cursor: on ? "pointer" : "not-allowed",
+                          textDecoration: !on ? "line-through" : "none",
+                          opacity: !on ? 0.7 : 1,
+                        }}
+                      >
+                        Kaufen
+                      </button>
+                      {!on && (
+                        <p className="text-[11px] text-gray-600 mt-1">aktuell nicht verfügbar</p>
+                      )}
+                    </div>
                   </div>
+
                 </div>
               </div>
             );
