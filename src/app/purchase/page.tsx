@@ -15,7 +15,7 @@ const GAME_ICON_SLUGS = {
 };
 
 const GameIcon = ({ name, disabled }: { name: string; disabled?: boolean }) => {
-  const info = GAME_ICON_SLUGS[name];
+  const info = GAME_ICON_SLUGS[name as keyof typeof GAME_ICON_SLUGS];
   if (!info) return null;
   const hex = disabled ? "444455" : info.hex;
   return (
