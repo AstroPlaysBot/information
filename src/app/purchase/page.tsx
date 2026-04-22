@@ -145,13 +145,14 @@ const DEFAULT_AVAIL = {
 
 async function loadAvail() {
   try {
-    const res = await window.storage.get("availability");
-    if (!res) return DEFAULT_AVAIL;
-    const parsed = JSON.parse(res.value);
-    // Merge defaults so new games don't break
+    const res = await fetch("/api/adminboard/availability");
+    const data = await res.json();
+
+    if (!data) return DEFAULT_AVAIL;
+
     return {
-      premium: parsed.premium ?? true,
-      games: { ...DEFAULT_AVAIL.games, ...parsed.games },
+      ...DEFAULT_AVAIL,
+      ...data.games
     };
   } catch {
     return DEFAULT_AVAIL;
