@@ -151,14 +151,16 @@ async function loadAvail() {
     if (!data) return DEFAULT_AVAIL;
 
     return {
-      ...DEFAULT_AVAIL,
-      ...data.games
+      premium: data.premium ?? true,
+      games: {
+        ...DEFAULT_AVAIL.games,
+        ...(data.games || {})
+      }
     };
   } catch {
     return DEFAULT_AVAIL;
   }
 }
-
 // ── Page component ─────────────────────────────────────────────────────────
 export default function PurchasePage() {
   const [hovered, setHovered] = useState<string | null>(null);
