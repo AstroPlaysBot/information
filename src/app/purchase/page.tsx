@@ -9,7 +9,6 @@ const GAME_ICON_SLUGS: Record<string, { slug: string; hex: string }> = {
   "GTA V":              { slug: "simple-icons:rockstargames",    hex: "FCAF17" },
   "League of Legends":  { slug: "simple-icons:riotgames",       hex: "C89B3C" },
   Valorant:             { slug: "simple-icons:valorant",         hex: "FF4655" },
-  // Rocket League & Apex: game-icons.net via Iconify (da simple-icons diese proprietären Logos nicht hat)
   "Rocket League":      { slug: "game-icons:rocket",            hex: "1B8BE0" },
   "Apex Legends":       { slug: "game-icons:targeting",         hex: "DA292A" },
   "Destiny 2":          { slug: "simple-icons:bungie",           hex: "b0b8c8" },
@@ -29,6 +28,21 @@ const GameIcon = ({ name, disabled }: { name: string; disabled?: boolean }) => {
     />
   );
 };
+
+// ── Preis-Hilfsfunktion ────────────────────────────────────────────────────
+// Berechnet Rabattpreis: mathematisch auf 2 Dezimalstellen gerundet (legal in DE/EU).
+// Beispiel: 3,99 × 0,80 = 3,192 → 3,19€ (echter Rabatt ~20,05% — korrekt ausweisbar)
+function calcDiscountedPrice(originalCents: number, discountPercent: number): number {
+  return Math.round(originalCents * (1 - discountPercent / 100)) / 100;
+}
+
+function parsePrice(priceStr: string): number {
+  return parseFloat(priceStr.replace(",", "."));
+}
+
+function formatPrice(price: number): string {
+  return price.toFixed(2).replace(".", ",");
+}
 
 // ── Game definitions ───────────────────────────────────────────────────────
 const GAMES = [
@@ -135,6 +149,8 @@ const GAMES = [
   },
 ];
 
+const PREMIUM_PRICE = "11,25";
+
 // ── Premium features ───────────────────────────────────────────────────────
 const PREMIUM_FEATURES = [
   { label: "Alle PLAYS-Spiele inklusive",            color: "#818cf8", idx: 0 },
@@ -145,13 +161,33 @@ const PREMIUM_FEATURES = [
   { label: "Early Access auf neue Features",         color: "#fb7185", idx: 5 },
 ];
 
-// ── Availability ───────────────────────────────────────────────────────────
-const DEFAULT_AVAIL = {
-  premium: true,
-  games: Object.fromEntries(GAMES.map((g) => [g.name, true])),
+// ── Availability + Discounts ───────────────────────────────────────────────
+// Erwartetes API-Format von /api/adminboard/availability:
+// {
+//   premium: boolean,
+//   games: { [gameName]: boolean },
+//   discounts: {
+//     premium?: number,          // z.B. 20 für 20%
+//     games?: { [gameName]: number }  // z.B. { "Minecraft": 15 }
+//   }
+// }
+
+type AvailState = {
+  premium: boolean;
+  games: Record<string, boolean>;
+  discounts: {
+    premium?: number;
+    games?: Record<string, number>;
+  };
 };
 
-async function loadAvail() {
+const DEFAULT_AVAIL: AvailState = {
+  premium: true,
+  games: Object.fromEntries(GAMES.map((g) => [g.name, true])),
+  discounts: {},
+};
+
+async function loadAvail(): Promise<AvailState> {
   try {
     const res = await fetch("/api/adminboard/availability");
     const data = await res.json();
@@ -159,6 +195,7 @@ async function loadAvail() {
     return {
       premium: data.premium ?? true,
       games: { ...DEFAULT_AVAIL.games, ...(data.games ?? {}) },
+      discounts: data.discounts ?? {},
     };
   } catch {
     return DEFAULT_AVAIL;
@@ -169,7 +206,7 @@ async function loadAvail() {
 export default function PurchasePage() {
   const [hovered, setHovered] = useState<string | null>(null);
   const [premiumHovered, setPremiumHovered] = useState(false);
-  const [avail, setAvail] = useState(DEFAULT_AVAIL);
+  const [avail, setAvail] = useState<AvailState>(DEFAULT_AVAIL);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -181,6 +218,27 @@ export default function PurchasePage() {
   const premiumOn = avail.premium !== false;
   const gameOn = (name: string) => avail.games?.[name] !== false;
 
+  // Rabatt-Helfer
+  const premiumDiscount = avail.discounts?.premium;
+  const gameDiscount = (name: string) => avail.discounts?.games?.[name];
+
+  const getPremiumDisplayPrice = () => {
+    if (!premiumDiscount) return null;
+    const orig = parsePrice(PREMIUM_PRICE);
+    const discounted = calcDiscountedPrice(Math.round(orig * 100), premiumDiscount);
+    return { orig: PREMIUM_PRICE, discounted: formatPrice(discounted), pct: premiumDiscount };
+  };
+
+  const getGameDisplayPrice = (game: typeof GAMES[0]) => {
+    const disc = gameDiscount(game.name);
+    if (!disc) return null;
+    const orig = parsePrice(game.price);
+    const discounted = calcDiscountedPrice(Math.round(orig * 100), disc);
+    return { orig: game.price, discounted: formatPrice(discounted), pct: disc };
+  };
+
+  const premiumPriceInfo = getPremiumDisplayPrice();
+
   return (
     <div className="overflow-x-hidden relative min-h-screen bg-[#06060e]">
 
@@ -191,7 +249,6 @@ export default function PurchasePage() {
           50%       { background-position: 100% 50%; }
         }
 
-        /* Jede Feature-Box hat eine einzigartige Phase — sie treffen sich nie */
         @keyframes float0 {
           0%,100% { transform: translateY(0px) rotate(0deg); }
           30%     { transform: translateY(-3px) rotate(0.12deg); }
@@ -235,14 +292,16 @@ export default function PurchasePage() {
                       box-shadow 0.5s ease, transform 0.5s cubic-bezier(0.34,1.4,0.64,1);
           will-change: transform;
         }
-
-        /* Wenn Premium gehovert: Box zusätzlich nach oben anheben (Float-Animation läuft parallel) */
         .feature-box-lifted {
           transform: translateY(-6px) !important;
           box-shadow: 0 12px 32px rgba(0,0,0,0.35), 0 0 0 0.5px rgba(255,255,255,0.07) !important;
         }
 
+        /* WICHTIG: Das äußere Wrapper-Div braucht overflow:hidden + border-radius damit
+           beim scale(1.013) keine harten Ecken sichtbar werden */
         .premium-card-outer {
+          border-radius: 1.5rem; /* = rounded-3xl = 24px */
+          overflow: hidden;
           transition: transform 0.5s cubic-bezier(0.34,1.15,0.64,1),
                       box-shadow 0.5s ease;
           will-change: transform;
@@ -252,6 +311,14 @@ export default function PurchasePage() {
           box-shadow: 0 48px 96px rgba(99,102,241,0.2),
                       0 16px 32px rgba(168,85,247,0.1),
                       0 0 0 1px rgba(99,102,241,0.08);
+        }
+
+        @keyframes badgePulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+          50%      { box-shadow: 0 0 0 4px rgba(239,68,68,0); }
+        }
+        .discount-badge {
+          animation: badgePulse 2s ease-in-out infinite;
         }
       `}</style>
 
@@ -299,19 +366,29 @@ export default function PurchasePage() {
         </div>
 
         {/* ── PREMIUM CARD ── */}
+        {/* Das äußere Div hat overflow:hidden + border-radius via CSS-Klasse,
+            damit beim Hover-Scale keine harten Ecken entstehen */}
         <div
           className={`relative mb-24 premium-card-outer ${premiumHovered ? "premium-card-outer-hovered" : ""}`}
           onMouseEnter={() => setPremiumHovered(true)}
           onMouseLeave={() => setPremiumHovered(false)}
         >
+          {/* Rabatt-Badge oben rechts */}
+          {premiumPriceInfo && (
+            <div className="discount-badge absolute top-4 right-4 z-20 bg-red-600 text-white text-[11px] font-black px-3 py-1.5 rounded-full tracking-wide shadow-lg">
+              -{premiumPriceInfo.pct}% RABATT
+            </div>
+          )}
+
           <div className="rounded-3xl p-px" style={{
             background: premiumOn
               ? "linear-gradient(135deg,#6366f1,#a855f7,#ec4899,#6366f1)"
               : "rgba(255,255,255,0.06)",
             backgroundSize: "300% 300%",
             animation: premiumOn ? "gradShift 5s ease infinite" : "none",
+            borderRadius: "1.5rem",
           }}>
-            <div className="relative rounded-3xl bg-[#06060e] overflow-hidden">
+            <div className="relative bg-[#06060e]" style={{ borderRadius: "calc(1.5rem - 1px)" }}>
               {premiumOn && (
                 <>
                   <div className="absolute -top-32 -left-32 w-96 h-96 bg-indigo-600/[0.06] rounded-full blur-3xl pointer-events-none" />
@@ -346,18 +423,15 @@ export default function PurchasePage() {
                       Alle Spiele der PLAYS-Kategorie inklusive — solange dein Abo aktiv ist. Plus exklusive Features die kein anderer hat.
                     </p>
 
-                    {/* ── FEATURE BOXES — schweben bei Hover ── */}
+                    {/* Feature Boxes */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       {PREMIUM_FEATURES.map(({ label, color, idx }) => (
                         <div
                           key={label}
                           className={`feature-box feature-float-${idx} ${premiumHovered ? "feature-box-lifted" : ""} flex items-center gap-3 rounded-xl px-4 py-3`}
                           style={{
-                            background: premiumHovered
-                              ? "rgba(255,255,255,0.04)"
-                              : "rgba(255,255,255,0.025)",
+                            background: premiumHovered ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.025)",
                             border: `1px solid ${premiumHovered ? color + "33" : "rgba(255,255,255,0.04)"}`,
-                            // individuelle Verzögerung damit sie gestaffelt abheben
                             transitionDelay: premiumHovered ? `${idx * 30}ms` : "0ms",
                           }}
                         >
@@ -375,14 +449,34 @@ export default function PurchasePage() {
                   <div className="flex flex-col items-start md:items-end gap-6 shrink-0 md:min-w-[220px]">
                     <div className="md:text-right">
                       <p className="text-gray-700 text-[10px] uppercase tracking-[0.2em] mb-2">Monatlich</p>
-                      <div className="flex items-end gap-1">
-                        <span className="text-gray-600 text-xl font-bold self-start mt-2">€</span>
-                        <span className="text-white font-black leading-none" style={{ fontSize: "3.5rem" }}>11,25</span>
-                      </div>
+
+                      {/* Preis — mit oder ohne Rabatt */}
+                      {premiumPriceInfo ? (
+                        <div className="flex flex-col items-end gap-1">
+                          {/* Durchgestrichener Originalpreis */}
+                          <div className="flex items-center gap-1">
+                            <span className="text-red-500/60 text-lg font-bold line-through decoration-red-500/60">
+                              {premiumPriceInfo.orig}€
+                            </span>
+                          </div>
+                          {/* Neuer Preis */}
+                          <div className="flex items-end gap-1">
+                            <span className="text-gray-500 text-lg font-bold self-start mt-1">€</span>
+                            <span className="text-white font-black leading-none" style={{ fontSize: "3.5rem" }}>
+                              {premiumPriceInfo.discounted}
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-end gap-1">
+                          <span className="text-gray-600 text-xl font-bold self-start mt-2">€</span>
+                          <span className="text-white font-black leading-none" style={{ fontSize: "3.5rem" }}>11,25</span>
+                        </div>
+                      )}
                       <p className="text-gray-700 text-[11px] mt-2">pro Monat · jederzeit kündbar</p>
                     </div>
 
-                    {/* Premium Button */}
+                    {/* Button */}
                     <div className="w-full flex flex-col items-stretch gap-1.5">
                       <button
                         disabled={!premiumOn}
@@ -435,6 +529,7 @@ export default function PurchasePage() {
           {GAMES.map((game) => {
             const on = gameOn(game.name);
             const isH = hovered === game.name;
+            const discInfo = getGameDisplayPrice(game);
 
             return (
               <div
@@ -452,6 +547,13 @@ export default function PurchasePage() {
                   cursor: "default",
                 }}
               >
+                {/* Rabatt-Badge oben rechts */}
+                {discInfo && (
+                  <div className="discount-badge absolute top-3 right-3 z-10 bg-red-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full tracking-wide shadow-lg">
+                    -{discInfo.pct}%
+                  </div>
+                )}
+
                 {/* Top glow line */}
                 <div className="absolute top-0 left-0 right-0 h-px transition-opacity duration-300 pointer-events-none"
                   style={{
@@ -502,14 +604,29 @@ export default function PurchasePage() {
                   {/* Price + CTA */}
                   <div className="border-t pt-5 flex items-start justify-between"
                     style={{ borderColor: `rgba(${game.glow},${isH && on ? 0.16 : 0.05})` }}>
+
+                    {/* Preis-Block */}
                     <div>
                       <p className="text-gray-700 text-[10px] uppercase tracking-wider mb-0.5">einmalig</p>
-                      <p className="font-black text-xl text-white">
-                        {game.price}€
-                      </p>
+                      {discInfo ? (
+                        <>
+                          {/* Durchgestrichener Originalpreis in Rot */}
+                          <p className="text-red-500/60 text-sm font-semibold line-through decoration-red-500/60 leading-tight">
+                            {discInfo.orig}€
+                          </p>
+                          {/* Neuer Preis größer */}
+                          <p className="font-black text-xl text-white leading-tight">
+                            {discInfo.discounted}€
+                          </p>
+                        </>
+                      ) : (
+                        <p className="font-black text-xl text-white">
+                          {game.price}€
+                        </p>
+                      )}
                     </div>
 
-                    {/* Game Button — nur Button gesperrt wenn deaktiviert */}
+                    {/* Button */}
                     <div className="flex flex-col items-end gap-1">
                       <button
                         disabled={!on}
