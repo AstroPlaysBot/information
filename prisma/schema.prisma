@@ -305,4 +305,5 @@ model AvailabilitySettings {
   premium   Boolean  @default(true)
   games     Json
   updatedAt DateTime @updatedAt
+  discounts Json    @default("{}")
 }
