@@ -1,0 +1,50 @@
+name: Bump Legal Version
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/app/(legal)/AGB/page.tsx"
+      - "src/app/(legal)/Datenschutz/page.tsx"
+      - "src/app/(legal)/Impressum/page.tsx"
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+
+    # Verhindert dass die Action sich selbst auslöst (würde Endlosschleife erzeugen)
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@v4
+        with:
+          # Token damit die Action zurück in dein Repo pushen darf
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 2   # letzten 2 Commits damit wir diff machen können
+
+      - name: Node.js einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Dependencies installieren
+        run: npm ci
+
+      - name: Geänderte Legal-Dateien erkennen und Version bumpen
+        env:
+          DATABASE_URL:       ${{ secrets.DATABASE_URL }}
+          SMP_USER:         ${{ secrets.SMP_USER }}
+          SMP_PASS: ${{ secrets.SMP_PASS }}
+          COMMIT_MESSAGE:     ${{ github.event.head_commit.message }}
+        run: npx ts-node scripts/bump-legal-version.ts --auto
+
+      - name: Geänderte Dateien zurück committen
+        run: |
+          git config user.name  "AstroPlays Bot"
+          git config user.email "astroplays.help@gmail.com"
+          git add src/app/\(legal\)/
+          # Nur committen wenn sich wirklich was geändert hat
+          git diff --staged --quiet || git commit -m "chore: auto-bump legal versions [skip ci]"
+          git push
