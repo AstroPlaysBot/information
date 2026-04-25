@@ -30,7 +30,7 @@ const VIEW_LABELS: Record<string, string> = {
 const MANAGE_TAB_LABELS: Record<string, string> = {
   berechtigungen: 'Berechtigungen',
   zentrale: 'Zentrale',
-  kaufeinstellung: 'Kaufeinstellungen',
+  kaufeinstellungen: 'Kaufeinstellungen',
 }
 
 export default function Topbar({ view, filter, setFilter, manageTab }: TopbarProps) {
