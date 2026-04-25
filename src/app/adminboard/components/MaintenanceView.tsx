@@ -2,19 +2,13 @@
 import { useEffect, useState } from 'react'
 import { Plus, Trash2, Save } from 'lucide-react'
 
-const OWNER_ID = "1462891063202156807"
-
 interface MaintenancePage {
   path: string
   reason: string
 }
 
-interface MaintenanceViewProps {
-  session?: any
-}
-
-export default function MaintenanceView({ session }: MaintenanceViewProps) {
-  const isOwner = session?.user?.id === OWNER_ID
+export default function MaintenanceView() {
+  const [isOwner, setIsOwner] = useState(false)
   const [pages, setPages] = useState<MaintenancePage[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -22,6 +16,11 @@ export default function MaintenanceView({ session }: MaintenanceViewProps) {
   const [errorMsg, setErrorMsg] = useState('')
 
   useEffect(() => {
+    fetch('/api/adminboard/my-role', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => setIsOwner(d.role === 'OWNER'))
+      .catch(() => {})
+
     fetch('/api/adminboard/maintenance', { credentials: 'include' })
       .then(r => r.json())
       .then(d => setPages(d.pages ?? []))
