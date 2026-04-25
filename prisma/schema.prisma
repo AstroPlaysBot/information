@@ -56,6 +56,7 @@ model DashboardUser {
   discordId String   @unique @map("discord_id")
   username  String
   avatar    String?
+  email     String?
 
   createdAt DateTime @default(now())
 
@@ -181,6 +182,7 @@ model AdminBoardMember {
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  email         String?
 }
 
 // ======================
@@ -306,4 +308,13 @@ model AvailabilitySettings {
   games     Json
   updatedAt DateTime @updatedAt
   discounts Json    @default("{}")
+}
+
+// ======================
+// Rechtsdokument-Versionen
+// ======================
+model LegalDocVersion {
+  id        String   @id
+  version   String
+  updatedAt DateTime @updatedAt
 }
