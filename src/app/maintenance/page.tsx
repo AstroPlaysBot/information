@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import MaintenanceBanner from '@/app/adminboard/components/MaintenanceBanner'
+import MaintenanceBanner from '../adminboard/components/MaintenanceBanner'
 
 export default function MaintenancePage({
   searchParams,
