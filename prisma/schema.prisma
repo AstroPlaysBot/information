@@ -318,3 +318,12 @@ model LegalDocVersion {
   version   String
   updatedAt DateTime @updatedAt
 }
+
+// ======================
+// Wartungsarbeiten
+// ======================
+model MaintenanceConfig {
+  id        String   @id @default(cuid())
+  pages     Json     @default("[]")
+  updatedAt DateTime @updatedAt
+}
