@@ -7,13 +7,13 @@ import RulesPage from './rules/page'
 import NewsPage from './news/page'
 import ManagePage from './manage/ManagePage'
 import ZentralePage from './zentrale/page'
+import MaintenanceView from './components/MaintenanceView'
 
 export default function AdminBoardWrapper(){
-  const [view, setView] = useState<'applications'|'rules'|'trash'|'news'|'manage'|'zentrale'>('news')
+  const [view, setView] = useState<'applications'|'rules'|'trash'|'news'|'manage'|'zentrale'|'maintenance'>('news')
   const [applicationCount, setApplicationCount] = useState(0)
   const [filter, setFilter] = useState("Offen")
   const [manageTab, setManageTab] = useState("berechtigungen")
-
   return (
     <div className="flex h-screen bg-gradient-to-br from-black via-gray-950 to-gray-900 text-white">
       <Sidebar setView={(v) => setView(v as any)} view={view} applicationCount={applicationCount} />
@@ -26,6 +26,7 @@ export default function AdminBoardWrapper(){
           {view === 'trash' && <div className="p-10 text-gray-400">Papierkorb kommt bald.</div>}
           {view === 'manage' && <ManagePage onTabChange={setManageTab} />}
           {view === 'zentrale' && <ZentralePage />}
+          {view === 'maintenance' && <MaintenanceView />}
         </div>
       </div>
     </div>
