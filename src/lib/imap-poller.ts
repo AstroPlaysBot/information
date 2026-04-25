@@ -17,6 +17,8 @@ const IGNORED_SENDERS = [
   'notifications@',
   'github.com',
   'automated@',
+  'neon.tech',
+  'railway.app',
 ]
 
 export async function pollGmail() {
