@@ -24,11 +24,13 @@ const VIEW_LABELS: Record<string, string> = {
   rules: 'Regeln',
   manage: 'Verwalten',
   zentrale: 'Zentrale',
+  maintenance: 'Wartungsarbeiten',
 }
 
 const MANAGE_TAB_LABELS: Record<string, string> = {
   berechtigungen: 'Berechtigungen',
   zentrale: 'Zentrale',
+  kaufeinstellung: 'Kaufeinstellung',
 }
 
 export default function Topbar({ view, filter, setFilter, manageTab }: TopbarProps) {
