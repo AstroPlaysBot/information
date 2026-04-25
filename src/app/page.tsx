@@ -20,71 +20,13 @@ export default function HomePage() {
     }
   }, []);
 
-  const modules = [
-    {
-      group: 'AstroModeration',
-      id: 'astro-moderation',
-      description: 'Vollständiges Moderationssystem für deinen Server – von Rollen bis Willkommensnachrichten.',
-      icon: '🛡️',
-      items: [
-        { name: 'AstroAutoRoles', info: 'Automatisches Rollenmanagement beim Beitritt', icon: '🎭' },
-        { name: 'AstroBoost', info: 'Boost-Benachrichtigungen & Belohnungen', icon: '🚀' },
-        { name: 'AstroBump', info: 'Automatische Bump-Erinnerungen für deinen Server', icon: '🔔' },
-        { name: 'AstroCall', info: 'Voice-Channel Verwaltung & Benachrichtigungen', icon: '📞' },
-        { name: 'AstroClear', info: 'Nachrichten schnell und einfach löschen', icon: '🧹' },
-        { name: 'AstroGreeting', info: 'Personalisierte Willkommensnachrichten', icon: '👋' },
-        { name: 'AstroTickets', info: 'Professionelles Support-Ticket-System', icon: '🎫' },
-      ],
-    },
-    {
-      group: 'AstroProtect',
-      description: 'Schütze deinen Server vor Spam, Raids und unerwünschtem Verhalten.',
-      icon: '🔒',
-      items: [
-        { name: 'AstroLogs', info: 'Detaillierte Server-Logs in Echtzeit', icon: '📋' },
-        { name: 'AstroLock', info: 'Kanäle gezielt sperren & freigeben', icon: '🔐' },
-        { name: 'AstroModeration', info: 'Umfassende Moderationstools für Admins', icon: '⚖️' },
-        { name: 'AstroModlogs', info: 'Automatische Moderations-Protokolle', icon: '📝' },
-        { name: 'AstroShield', info: 'Aktiver Schutz vor Spam & Raid-Attacken', icon: '🛡️' },
-      ],
-    },
-    {
-      group: 'AstroStreaming',
-      description: 'Streaming-Integrationen – in aktiver Entwicklung.',
-      icon: '🎬',
-      items: [{ name: 'Kommt bald', info: 'Streaming-Features sind in Arbeit. Bleib gespannt!', icon: '⏳' }],
-    },
-    {
-      group: 'AstroPLAYS',
-      description: 'Gaming-Integrationen für die beliebtesten Spiele.',
-      icon: '🎮',
-      items: [
-        { name: 'Minecraft', info: 'Whitelist-System direkt über Discord', icon: '⛏️' },
-        { name: 'GTA V', info: 'Economy-System für Roleplay-Server', icon: '🏙️' },
-        { name: 'Fortnite', info: 'Live Shop & Game-Updates', icon: '🎯' },
-      ],
-    },
-    {
-      group: 'Premium Features',
-      description: 'Exklusive Features für Power-User und Communities.',
-      icon: '⭐',
-      items: [{ name: 'AstroTickets+', info: 'Erweitertes Ticket-System mit Priority-Support', icon: '🌟' }],
-    },
-  ];
-
   return (
     <div className="overflow-x-hidden relative">
       <Background />
 
       {/* HERO SECTION */}
-      <section className="relative flex flex-col items-center justify-center min-h-screen px-8 max-w-5xl mx-auto text-center gap-8">
-        <div className="flex flex-col items-center">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-gray-400 text-xs font-medium mb-8 tracking-wide uppercase">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-            Discord Bot · Jetzt verfügbar
-          </div>
-
+      <section className="relative flex flex-col lg:flex-row items-center justify-between min-h-screen px-8 max-w-7xl mx-auto gap-12">
+        <div className="flex flex-col items-start justify-center flex-1">
           <h1 className="text-white text-5xl md:text-7xl font-extrabold leading-tight mb-6 tracking-tight">
             Play, Manage,<br />
             <span className="text-violet-500">Level Up.</span>
@@ -95,7 +37,7 @@ export default function HomePage() {
             zu verwalten und auf das nächste Level zu bringen – alles an einem Ort.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <a
               href="/concept"
               className="inline-flex items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 transition-all text-white font-semibold px-7 py-3 shadow-lg shadow-indigo-500/20"
@@ -112,61 +54,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* MODULES SECTION */}
-      <section className="relative px-6 md:px-8 max-w-7xl mx-auto space-y-28 mt-20 pb-8">
-        {modules.map((group) => (
-          <div
-            key={group.group}
-            id={group.id ?? undefined}
-            className="relative"
-          >
-            {/* Group Header */}
-            <div className="text-center mb-14">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-gray-500 text-xs font-medium uppercase tracking-widest mb-4">
-                <span>{group.icon}</span>
-                Modul-Gruppe
-              </div>
-              <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-3">
-                {group.group}
-              </h2>
-              <p className="text-gray-500 text-base max-w-xl mx-auto">{group.description}</p>
-            </div>
-
-            {/* Module Cards */}
-            <div
-              className={`grid gap-4 ${
-                group.items.length === 1
-                  ? 'grid-cols-1 max-w-md mx-auto'
-                  : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
-              }`}
-            >
-              {group.items.map((mod) => (
-                <div
-                  key={mod.name}
-                  className="group relative rounded-2xl bg-neutral-900/60 border border-white/[0.07] hover:border-indigo-500/40 p-6 transition-all duration-300 hover:bg-neutral-800/60 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/30"
-                >
-                  {/* Icon */}
-                  <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-xl mb-4 group-hover:bg-indigo-500/10 group-hover:border-indigo-500/30 transition-all duration-300">
-                    {mod.icon}
-                  </div>
-
-                  {/* Content */}
-                  <h3 className="text-white font-semibold text-base mb-1.5 tracking-tight">
-                    {mod.name}
-                  </h3>
-                  <p className="text-gray-500 text-sm leading-relaxed">
-                    {mod.info}
-                  </p>
-
-                  {/* Subtle glow on hover */}
-                  <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-gradient-to-br from-indigo-500/5 to-transparent" />
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </section>
-
       {/* SUPPORT SECTION */}
       <section id="support" className="relative px-8 max-w-3xl mx-auto mt-48 mb-48 text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-gray-500 text-xs font-medium uppercase tracking-widest mb-6">
@@ -177,7 +64,6 @@ export default function HomePage() {
           Fragen, Probleme oder Feedback? Wir helfen dir gerne weiter –
           schreib uns direkt per Mail oder tritt unserem Discord bei.
         </p>
-
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <a
             href="mailto:astroplays.help@gmail.com"
