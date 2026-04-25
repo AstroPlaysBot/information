@@ -1,10 +1,8 @@
-// middleware.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-
   const userToken = req.cookies.get('user_token')?.value;
   const adminToken = req.cookies.get('admin_token')?.value;
 
@@ -13,7 +11,21 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Dashboard → jeder eingeloggte User (User oder Admin)
+  // ── Wartungscheck ──────────────────────────────────────────
+  try {
+    const res = await fetch(`${req.nextUrl.origin}/api/adminboard/maintenance`);
+    const { pages } = await res.json();
+    const match = pages?.find((p: { path: string }) => p.path === pathname);
+    if (match) {
+      const url = req.nextUrl.clone();
+      url.pathname = '/maintenance';
+      url.searchParams.set('reason', match.reason);
+      return NextResponse.rewrite(url);
+    }
+  } catch {}
+  // ──────────────────────────────────────────────────────────
+
+  // Dashboard → jeder eingeloggte User
   if (pathname.startsWith('/dashboard')) {
     if (!userToken && !adminToken) {
       return NextResponse.redirect('/api/discord-auth');
@@ -32,7 +44,6 @@ export function middleware(req: NextRequest) {
   return NextResponse.next();
 }
 
-// Middleware wird nur auf relevante Pfade angewendet
 export const config = {
   matcher: ['/dashboard/:path*', '/adminboard/:path*', '/login', '/login/:path*'],
 };
