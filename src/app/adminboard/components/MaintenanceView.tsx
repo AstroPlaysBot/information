@@ -1,11 +1,19 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { Plus, Trash2, Save } from 'lucide-react'
+import { Plus, Trash2, Save, Pencil, X, Check } from 'lucide-react'
 
 interface MaintenancePage {
   path: string
   reason: string
 }
+
+const ALL_PATHS = [
+  '/dashboard',
+  '/purchase',
+  '/apply',
+  '/team',
+  '/login',
+]
 
 export default function MaintenanceView() {
   const [isOwner, setIsOwner] = useState(false)
@@ -14,6 +22,9 @@ export default function MaintenanceView() {
   const [saving, setSaving] = useState(false)
   const [successMsg, setSuccessMsg] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
+  const [editingIndex, setEditingIndex] = useState<number | null>(null)
+  const [draft, setDraft] = useState<MaintenancePage | null>(null)
+  const [suggestions, setSuggestions] = useState<string[]>([])
 
   useEffect(() => {
     fetch('/api/adminboard/my-role', { credentials: 'include' })
@@ -28,26 +39,71 @@ export default function MaintenanceView() {
       .finally(() => setLoading(false))
   }, [])
 
+  const availablePaths = ALL_PATHS.filter(p => !pages.some(page => page.path === p))
+
   const addPage = () => {
+    const newIndex = pages.length
     setPages(prev => [...prev, { path: '', reason: '' }])
+    setEditingIndex(newIndex)
+    setDraft({ path: '', reason: '' })
   }
 
-  const updatePage = (index: number, field: keyof MaintenancePage, value: string) => {
-    setPages(prev => prev.map((p, i) => i === index ? { ...p, [field]: value } : p))
+  const startEdit = (index: number) => {
+    setEditingIndex(index)
+    setDraft({ ...pages[index] })
+    setSuggestions([])
+  }
+
+  const cancelEdit = (index: number) => {
+    // if it was a new empty entry, remove it
+    if (!pages[index].path && !pages[index].reason) {
+      setPages(prev => prev.filter((_, i) => i !== index))
+    }
+    setEditingIndex(null)
+    setDraft(null)
+    setSuggestions([])
+  }
+
+  const confirmEdit = (index: number) => {
+    if (!draft) return
+    if (!draft.path.trim() || !draft.reason.trim()) {
+      setErrorMsg('Pfad und Grund müssen ausgefüllt sein.')
+      return
+    }
+    if (!draft.path.startsWith('/')) {
+      setErrorMsg('Pfad muss mit / beginnen.')
+      return
+    }
+    setErrorMsg('')
+    setPages(prev => prev.map((p, i) => i === index ? draft : p))
+    setEditingIndex(null)
+    setDraft(null)
+    setSuggestions([])
   }
 
   const removePage = (index: number) => {
     setPages(prev => prev.filter((_, i) => i !== index))
+    setEditingIndex(null)
+    setDraft(null)
+  }
+
+  const handlePathInput = (value: string) => {
+    if (!draft) return
+    setDraft({ ...draft, path: value })
+    if (value.startsWith('/')) {
+      const filtered = availablePaths.filter(p =>
+        p.startsWith(value) && p !== draft.path
+      )
+      setSuggestions(filtered)
+    } else {
+      setSuggestions([])
+    }
   }
 
   const save = async () => {
     for (const p of pages) {
       if (!p.path.trim() || !p.reason.trim()) {
-        setErrorMsg('Alle Felder (Pfad & Grund) müssen ausgefüllt sein.')
-        return
-      }
-      if (!p.path.startsWith('/')) {
-        setErrorMsg(`Pfade müssen mit / beginnen (z.B. /dashboard). Fehler bei: "${p.path}"`)
+        setErrorMsg('Alle Einträge müssen Pfad & Grund haben.')
         return
       }
     }
@@ -93,47 +149,91 @@ export default function MaintenanceView() {
         </div>
       )}
 
-      <div className="flex flex-col gap-4 mb-6">
+      <div className="flex flex-col gap-3 mb-6">
         {pages.map((page, i) => (
-          <div key={i} className="bg-gray-900/60 border border-gray-800 rounded-xl p-4 flex flex-col gap-3">
-            <div className="flex items-center gap-3">
-              <div className="flex-1">
-                <label className="text-xs text-gray-500 mb-1 block">Pfad</label>
-                {isOwner ? (
+          <div key={i} className="bg-gray-900/60 border border-gray-800 rounded-xl p-4">
+            {editingIndex === i && draft ? (
+              // ── Edit Mode ──
+              <div className="flex flex-col gap-3">
+                <div className="relative">
+                  <label className="text-xs text-gray-500 mb-1 block">Pfad</label>
                   <input
                     type="text"
-                    value={page.path}
-                    onChange={e => updatePage(i, 'path', e.target.value)}
+                    value={draft.path}
+                    onChange={e => handlePathInput(e.target.value)}
                     placeholder="/dashboard"
+                    autoFocus
                     className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2 border border-gray-700 focus:outline-none focus:border-gray-500 font-mono"
                   />
-                ) : (
+                  {suggestions.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg overflow-hidden z-10">
+                      {suggestions.map(s => (
+                        <button
+                          key={s}
+                          onClick={() => {
+                            setDraft({ ...draft, path: s })
+                            setSuggestions([])
+                          }}
+                          className="w-full text-left px-3 py-2 text-sm font-mono text-gray-300 hover:bg-gray-700 hover:text-white transition"
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">
+                    Grund <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    value={draft.reason}
+                    onChange={e => setDraft({ ...draft, reason: e.target.value })}
+                    placeholder="Warum ist diese Seite unter Wartung?"
+                    rows={2}
+                    className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2 border border-gray-700 focus:outline-none focus:border-gray-500 resize-none"
+                  />
+                </div>
+                <div className="flex items-center gap-2 justify-end">
+                  <button
+                    onClick={() => cancelEdit(i)}
+                    className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white px-3 py-1.5 rounded-lg border border-gray-700 hover:border-gray-500 transition"
+                  >
+                    <X size={13} /> Abbrechen
+                  </button>
+                  <button
+                    onClick={() => confirmEdit(i)}
+                    className="flex items-center gap-1.5 text-xs bg-white text-black font-semibold px-3 py-1.5 rounded-lg hover:bg-gray-200 transition"
+                  >
+                    <Check size={13} /> Übernehmen
+                  </button>
+                </div>
+              </div>
+            ) : (
+              // ── View Mode ──
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col gap-1">
                   <span className="text-white font-mono text-sm">{page.path}</span>
+                  <span className="text-gray-400 text-sm">{page.reason}</span>
+                </div>
+                {isOwner && (
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => startEdit(i)}
+                      className="text-gray-500 hover:text-white transition"
+                    >
+                      <Pencil size={15} />
+                    </button>
+                    <button
+                      onClick={() => removePage(i)}
+                      className="text-gray-500 hover:text-red-400 transition"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
                 )}
               </div>
-              {isOwner && (
-                <button
-                  onClick={() => removePage(i)}
-                  className="text-gray-600 hover:text-red-400 transition mt-5"
-                >
-                  <Trash2 size={16} />
-                </button>
-              )}
-            </div>
-            <div>
-              <label className="text-xs text-gray-500 mb-1 block">Grund <span className="text-red-500">*</span></label>
-              {isOwner ? (
-                <textarea
-                  value={page.reason}
-                  onChange={e => updatePage(i, 'reason', e.target.value)}
-                  placeholder="Warum ist diese Seite unter Wartung?"
-                  rows={2}
-                  className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2 border border-gray-700 focus:outline-none focus:border-gray-500 resize-none"
-                />
-              ) : (
-                <span className="text-gray-300 text-sm">{page.reason}</span>
-              )}
-            </div>
+            )}
           </div>
         ))}
       </div>
@@ -142,15 +242,16 @@ export default function MaintenanceView() {
         <div className="flex items-center gap-3">
           <button
             onClick={addPage}
-            className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition px-4 py-2 rounded-xl border border-gray-800 hover:border-gray-600"
+            disabled={editingIndex !== null}
+            className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition px-4 py-2 rounded-xl border border-gray-800 hover:border-gray-600 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Plus size={15} />
             Seite hinzufügen
           </button>
           <button
             onClick={save}
-            disabled={saving}
-            className="flex items-center gap-2 text-sm bg-white text-black font-semibold px-4 py-2 rounded-xl hover:bg-gray-200 transition disabled:opacity-50"
+            disabled={saving || editingIndex !== null}
+            className="flex items-center gap-2 text-sm bg-white text-black font-semibold px-4 py-2 rounded-xl hover:bg-gray-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Save size={15} />
             {saving ? 'Speichert…' : 'Speichern'}
