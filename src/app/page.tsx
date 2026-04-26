@@ -42,8 +42,9 @@ export default function HomePage() {
             >
               Zum Konzept
             </a>
-            <a href="/features" className="text-gray-400 font-medium hover:text-white transition-colors">
-              Funktionen entdecken →
+            <a href="/updates" className="inline-flex items-center gap-1.5 text-gray-400 font-medium hover:text-white transition-colors">
+              Latest Update
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </a>
           </div>
         </div>
