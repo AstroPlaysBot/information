@@ -36,6 +36,7 @@ const marketplaceItems = [
     label: 'Premium',
     href: '/purchase#premium',
     desc: 'Exklusive Features für Power-User',
+    premium: true,
   },
   {
     label: 'Spiele',
@@ -52,7 +53,7 @@ const marketplaceItems = [
 /* ─────────────────────────────────────────
    DROPDOWN COMPONENT
 ───────────────────────────────────────── */
-type DropdownItem = { label: string; href: string; desc: string };
+type DropdownItem = { label: string; href: string; desc: string; premium?: boolean };
 
 function NavDropdown({
   label,
@@ -101,27 +102,64 @@ function NavDropdown({
 
       {open && (
         <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2.5 w-64 rounded-xl border border-white/[0.08] bg-[#0e0e12]/95 backdrop-blur-xl shadow-2xl shadow-black/60 overflow-hidden z-50">
-          {/* top accent line */}
           <div className="h-px w-full bg-gradient-to-r from-transparent via-indigo-500/40 to-transparent" />
           <div className="p-1.5">
             {items.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                onClick={onClose}
-                className="group flex flex-col gap-0.5 px-3 py-2.5 rounded-lg hover:bg-white/[0.05] transition-all"
-              >
-                <span className="text-[13px] font-semibold text-gray-200 group-hover:text-white transition-colors">
-                  {item.label}
-                </span>
-                <span className="text-[11px] text-gray-500 group-hover:text-gray-400 transition-colors leading-snug">
-                  {item.desc}
-                </span>
-              </a>
+              item.premium ? (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  onClick={onClose}
+                  className="group relative flex flex-col gap-0.5 px-3 py-2.5 rounded-lg transition-all overflow-hidden"
+                >
+                  {/* Animated rainbow border */}
+                  <span className="pointer-events-none absolute inset-0 rounded-lg rainbow-border" aria-hidden />
+                  {/* Dark fill inside */}
+                  <span className="pointer-events-none absolute inset-[1.5px] rounded-[7px] bg-[#0e0e12]" aria-hidden />
+                  <span className="relative text-[13px] font-semibold text-gray-200 group-hover:text-white transition-colors">
+                    {item.label}
+                  </span>
+                  <span className="relative text-[11px] text-gray-500 group-hover:text-gray-400 transition-colors leading-snug">
+                    {item.desc}
+                  </span>
+                </a>
+              ) : (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  onClick={onClose}
+                  className="group flex flex-col gap-0.5 px-3 py-2.5 rounded-lg hover:bg-white/[0.05] transition-all"
+                >
+                  <span className="text-[13px] font-semibold text-gray-200 group-hover:text-white transition-colors">
+                    {item.label}
+                  </span>
+                  <span className="text-[11px] text-gray-500 group-hover:text-gray-400 transition-colors leading-snug">
+                    {item.desc}
+                  </span>
+                </a>
+              )
             ))}
           </div>
         </div>
       )}
+
+      <style jsx global>{`
+        @keyframes rainbow-spin {
+          0%   { background-position: 0% 50%; }
+          50%  { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .rainbow-border {
+          background: linear-gradient(
+            90deg,
+            #ff0080, #ff4d00, #ffe600,
+            #00ff88, #00cfff, #a855f7,
+            #ff0080
+          );
+          background-size: 300% 300%;
+          animation: rainbow-spin 2.8s linear infinite;
+        }
+      `}</style>
     </div>
   );
 }
