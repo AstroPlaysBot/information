@@ -13,6 +13,8 @@ const ALL_PATHS = [
   '/apply',
   '/team',
   '/login',
+  '/world-league/leaderboard',
+  '/world-league/rules',
 ]
 
 export default function MaintenanceView() {
