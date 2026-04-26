@@ -34,7 +34,7 @@ const FixedFooter: React.FC = () => {
                 <Instagram size={16} />
               </a>
               <a
-                href="TIKTOK_LINK_HIER"
+                href="https://www.tiktok.com/@cryptix.astroplays?_r=1&_t=ZG-95rF41t9uJV"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="TikTok"
