@@ -34,7 +34,7 @@ const FixedFooter: React.FC = () => {
                 <Instagram size={16} />
               </a>
               <a
-                href="https://www.tiktok.com/@cryptix.astroplays?_r=1&_t=ZG-95rF41t9uJV"
+                href="TIKTOK_LINK_HIER"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="TikTok"
@@ -54,15 +54,15 @@ const FixedFooter: React.FC = () => {
             </div>
           </div>
 
-          {/* ── PRODUKT ── */}
+          {/* ── WICHTIGE LINKS ── */}
           <div className="flex flex-col gap-3">
-            <span className="text-white text-xs font-semibold uppercase tracking-widest">Produkt</span>
+            <span className="text-white text-xs font-semibold uppercase tracking-widest">Wichtige Links</span>
             <nav className="flex flex-col gap-2.5">
               {[
-                { label: 'Module', href: '/astro/moderation' },
-                { label: 'Marketplace', href: '/purchase' },
-                { label: 'World League', href: '/world-league' },
-                { label: 'Dashboard', href: '/dashboard' },
+                { label: 'Einloggen', href: '/login' },
+                { label: 'Premium', href: '/purchase#premium' },
+                { label: 'Spiele', href: '/purchase#games' },
+                { label: 'Support', href: '/#support' },
                 { label: 'Bewerben', href: '/apply' },
               ].map((link) => (
                 <Link
