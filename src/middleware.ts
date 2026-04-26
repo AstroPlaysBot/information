@@ -63,6 +63,8 @@ export const config = {
     '/purchase/:path*',
     '/apply/:path*',
     '/team/:path*',
-    '/login/:path*'
+    '/login/:path*',
+    '/world-league/leaderboard/:path*',
+    '/world-league/rules/:path*'
   ],
 };
